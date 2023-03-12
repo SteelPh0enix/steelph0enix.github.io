@@ -1,0 +1,72 @@
+code,
+pre {
+	font-family: 'Fira Mono', monospace !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+	font-family: 'Fira Sans', sans-serif !important;
+}
+
+
+.img-150 img {
+	width: 150%;
+}
+
+.img-140 img {
+	width: 140%;
+}
+
+.img-130 img {
+	width: 130%;
+}
+
+.img-120 img {
+	width: 120%;
+}
+
+.img-110 img {
+	width: 110%;
+}
+
+.img-90 img {
+	width: 90%;
+}
+
+.img-80 img {
+	width: 80%;
+}
+
+.img-70 img {
+	width: 70%;
+}
+
+.img-60 img {
+	width: 60%;
+}
+
+.img-50 img {
+	width: 50%;
+}
+
+
+	.font-60 {
+		font-size: 60%;
+	}
+
+	.font-70 {
+		font-size: 70%;
+	}
+
+	.font-80 {
+		font-size: 80%;
+	}
+
+	.font-90 {
+		font-size: 90%;
+	}
