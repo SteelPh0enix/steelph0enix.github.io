@@ -36,7 +36,9 @@
     "telemedicine",
     "toolchain",
     "toolchains",
+    "UCRT",
     "Wextra",
+    "winlibs",
     "Zorin"
   ],
 }
