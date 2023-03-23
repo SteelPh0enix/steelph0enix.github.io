@@ -42,18 +42,15 @@ If you already have your preferred toolchain installed and configured, feel free
 
 **For Windows**:
 
-* Download MinGW-w64 installer from [here](https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/installer/mingw-w64-install.exe/download) - that's basically 64-bit GCC for Windows.
-* Run the installer. Make sure to change the **Architecture** setting to `x86_64`, otherwise you'll get a 32-bit toolchain and that's not what we want here. Also; make sure the **Threads** setting is configured as `posix`, otherwise you won't be able to use standard C++ threading library. Don't change other settings there.
-![mingw-w64-installer](/img/vscode-cpp-setup/mingw-install-win.png)
-* After installation, add the `/bin` subdirectory (with `gcc.exe` and `g++.exe` inside) of installed toolchain to system PATH variable. *It, obviously, can be different than the one on the screenshot below*
-![mingw-bin-dir](/img/vscode-cpp-setup/mingw-bin-dir.png)
-Go to "Edit the system environment variables" settings in Windows, then press the "Environment variables..." button and add the new entry with GCC bin directory, either to user, or system PATH variable - doesn't really matter which one.
-![env-vars](/img/vscode-cpp-setup/env-vars.png)
-* Check if you've done it correctly by running PowerShell or `cmd.exe` and trying out `gcc --version` command. You should see something like this:
-![gcc-installed](/img/vscode-cpp-setup/gcc-installed.png)
-If that's not what you see, check if you've added correct path to PATH variable. Or restart the shell/computer, and try again.
+My usual way of installing C++ toolchain on Windows is via [WinLibs](https://winlibs.com/) package. To install it:
 
->**Important note about MinGW and MinGW-w64** - Both official MinGW and MinGW-w64 distributions are pretty outdated (they're using GCC 8.1.0, while the latest release at the time of writing is 11.0). If you want a fresh new version of GCC on your Windows machine, either use [MSYS2](https://www.msys2.org/) or [WinLibs package](https://winlibs.com/). However, MSYS2 setup is a bit longer than MinGW, and both of these packages can have their issues (i've managed to get issues with WinAPI and terminal output using both of them), so if you're an absolute beginner, stick to MinGW-w64 for a while.
+* Download latest UCRT runtime version for Win64 (i assume you're running at least Win10 64bit, otherwise read the instructions on WinLibs page). ![winlibs download](/img/vscode-cpp-setup/winlibs_download.png)
+* Extract it somewhere - preferably directly to a hard drive, for example `C:\`, but it can be anywhere. I recommend avoiding paths with spaces and non-ASCII characters though, they may cause headaches in the future. ![mingw unzipped](/img/vscode-cpp-setup/mingw_unzipped.png)
+* Add `/bin` subdirectory to system or user `PATH` variable. ![env vars](/img/vscode-cpp-setup/env_vars.png)
+* Open terminal and run `gcc --version` command. You should see similar message to the one below. You may also want to run `where.exe gcc` to make sure you're using correct GCC executable, in case you'd have other GCC installation in the system that you forgot about - usually, WinLibs provides most recent one, so this is the one you should be using. ![check install](/img/vscode-cpp-setup/gcc_version.png)
+
+If you'd rather use different toolchain than GCC, i recommend Visual C++, which you can install via Build Tools for Visual Studio 2022. You can download it from [here](https://aka.ms/vs/17/release/vs_BuildTools.exe). To install C++ toolchain, run the installer and select the option "Desktop development with C++". ![msvc install](/img/vscode-cpp-setup/msvc_cpp.png)
+Note that **you don't need both toolchains, one is enough**, and that build tools do not include Visual Studio - if you want Visual Studio, you can install it as separate product using the same installer. Since this guide is about **Visual Studio Code**, which is a different product, i'm not going to provide instructions for that.
 
 **For Linux**:
 
