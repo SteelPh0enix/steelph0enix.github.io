@@ -1,6 +1,6 @@
 +++
 title = "Visual Studio Code - C/C++ Setup"
-date = "2021-06-08T09:48:53+02:00"
+date = "2021-06-08"
 author = "SteelPh0enix"
 authorTwitter = "steel_ph0enix" #do not include @
 cover = ""
@@ -8,6 +8,7 @@ tags = ["visual", "studio", "code", "c", "c++", "setup", "configuration", "guide
 keywords = ["visual", "studio", "code", "c", "c++", "setup", "configuration", "guide"]
 description = "How to configure Visual Studio Code for C and C++ development"
 showFullContent = false
+lastmod = "2023-03-23"
 +++
 
 Visual Studio Code is a great open-source editor with plenty of useful plugins for insane amount of languages and frameworks.

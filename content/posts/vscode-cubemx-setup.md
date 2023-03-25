@@ -1,6 +1,6 @@
 +++
 title = "VSCode CubeMX Project Setup"
-date = "2021-09-16T23:35:10+02:00"
+date = "2021-09-16"
 author = "SteelPh0enix"
 authorTwitter = "steel_ph0enix" #do not include @
 cover = ""
