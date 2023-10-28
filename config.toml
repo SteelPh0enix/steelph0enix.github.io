@@ -50,19 +50,20 @@ disqusShortname = "steelph0enixblog"
 
 [languages]
   [languages.en]
-    languageName = "English"
-    title = "SteelPh0enix's Blog"
-    subtitle = "i write stuff about programming"
-    owner = "SteelPh0enix"
-    keywords = ""
-    copyright = ""
-    menuMore = "Show more"
-    readMore = "Read more"
-    readOtherPosts = "Read other posts"
-    newerPosts = "Newer posts"
-    olderPosts = "Older posts"
-    missingContentMessage = "Page not found..."
-    missingBackButtonLabel = "Back to home page"
+    [languages.en.params]
+      languageName = "English"
+      title = "SteelPh0enix's Blog"
+      subtitle = "i write stuff about programming"
+      owner = "SteelPh0enix"
+      keywords = ""
+      copyright = ""
+      menuMore = "Show more"
+      readMore = "Read more"
+      readOtherPosts = "Read other posts"
+      newerPosts = "Newer posts"
+      olderPosts = "Older posts"
+      missingContentMessage = "Page not found..."
+      missingBackButtonLabel = "Back to home page"
 
     [languages.en.params.logo]
       logoText = "SteelPh0enix's Blog"
