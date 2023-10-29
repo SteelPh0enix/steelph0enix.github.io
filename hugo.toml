@@ -1,8 +1,12 @@
 baseurl = "https://steelph0enix.github.io/"
-languageCode = "en-us"
+languageCode = "en"
 theme = "terminal"
-paginate = 5
+paginate = 10
 disqusShortname = "steelph0enixblog"
+copyright = "SteelPh0enix's Blog © 2021 by SteelPh0enix is licensed under CC BY-SA 4.0"
+enableGitInfo = true
+enableRobotsTXT = true
+
 
 [params]
   # dir name of your main content (default is `content/posts`).
@@ -32,7 +36,7 @@ disqusShortname = "steelph0enixblog"
   showLastUpdated = true
   enableGitInfo = true
   # Provide a string as a prefix for the last update date. By default, it looks like this: 2020-xx-xx [Updated: 2020-xx-xx] :: Author
-  updatedDatePrefix = "Updated"
+  # updatedDatePrefix = "Updated"
 
   # set all headings to their default size (depending on browser settings)
   # it's set to `true` by default
@@ -56,7 +60,7 @@ disqusShortname = "steelph0enixblog"
       subtitle = "i write stuff about programming"
       owner = "SteelPh0enix"
       keywords = ""
-      copyright = ""
+      copyright = "SteelPh0enix's Blog © 2021 by SteelPh0enix is licensed under CC BY-SA 4.0"
       menuMore = "Show more"
       readMore = "Read more"
       readOtherPosts = "Read other posts"
