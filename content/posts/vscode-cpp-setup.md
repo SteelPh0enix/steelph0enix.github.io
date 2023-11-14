@@ -8,7 +8,6 @@ tags = ["visual", "studio", "code", "c", "c++", "setup", "configuration", "guide
 keywords = ["visual", "studio", "code", "c", "c++", "setup", "configuration", "guide"]
 description = "How to configure Visual Studio Code for C and C++ development"
 showFullContent = false
-lastmod = "2023-03-23"
 +++
 
 Visual Studio Code is a great open-source editor with plenty of useful plugins for insane amount of languages and frameworks.

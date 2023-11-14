@@ -8,7 +8,6 @@ tags = ["blog-meta"]
 keywords = ["blog-meta"]
 description = "what am i gonna do?"
 showFullContent = false
-lastmod = "2023-10-28"
 +++
 
 ## The flashback

@@ -1,6 +1,6 @@
 +++
 title = "When should you choose C++ as your starting language?"
-date = "2023-11-05"
+date = "2023-11-14"
 author = "SteelPh0enix"
 authorTwitter = "steel_ph0enix" #do not include @
 cover = ""
@@ -8,7 +8,6 @@ tags = ["random-thoughts", "guide"]
 keywords = ["pick", "language", "first", "c", "c++"]
 description = "Short answer: probably never."
 showFullContent = false
-lastmod = "2023-11-05"
 +++
 
 When i'm lurking through the internet, i'm often seeing posts asking about "which language should i pick as a beginner???". As someone who struggled a lot with this choice, and ultimately picked C++ (for reasons that made no real sense - but, of course, i didn't knew that back then), i think i can say a few words about this specific choice and how it can affect the learning process of an individual.
