@@ -3,7 +3,6 @@ title = "When should you choose C++ as your starting language?"
 date = "2023-11-14"
 author = "SteelPh0enix"
 authorTwitter = "steel_ph0enix" #do not include @
-cover = ""
 tags = ["random-thoughts", "guide"]
 keywords = ["pick", "language", "first", "c", "c++"]
 description = "Short answer: probably never."
