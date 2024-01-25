@@ -3,7 +3,7 @@ languageCode = "en"
 theme = "terminal"
 paginate = 10
 disqusShortname = "steelph0enixblog"
-copyright = "SteelPh0enix's Blog © 2021 by SteelPh0enix is licensed under CC BY-SA 4.0"
+copyright = "SteelPh0enix's Blog © 2021-2024 by SteelPh0enix is licensed under CC BY-SA 4.0"
 enableGitInfo = true
 enableRobotsTXT = true
 
@@ -60,7 +60,7 @@ enableRobotsTXT = true
       subtitle = "i write stuff about programming"
       owner = "SteelPh0enix"
       keywords = ""
-      copyright = "SteelPh0enix's Blog © 2021 by SteelPh0enix is licensed under CC BY-SA 4.0"
+      copyright = "SteelPh0enix's Blog © 2021-2024 by SteelPh0enix is licensed under CC BY-SA 4.0"
       menuMore = "Show more"
       readMore = "Read more"
       readOtherPosts = "Read other posts"
