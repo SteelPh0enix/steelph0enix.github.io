@@ -176,8 +176,10 @@ And an executable
 
 ```
 PS .> cd .\builddir\
+
 PS .\builddir> .\project_template.exe
 This is project project_template.
+
 PS .\builddir> .\project_template.exe hello world
 F:\Projects\C_C++\meson_c_cpp_project_template\builddir\project_template.exetakes no arguments.
 ```
@@ -224,7 +226,7 @@ However, due to the fact that I'd rather not work on a completely abstract proje
 
 Let's gather what we already assumed about our project.
 We assumed that it's supposed to be testable.
-Unit tests are the bare minimum that we want to have.
+Unit tests are the bare minimum that we want to support.
 We also assumed that we'd like our code to be checked by external tools, but we can ignore that, because those tools should work no matter how we structure our project.
 Same thing with Doxygen.
 As for `clangd`, Meson provides `compile_commands.json`, so it doesn't matter either.
@@ -238,3 +240,247 @@ That way, it's trivial to test them - we can just link the same binary that's us
 >This is how it's done in [some projects](https://github.com/n7space/SAMV71-BSP) that I've been working on in my current job, and if it's good enough choice for space-grade projects, it's sure as hell good enough choice for me.
 >But really, I've seen this approach in action and it should work well.
 
+Let's also assume that our project can contain more than one executable.
+We're gonna put them in `apps` directory.
+Modules will go to `lib`, and tests into `tests`.
+
+Let's create some dummy libs, tests for them, and an application to tie it together.
+Also; let's add `meson.build` to each directory, empty - for now.
+This is how it might look like:
+
+
+```
+meson_c_cpp_project_template
+│   meson.build
+│
+├───apps
+│   └───hello_world
+│           hello_world.cpp
+│           meson.build
+│
+├───lib
+│   ├───calc
+│   │       calc.cpp
+│   │       calc.hpp
+│   │       meson.build
+│   │
+│   └───greeter
+│           greeter.cpp
+│           greeter.hpp
+│           meson.build
+│
+└───tests
+    ├───calc
+    │       calc_test.cpp
+    │       meson.build
+    │
+    └───greeter
+            greeter_test.cpp
+            meson.build
+```
+
+Let's ignore the fact that we don't have a test harness yet, and focus on making the libraries build.
+But first, we have to put some code into them:
+
+calc.hpp:
+```cpp
+#pragma once
+
+double celcius_to_fahrenheit(double celcius);
+double fahrenheit_to_celcius(double fahrenheit);
+```
+
+calc.cpp:
+```cpp
+#include "calc.hpp"
+
+double celcius_to_fahrenheit(double celcius) {
+    return (celcius * (9.0 / 5.0)) + 32.0;
+}
+
+double fahrenheit_to_celcius(double fahrenheit) {
+    return (fahrenheit - 32.0) * (5.0 / 9.0);
+}
+```
+
+greeter.hpp:
+```cpp
+#pragma once
+#include <string>
+
+std::string greet(std::string const& name);
+```
+
+greeter.cpp:
+```cpp
+#include "greeter.hpp"
+
+std::string greet(std::string const& name) {
+    return std::string("Hello ") + name;
+}
+```
+
+And now, let's fill `meson.build` files.
+In order to build a library, we have to use `library` function. Duh.
+
+```meson
+calc = library('calc', 'calc.cpp')
+```
+
+The first argument is name of the library, followed by 0 or more sources in next arguments.
+There are some options that we can set here using keyword arguments, but we're gonna ignore them for now.
+We also save the result of this function to `calc` variable, which we're gonna use later.
+We need to do the same thing for the other module, and the next step is changing our top-level `meson.build` to recognize this dependency.
+Let's remove the `executable` and `test` calls, and call `subdir` instead, to include `lib` directory.
+
+```meson
+project('project_template', 'cpp',
+  version : '0.1',
+  default_options : ['warning_level=3',
+                     'cpp_std=c++14'])
+
+subdir('lib')
+```
+
+Then, we're gonna create `meson.build` in `lib`, that will include all the modules we currently have.
+
+```meson
+subdir('calc')
+subdir('greeter')
+```
+
+And now, we should be able to build them.
+I recommend removing `builddir` directory after every big change, although I'm pretty sure that there is a way to do it in more elegant fashion (re-`setup`?), and re-generating the build files.
+Oh, yeah, it's `meson setup --reconfigure builddir`.
+There you go.
+And I got instantly reminded why I'm not using it - it doesn't really reconfigure *everything*, so it's better to stick to the ol' `rm builddir` technique, at least until our project's structure stabilizes a bit.
+
+```
+PS> meson setup builddir
+The Meson build system
+Version: 1.3.1
+Source dir: F:\Projects\C_C++\meson_c_cpp_project_template
+Build dir: F:\Projects\C_C++\meson_c_cpp_project_template\builddir
+Build type: native build
+Project name: project_template
+Project version: 0.1
+C++ compiler for the host machine: ccache c++ (gcc 13.2.0 "c++ (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht
+Sanders) 13.2.0")
+C++ linker for the host machine: c++ ld.bfd 2.41
+Host machine cpu family: x86_64
+Host machine cpu: x86_64
+Build targets in project: 2
+
+Found ninja-1.11.1.git.kitware.jobserver-1 at C:\gcc\bin\ninja.EXE
+
+
+PS> meson compile -C builddir
+INFO: autodetecting backend as ninja
+INFO: calculating backend command to run: C:\gcc\bin\ninja.EXE -C F:/Projects/C_C++/meson_c_cpp_project_template/
+builddir
+ninja: Entering directory `F:/Projects/C_C++/meson_c_cpp_project_template/builddir'
+[4/4] Linking target lib/greeter/libgreeter.dll
+```
+
+And it seems that it works.
+It detected 2 build targets in project, exactly what we wanted to see.
+Let's look at `builddir` to confirm it.
+
+```
+meson_c_cpp_project_template\builddir\lib
+├───calc
+│   │   libcalc.dll
+│   │   libcalc.dll.a
+│   │
+│   └───libcalc.dll.p
+│           calc.cpp.obj
+│
+└───greeter
+    │   libgreeter.dll
+    │   libgreeter.dll.a
+    │
+    └───libgreeter.dll.p
+            greeter.cpp.obj
+```
+
+Okay, but we got DLLs.
+I don't want DLLs, i want static libs.
+Fortunately, there's an easy fix, straight from the docs - `library` respects the `default_library` project option, so we just have to change it in our project's settings before building the libs.
+
+```meson
+project('project_template', 'cpp',
+  version : '0.1',
+  default_options : {
+    'warning_level': '3',
+    'cpp_std': 'c++14',
+    'c_std': 'c11',
+    'default_library': 'static',
+  }
+)
+```
+
+I took an opportunity to refactor that ugly array list into a proper dict, and set default C standard to C11.
+Let's rebuild the project (again, `--reconfigure` may not detect this change, so `rm builddir`), and as we can see - we've got static libs now!
+
+```
+meson_c_cpp_project_template\builddir\lib
+├───calc
+│   │   libcalc.a
+│   │
+│   └───libcalc.a.p
+│           calc.cpp.obj
+│
+└───greeter
+    │   libgreeter.a
+    │
+    └───libgreeter.a.p
+            greeter.cpp.obj
+```
+
+Next, let's use those libs with our executable.
+Example `hello_world.cpp` may look like this:
+
+```cpp
+#include <calc.hpp>
+#include <greeter.hpp>
+#include <iostream>
+
+int main() {
+    std::cout << greet("random developer") << std::endl;
+    std::cout << "12.5*F == " << fahrenheit_to_celcius(12.5) << "*C" << std::endl;
+    std::cout << "12.5*C == " << celcius_to_fahrenheit(12.5) << "*F" << std::endl;
+}
+```
+
+Of course, the LSP will not be able to detect those headers properly yet, so ignore all the errors.
+Let the toolchain speak the truth.
+This is the content of `hello_world`'s `meson.build`
+
+```meson
+hello_world = executable(
+  'hello_world',
+  'hello_world.cpp',
+  link_with: [calc, greeter]
+)
+```
+
+Notice that we've used previously defined `calc` and `greeter` variables.
+In order to do that, `lib` subdirectory must be evaluated before `apps`, but that's the matter of putting the `subdir('apps')` call below `subdir('lib')` in our main `meson.build` file.
+`subdir` basically evaluates the `meson.build` from the directory provided via the argument, and retains the environment after that.
+Pretty useful, but we have to be careful not to overuse that feature.
+
+```meson
+subdir('lib')
+subdir('apps')
+```
+
+We also have to create `meson.build` for `apps` directory.
+
+```meson
+subdir('hello_world')
+```
+
+>And yes, we probably could just `subdir('apps/hello_world')`, but I wanna keep everything as local as possible.
+
+`meson setup builddir` tells me that there are 3 targets now.
+But after running `meson compile -C builddir`, it seems that we have a problem.
