@@ -1,7 +1,6 @@
 ---
 title: "About"
 date: 2021-06-07T19:06:23+02:00
-draft: false
 lastmod: 2023-10-28
 ---
 
