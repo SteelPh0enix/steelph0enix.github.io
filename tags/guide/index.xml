@@ -1,4 +1,405 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>guide on</title><link>https://steelph0enix.github.io/tags/guide/</link><description>Recent content in guide on</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>SteelPh0enix's Blog © 2021-2024 by SteelPh0enix is licensed under CC BY-SA 4.0</copyright><lastBuildDate>Tue, 14 Nov 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://steelph0enix.github.io/tags/guide/index.xml" rel="self" type="application/rss+xml"/><item><title>When should you choose C++ as your starting language?</title><link>https://steelph0enix.github.io/posts/choosing-first-language/</link><pubDate>Tue, 14 Nov 2023 00:00:00 +0000</pubDate><guid>https://steelph0enix.github.io/posts/choosing-first-language/</guid><description>When I&amp;rsquo;m lurking through the internet, I often see posts asking about &amp;ldquo;what language should I pick as a beginner???&amp;rdquo;. As someone who struggled a lot with this choice, and ultimately picked C++ (for reasons that made no real sense—but, of course, I didn&amp;rsquo;t know that back then), I think I can say a few words about this specific choice and how it can affect the learning process of an individual.</description><content>&lt;p>When I&amp;rsquo;m lurking through the internet, I often see posts asking about &amp;ldquo;what language should I pick as a beginner???&amp;rdquo;. As someone who struggled a lot with this choice, and ultimately picked C++ (for reasons that made no real sense—but, of course, I didn&amp;rsquo;t know that back then), I think I can say a few words about this specific choice and how it can affect the learning process of an individual.&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>guide on</title><link>https://steelph0enix.github.io/tags/guide/</link><description>Recent content in guide on</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>SteelPh0enix's Blog © 2021-2024 by SteelPh0enix is licensed under CC BY-SA 4.0</copyright><lastBuildDate>Sat, 27 Jan 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://steelph0enix.github.io/tags/guide/index.xml" rel="self" type="application/rss+xml"/><item><title>Making C/C++ project template in Meson - part 1</title><link>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-1/</link><pubDate>Sat, 27 Jan 2024 00:00:00 +0000</pubDate><guid>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-1/</guid><description>Intro One of the things that I dislike about C and C++ in particular is lack of standardized build environment, package manager, and all that stuff. And although CMake is de-facto &amp;ldquo;standard&amp;rdquo; over here, and even tries to double as a &amp;ldquo;package manager&amp;rdquo;, I find it hard to like this tool. It&amp;rsquo;s not a bad tool, I&amp;rsquo;ve used it few times, I&amp;rsquo;ve seen some non-trivial projects made with CMake, but I did not like what I&amp;rsquo;ve seen.</description><content>&lt;h2 id="intro">Intro&lt;/h2>
+&lt;p>One of the things that I dislike about C and C++ in particular is lack of standardized build environment, package manager, and all that stuff.
+And although CMake is de-facto &amp;ldquo;standard&amp;rdquo; over here, and even tries to double as a &amp;ldquo;package manager&amp;rdquo;, I find it hard to like this tool.
+It&amp;rsquo;s not a &lt;em>bad&lt;/em> tool, I&amp;rsquo;ve used it few times, I&amp;rsquo;ve seen some non-trivial projects made with CMake, but I did not like what I&amp;rsquo;ve seen.&lt;/p>
+&lt;p>I&amp;rsquo;ve also been missing a proper C/C++ project template for a very long time.
+I was not aware I&amp;rsquo;m missing one, until i got a hang of the codebase of one of the projects I&amp;rsquo;ve been working on in my work, and experienced the true power of scripting and automation.
+I&amp;rsquo;ve been tinkering with many build systems over the years, but I&amp;rsquo;ve never found one that really &amp;ldquo;clicked&amp;rdquo; for me.
+And since I still cannot lift the curse of C/C++ from my life, it seems the only alternative I have is to pick &lt;em>something&lt;/em> and force myself through.
+And I&amp;rsquo;m taking You for a ride with me.&lt;/p>
+&lt;p>So we&amp;rsquo;re going with &lt;a href="https://mesonbuild.com/">Meson Build system&lt;/a>, which was recommended to me by a colleague few years ago.
+Since then I&amp;rsquo;ve read the docs and also experimented with it a bit, but I haven&amp;rsquo;t really made a proper project based on it yet, as of writing this sentence.
+This is about to change.&lt;/p>
+&lt;p>I will try to make this series of blog posts as &amp;ldquo;followable&amp;rdquo; as possible, so You should be able to reproduce most of my work by yourself, and understand the choices I make.
+Remember that the best tool for the job is sometimes the one you make yourself, not the one you blindly copy&amp;amp;paste without deeper understanding.
+&lt;del>But please, don&amp;rsquo;t reinvent the wheel if that&amp;rsquo;s not necessary.&lt;/del>
+&lt;del>Use the right tools for the job, and whatnot.&lt;/del>&lt;/p>
+&lt;h2 id="goals">Goals&lt;/h2>
+&lt;p>Our main goal here is to &lt;strong>make a generic, compiler/platform-independent, easy-to-expand project template in Meson for small-to-medium size C/C++ projects&lt;/strong>.
+I also want it to have some specific features that I believe are &amp;ldquo;must have&amp;rdquo; in any self-respecting project.
+In the end, we will use that template to write some kind of application and maybe play with the project&amp;rsquo;s structure afterwards, until I&amp;rsquo;m satisfied with the results.
+After that, I have a plan to use this template as a basis for ARM Cortex-M project template, but we&amp;rsquo;ll cross that bridge when we&amp;rsquo;ll get to it.&lt;/p>
+&lt;p>The first thing that I&amp;rsquo;m interested in is unit and integration test support.
+I don&amp;rsquo;t want to make assumptions about test harnesses though, so we&amp;rsquo;ll just have to make sure that the project&amp;rsquo;s structure is &lt;em>testable&lt;/em> and Meson can build the tests.
+Unit tests have built-in support in Meson, so let&amp;rsquo;s go with that.
+There&amp;rsquo;s also some support for code coverage, and we will surely explore that too.
+Integration tests are much more project-dependent, so the only requirements is that Meson should recognize them as targets, but running them might be done via external script or program (executed by Meson).
+Meson is our &lt;em>build&lt;/em> system, not necessarily the runner, nor the harness, so let&amp;rsquo;s not expect it to be able to handle generic integration tests by itself.
+Some external tooling/scripting may still be required (especially when we&amp;rsquo;ll get to the embedded part&amp;hellip;), but everything should eventually be held together by Meson.&lt;/p>
+&lt;p>The second thing that I wanna see there is support for C/C++ LSP.
+My primary choice there is &lt;code>clangd&lt;/code>, so we&amp;rsquo;ll have to generate &lt;code>compile_commands.json&lt;/code> using Meson. Fortunately, it does that automatically.&lt;/p>
+&lt;p>The third thing is support for code checks and code formatting.
+External tools can be plugged to Meson via &lt;a href="https://mesonbuild.com/Custom-build-targets.html">custom build targets&lt;/a>, and we will configure at least one code checker and autoformatter like that.
+Our project should provide commands to perform project-wide code and formatting check (which is very useful in git prehooks).&lt;/p>
+&lt;p>And the last, but not the least - documentation.
+I want to be able to generate docs for my code via Meson.
+Probably using Doxygen, as it&amp;rsquo;s relatively easy to set up.
+This also includes coverage reports, and we will most likely use &lt;code>lcov&lt;/code>/&lt;code>gcov&lt;/code> for that.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;em>Did I mention that I&amp;rsquo;ve spent most of last year writing Rust code?&lt;/em>
+&lt;em>Did you know that Cargo provides most of the stuff that I&amp;rsquo;ve described here out-of-the-box?&lt;/em>
+&lt;em>Now you do.&lt;/em>&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="preparations">Preparations&lt;/h2>
+&lt;p>Before we start, let&amp;rsquo;s check our prerequisites, because there&amp;rsquo;s gonna be some.&lt;/p>
+&lt;ul>
+&lt;li>Meson - on Linux, should be in your package manager. If it&amp;rsquo;s not, i assume you know what to do. On Windows, i recommend grabbing an installer from &lt;a href="https://github.com/mesonbuild/meson/releases">Github&lt;/a>. Just make sure it&amp;rsquo;s in your &lt;code>PATH&lt;/code> variable - check if opening a terminal and running &lt;code>meson --version&lt;/code> returns expected version string. I&amp;rsquo;m currently running 1.3.1. &lt;em>Technically Meson is available via &lt;code>winget&lt;/code>, but their repo currently provides outdated version, so i recommend installing it manually on Windows.&lt;/em>&lt;/li>
+&lt;li>Ninja - I&amp;rsquo;ll describe it&amp;rsquo;s purpose in a bit. It should be bundled with Meson on Windows, and should be installed automatically on Linux when installing Meson via package manager. Should be in your &lt;code>PATH&lt;/code> too. In any case, verify if it&amp;rsquo;s installed correctly by running &lt;code>ninja --version&lt;/code>. I&amp;rsquo;m currently running 1.11.1. You can also install it manually if needed &lt;a href="https://github.com/ninja-build/ninja/releases">by downloading a zip from Github&lt;/a> and extracting it into a directory that&amp;rsquo;s in &lt;code>PATH&lt;/code> variable.&lt;/li>
+&lt;li>C/C++ toolchain - &lt;strong>TL;DR install latest GCC&lt;/strong>. In theory, we don&amp;rsquo;t have to choose any specific toolchain, because we&amp;rsquo;re using Meson and Ninja which support the popular ones. &lt;strong>However&lt;/strong>, I&amp;rsquo;ve mentioned that I want to have coverage report generation, and the only coverage tools that I&amp;rsquo;m familiar with are &lt;code>lcov&lt;/code>/&lt;code>gcov&lt;/code>, and this pretty much forces me to use GCC. If you don&amp;rsquo;t care about code coverage reports, pick your treat. If you somehow got here as a complete newbie and you don&amp;rsquo;t have any C/C++ toolchain installed, either grab GCC from your package manager if you&amp;rsquo;re running Linux (look for package called &lt;code>build-essentials&lt;/code> or &lt;code>base-devel&lt;/code> or something like that), or - if you&amp;rsquo;re running Windows - &lt;a href="https://steelph0enix.github.io/posts/vscode-cpp-setup/#cc-toolchain">download latest WinLibs package and add it&amp;rsquo;s &lt;code>bin&lt;/code> subdirectory to PATH&lt;/a>. Or install Microsoft&amp;rsquo;s Visual C++ toolchain via Visual Studio Build Tools (you may need to do that even after installing WinLibs, if you want to use &lt;code>clang&lt;/code>, but I recommend &lt;strong>not&lt;/strong> using MSVC for pure C unless you don&amp;rsquo;t value your sanity).&lt;/li>
+&lt;li>LLVM tools - mostly &lt;code>clangd&lt;/code>, but we&amp;rsquo;re also gonna use &lt;code>clang-tidy&lt;/code> at some point. If you&amp;rsquo;re running Linux, again - find those tools in your package manager. If you&amp;rsquo;re running Windows and WinLibs, you already got them. If you don&amp;rsquo;t use WinLibs, install latest LLVM release (&lt;code>winget install llvm&lt;/code>, should be &amp;ldquo;recent enough&amp;rdquo;, or get it from &lt;a href="https://github.com/llvm/llvm-project/releases">Github&lt;/a>), it should contain everything we&amp;rsquo;ll need. Again, if manually installed - make sure it&amp;rsquo;s in PATH by running &lt;code>clangd --version&lt;/code>. I&amp;rsquo;m currently using 17.0.5.&lt;/li>
+&lt;li>Doxygen - we&amp;rsquo;re not gonna be using it any time soon, but let&amp;rsquo;s make sure it&amp;rsquo;s available. Linux - install from repo, Windows - it&amp;rsquo;s already in WinLibs, if not using WinLibs (or you want the latest version), install manually - &lt;code>winget install doxygen&lt;/code> or grab installer from &lt;a href="https://www.doxygen.nl/download.html">here&lt;/a>. Run &lt;code>doxygen --version&lt;/code> to verify, I&amp;rsquo;m using 1.10.0. &lt;strong>Note - Winget may not add it to PATH, it&amp;rsquo;s installed in &lt;code>Program Files/doxygen&lt;/code> by default. Add &lt;code>bin&lt;/code> subdirectory to &lt;code>PATH&lt;/code> manually if that&amp;rsquo;s the case.&lt;/strong>&lt;/li>
+&lt;/ul>
+&lt;p>Oh, and there&amp;rsquo;s a small issue of &lt;code>lcov&lt;/code> not having official Windows support. There are some unofficial releases, but we&amp;rsquo;re not gonna use them - instead, we&amp;rsquo;re gonna lock the coverage report generation feature to Linux and GCC only.
+I don&amp;rsquo;t want to completely lock this template to GCC because of that feature, so we will have to separate this part appropriately.&lt;/p>
+&lt;blockquote>
+&lt;p>We can always use containers to get this running with all features on Windows.&lt;/p>
+&lt;/blockquote>
+&lt;p>Also; i &lt;em>assume&lt;/em> that we&amp;rsquo;re gonna be using Ninja as our building &amp;ldquo;back-end&amp;rdquo;, but it doesn&amp;rsquo;t really matter because Meson should handle whatever &amp;ldquo;back-end&amp;rdquo; you&amp;rsquo;d like to use.
+Just make sure to check the &amp;ldquo;whatever &amp;ldquo;back-end&amp;rdquo; you&amp;rsquo;d like to use&amp;rdquo; output when I&amp;rsquo;m talking about Ninja output.
+This is an &amp;ldquo;I assume you know what you&amp;rsquo;re doing&amp;rdquo; warning.&lt;/p>
+&lt;h2 id="hello-world">Hello, world!&lt;/h2>
+&lt;p>Assuming that everything is installed, we are ready to get going.
+I&amp;rsquo;ve made a &lt;a href="https://github.com/SteelPh0enix/meson_c_cpp_project_template">repository&lt;/a> for this project, I&amp;rsquo;ll try to make a tag after each part so You can easily follow.&lt;/p>
+&lt;p>Let&amp;rsquo;s start by initializing a new Meson project in an empty directory.
+The arguments don&amp;rsquo;t really matter here - we&amp;rsquo;re gonna be building our &lt;code>meson.build&lt;/code> from scratch anyway, but right now we want to verify if our environment is set up correctly, so let&amp;rsquo;s go with those for now:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>meson init --name project_template --language cpp --type executable
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>This should generate two files - &lt;code>meson.build&lt;/code> and &lt;code>project_template.cpp&lt;/code>. &lt;code>meson.build&lt;/code> should contain project definition with some reasonable defaults, executable, and a test:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>project(&lt;span style="color:#e6db74">&amp;#39;project_template&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;cpp&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> version : &lt;span style="color:#e6db74">&amp;#39;0.1&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> default_options : [&lt;span style="color:#e6db74">&amp;#39;warning_level=3&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;cpp_std=c++14&amp;#39;&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>exe &lt;span style="color:#f92672">=&lt;/span> executable(&lt;span style="color:#e6db74">&amp;#39;project_template&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;project_template.cpp&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> install : &lt;span style="color:#66d9ef">true&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>test(&lt;span style="color:#e6db74">&amp;#39;basic&amp;#39;&lt;/span>, exe)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Source file should contain a very simple test program:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;iostream&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#define PROJECT_NAME &amp;#34;project_template&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>(&lt;span style="color:#66d9ef">int&lt;/span> argc, &lt;span style="color:#66d9ef">char&lt;/span> &lt;span style="color:#f92672">**&lt;/span>argv) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span>(argc &lt;span style="color:#f92672">!=&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> argv[&lt;span style="color:#ae81ff">0&lt;/span>] &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;takes no arguments.&lt;/span>&lt;span style="color:#ae81ff">\n&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;This is project &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> PROJECT_NAME &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;.&lt;/span>&lt;span style="color:#ae81ff">\n&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Let&amp;rsquo;s try building it.
+But first, we need to generate actual build scripts via Meson, as it&amp;rsquo;s (similarly to CMake) a meta-build system.
+Which means that it&amp;rsquo;s only a &lt;em>generator&lt;/em> for an actual build system (like Ninja, or GNU Make) that performs the heavy lifting.
+If you&amp;rsquo;re not used to this approach, it may make no sense at first - why use two tools instead of one, right?
+Unfortunately, building stuff is not easy in C/C++, especially when you&amp;rsquo;re working on a big project with multiple dependencies, that must be supported on many different platforms.
+As far as I know, the earliest successful application of this approach is &lt;a href="https://en.wikipedia.org/wiki/GNU_Autotools">GNU Autotools&lt;/a> project with it&amp;rsquo;s &lt;code>configure&lt;/code>-&lt;code>make&lt;/code>-&lt;code>make install&lt;/code> routine.
+Apparently, it&amp;rsquo;s good to have an additional layer of abstraction over the target build system.
+I have already mentioned some reasons for that (multi-platform, yadda yadda yadda), also - meta-build systems are usually easier to use and have more features.
+Anyway, to generate a build directory with all the stuff required for compilation, run this from project&amp;rsquo;s directory&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>meson setup builddir
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The argument &lt;code>builddir&lt;/code> is the name of our build directory.
+If you&amp;rsquo;ve set up your compiler and Ninja correctly, you should get some info about compiler executables and your environment, and &lt;code>builddir&lt;/code> directory should appear with some Meson and Ninja files.&lt;/p>
+&lt;pre tabindex="0">&lt;code>PS&amp;gt; meson setup builddir
+The Meson build system
+Version: 1.3.1
+Source dir: F:\Projects\C_C++\meson_c_cpp_project_template
+Build dir: F:\Projects\C_C++\meson_c_cpp_project_template\builddir
+Build type: native build
+Project name: project_template
+Project version: 0.1
+C++ compiler for the host machine: ccache c++ (gcc 13.2.0 &amp;#34;c++ (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders) 13.2.0&amp;#34;)
+C++ linker for the host machine: c++ ld.bfd 2.41
+Host machine cpu family: x86_64
+Host machine cpu: x86_64
+Build targets in project: 1
+Found ninja-1.11.1.git.kitware.jobserver-1 at C:\gcc\bin\ninja.EXE
+&lt;/code>&lt;/pre>&lt;p>Now, we can tell Meson to compile the project:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>meson compile -C builddir
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;p>We could also use &lt;code>ninja&lt;/code> directly, but I&amp;rsquo;ll stick to using Meson whenever possible instead, for compatibility reasons.
+That&amp;rsquo;s actually a core part of this template - we &lt;strong>want&lt;/strong> Meson to do stuff for us, we don&amp;rsquo;t want to care what happens under the hood.&lt;/p>
+&lt;/blockquote>
+&lt;p>We should get some output from Ninja.&lt;/p>
+&lt;pre tabindex="0">&lt;code>PS&amp;gt; meson compile -C builddir
+ninja: Entering directory `F:/Projects/C_C++/meson_c_cpp_project_template/builddir&amp;#39;
+[2/2] Linking target project_template.exe
+&lt;/code>&lt;/pre>&lt;p>And an executable&lt;/p>
+&lt;pre tabindex="0">&lt;code>PS .&amp;gt; cd .\builddir\
+PS .\builddir&amp;gt; .\project_template.exe
+This is project project_template.
+PS .\builddir&amp;gt; .\project_template.exe hello world
+F:\Projects\C_C++\meson_c_cpp_project_template\builddir\project_template.exetakes no arguments.
+&lt;/code>&lt;/pre>&lt;p>And also a test!&lt;/p>
+&lt;pre tabindex="0">&lt;code>meson test
+&lt;/code>&lt;/pre>&lt;p>Oh, if you haven&amp;rsquo;t noticed yet - the &lt;code>-C&lt;/code> argument changes the working directory of Meson, so it&amp;rsquo;s necessary only when you&amp;rsquo;re outside of it.
+I assume that we &lt;code>cd&lt;/code>&amp;rsquo;d into it in previous step, so we don&amp;rsquo;t need it now.
+I&amp;rsquo;ll also stop adding it to future example invocations, just remember that it exists and that Meson&amp;rsquo;s working directory must be the one that was generated via &lt;code>meson setup&lt;/code> for most commands.&lt;/p>
+&lt;p>Let&amp;rsquo;s look at the output:&lt;/p>
+&lt;pre tabindex="0">&lt;code>PS .\builddir&amp;gt;meson test
+ninja: Entering directory `F:\Projects\C_C++\meson_c_cpp_project_template\builddir&amp;#39;
+ninja: no work to do.
+1/1 basic OK 0.01s
+Ok: 1
+Expected Fail: 0
+Fail: 0
+Unexpected Pass: 0
+Skipped: 0
+Timeout: 0
+Full log written to F:\Projects\C_C++\meson_c_cpp_project_template\builddir\meson-logs\testlog.txt
+&lt;/code>&lt;/pre>&lt;p>Yeah, that checks out, we have one &amp;ldquo;test&amp;rdquo; and it does nothing and returns 0, so it passes.
+If you have encountered any issues until now, take a break and investigate.
+Check if everything is where it&amp;rsquo;s supposed to be.
+You can also run &lt;code>meson&lt;/code> commands with &lt;code>--help&lt;/code> flag to see what options you have available, just as an exercise.
+Continue, when you&amp;rsquo;re ready.&lt;/p>
+&lt;h2 id="structuring-our-project">Structuring our project&lt;/h2>
+&lt;p>Now it&amp;rsquo;s time to think about the structure of our project.
+We must be aware of the fact that there&amp;rsquo;s no one &amp;ldquo;best&amp;rdquo; project structure that would suit every kind of project.
+However, due to the fact that I&amp;rsquo;d rather not work on a completely abstract project, we&amp;rsquo;ll have to make some assumptions about it&amp;rsquo;s structure, at least for now.&lt;/p>
+&lt;p>Let&amp;rsquo;s gather what we already assumed about our project.
+We assumed that it&amp;rsquo;s supposed to be testable.
+Unit tests are the bare minimum that we want to support.
+We also assumed that we&amp;rsquo;d like our code to be checked by external tools, but we can ignore that, because those tools should work no matter how we structure our project.
+It&amp;rsquo;s just the matter of invoking them properly.
+Same thing with Doxygen.
+As for &lt;code>clangd&lt;/code>, Meson provides &lt;code>compile_commands.json&lt;/code>, therefore it will work as long as the structure is valid.&lt;/p>
+&lt;p>Considering the usual good design practices, we&amp;rsquo;ll probably want to split our codebase into modules according to their responsibility.
+No, not &lt;a href="https://en.cppreference.com/w/cpp/language/modules">&lt;em>those&lt;/em>&lt;/a> modules, let&amp;rsquo;s ignore the existence of C++20 for now.
+We can store each module in a separate directory, with it&amp;rsquo;s own &lt;code>meson.build&lt;/code> file that would define how it&amp;rsquo;s built.
+Modules can be built as static libraries and linked to executables.
+That way, it&amp;rsquo;s trivial to test them - we can just link the same binary that&amp;rsquo;s used with our program executable to the test executable, and validate it&amp;rsquo;s behavior.&lt;/p>
+&lt;blockquote>
+&lt;p>This is how it&amp;rsquo;s done in some projects that I&amp;rsquo;ve been working on in my current job, and if it&amp;rsquo;s good enough choice for space-grade projects, it&amp;rsquo;s sure as hell good enough choice for me.
+But really, I&amp;rsquo;ve seen this approach in action and it should work well.&lt;/p>
+&lt;/blockquote>
+&lt;p>Let&amp;rsquo;s also assume that our project can contain more than one executable, because it should be simple to setup for that.
+We&amp;rsquo;re gonna put them in &lt;code>apps&lt;/code> directory.
+Modules will go to &lt;code>lib&lt;/code>, and tests into &lt;code>tests&lt;/code>.&lt;/p>
+&lt;p>Let&amp;rsquo;s create some dummy libs, tests for them, and an application to tie it together.
+Also; let&amp;rsquo;s add &lt;code>meson.build&lt;/code> to each directory, empty - for now.
+This is how it might look like:&lt;/p>
+&lt;pre tabindex="0">&lt;code>meson_c_cpp_project_template
+│ meson.build
+│
+├───apps
+│ └───hello_world
+│ hello_world.cpp
+│ meson.build
+│
+├───lib
+│ ├───calc
+│ │ calc.cpp
+│ │ calc.hpp
+│ │ meson.build
+│ │
+│ └───greeter
+│ greeter.cpp
+│ greeter.hpp
+│ meson.build
+│
+└───tests
+├───calc
+│ calc_test.cpp
+│ meson.build
+│
+└───greeter
+greeter_test.cpp
+meson.build
+&lt;/code>&lt;/pre>&lt;h3 id="adding-libraries">Adding libraries&lt;/h3>
+&lt;p>Let&amp;rsquo;s ignore the fact that we don&amp;rsquo;t have a test harness yet, and focus on making the libraries build.
+But first, we have to put some code into them:&lt;/p>
+&lt;p>calc.hpp:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#pragma once
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">celcius_to_fahrenheit&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> celcius);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">fahrenheit_to_celcius&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> fahrenheit);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>calc.cpp:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;#34;calc.hpp&amp;#34;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">celcius_to_fahrenheit&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> celcius) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> (celcius &lt;span style="color:#f92672">*&lt;/span> (&lt;span style="color:#ae81ff">9.0&lt;/span> &lt;span style="color:#f92672">/&lt;/span> &lt;span style="color:#ae81ff">5.0&lt;/span>)) &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#ae81ff">32.0&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">fahrenheit_to_celcius&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> fahrenheit) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> (fahrenheit &lt;span style="color:#f92672">-&lt;/span> &lt;span style="color:#ae81ff">32.0&lt;/span>) &lt;span style="color:#f92672">*&lt;/span> (&lt;span style="color:#ae81ff">5.0&lt;/span> &lt;span style="color:#f92672">/&lt;/span> &lt;span style="color:#ae81ff">9.0&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>greeter.hpp:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#pragma once
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;string&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>std&lt;span style="color:#f92672">::&lt;/span>string greet(std&lt;span style="color:#f92672">::&lt;/span>string &lt;span style="color:#66d9ef">const&lt;/span>&lt;span style="color:#f92672">&amp;amp;&lt;/span> name);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>greeter.cpp:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;#34;greeter.hpp&amp;#34;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>std&lt;span style="color:#f92672">::&lt;/span>string greet(std&lt;span style="color:#f92672">::&lt;/span>string &lt;span style="color:#66d9ef">const&lt;/span>&lt;span style="color:#f92672">&amp;amp;&lt;/span> name) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>string(&lt;span style="color:#e6db74">&amp;#34;Hello &amp;#34;&lt;/span>) &lt;span style="color:#f92672">+&lt;/span> name;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And now, let&amp;rsquo;s fill &lt;code>meson.build&lt;/code> files.
+In order to build a library, we have to use &lt;code>library()&lt;/code> function. Duh.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>calc &lt;span style="color:#f92672">=&lt;/span> library(&lt;span style="color:#e6db74">&amp;#39;calc&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;calc.cpp&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The first argument is name of the library, followed by 0 or more sources in next arguments.
+There are some options that we can set here using keyword arguments, but we&amp;rsquo;re gonna ignore them for now because we don&amp;rsquo;t need any.
+We also save the result of this function to &lt;code>calc&lt;/code> variable, which we&amp;rsquo;re gonna use later.
+We need to do the same thing for the other module, and the next step is modifying our top-level &lt;code>meson.build&lt;/code> to recognize this dependency.
+Let&amp;rsquo;s remove the &lt;code>executable()&lt;/code> and &lt;code>test()&lt;/code> calls generated by Meson, and call &lt;code>subdir&lt;/code> instead, to include &lt;code>lib&lt;/code> directory.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>project(&lt;span style="color:#e6db74">&amp;#39;project_template&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;cpp&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> version : &lt;span style="color:#e6db74">&amp;#39;0.1&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> default_options : [&lt;span style="color:#e6db74">&amp;#39;warning_level=3&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;cpp_std=c++14&amp;#39;&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;lib&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Then, we&amp;rsquo;re gonna create &lt;code>meson.build&lt;/code> in &lt;code>lib&lt;/code>, that will include all the modules we currently have.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;calc&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;greeter&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And now, we should be able to build them.
+I recommend removing &lt;code>builddir&lt;/code> directory after every big change, although I&amp;rsquo;m pretty sure that there is a way to do it in more elegant fashion (re-&lt;code>setup&lt;/code>?), and re-generating the build files.
+Oh, yeah, it&amp;rsquo;s &lt;code>meson setup --reconfigure builddir&lt;/code>.
+There you go.
+And I got instantly reminded why I&amp;rsquo;m not using it - it doesn&amp;rsquo;t really reconfigure &lt;em>everything&lt;/em>, so it&amp;rsquo;s better to stick to the ol&amp;rsquo; reliable &lt;code>rm builddir&lt;/code> technique, at least until our project&amp;rsquo;s structure stabilizes a bit.&lt;/p>
+&lt;pre tabindex="0">&lt;code>PS&amp;gt; meson setup builddir
+The Meson build system
+Version: 1.3.1
+Source dir: F:\Projects\C_C++\meson_c_cpp_project_template
+Build dir: F:\Projects\C_C++\meson_c_cpp_project_template\builddir
+Build type: native build
+Project name: project_template
+Project version: 0.1
+C++ compiler for the host machine: ccache c++ (gcc 13.2.0 &amp;#34;c++ (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht
+Sanders) 13.2.0&amp;#34;)
+C++ linker for the host machine: c++ ld.bfd 2.41
+Host machine cpu family: x86_64
+Host machine cpu: x86_64
+Build targets in project: 2
+Found ninja-1.11.1.git.kitware.jobserver-1 at C:\gcc\bin\ninja.EXE
+PS&amp;gt; meson compile -C builddir
+INFO: autodetecting backend as ninja
+INFO: calculating backend command to run: C:\gcc\bin\ninja.EXE -C F:/Projects/C_C++/meson_c_cpp_project_template/
+builddir
+ninja: Entering directory `F:/Projects/C_C++/meson_c_cpp_project_template/builddir&amp;#39;
+[4/4] Linking target lib/greeter/libgreeter.dll
+&lt;/code>&lt;/pre>&lt;p>And it seems that it works.
+It detected 2 build targets in project, exactly what we wanted to see.
+Let&amp;rsquo;s look at &lt;code>builddir&lt;/code> to confirm it.&lt;/p>
+&lt;pre tabindex="0">&lt;code>meson_c_cpp_project_template\builddir\lib
+├───calc
+│ │ libcalc.dll
+│ │ libcalc.dll.a
+│ │
+│ └───libcalc.dll.p
+│ calc.cpp.obj
+│
+└───greeter
+│ libgreeter.dll
+│ libgreeter.dll.a
+│
+└───libgreeter.dll.p
+greeter.cpp.obj
+&lt;/code>&lt;/pre>&lt;p>Okay, but we got DLLs (or &lt;code>.so&lt;/code>&amp;rsquo;s, if you&amp;rsquo;re running Linux).
+We don&amp;rsquo;t want dynamic libs, we want static libs.
+Fortunately, there&amp;rsquo;s an easy fix, straight from the docs - &lt;code>library()&lt;/code> respects the &lt;code>default_library&lt;/code> project option, so we just have to change it in our project&amp;rsquo;s settings before building the libs.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>project(&lt;span style="color:#e6db74">&amp;#39;project_template&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;cpp&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> version : &lt;span style="color:#e6db74">&amp;#39;0.1&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> default_options : {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;warning_level&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;3&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;cpp_std&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;c++14&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;c_std&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;c11&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;default_library&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;static&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>I took an opportunity to refactor that ugly array list into a proper dict, and set the default C standard to C11.
+You can find the list of available default options &lt;a href="https://mesonbuild.com/Builtin-options.html#base-options">here&lt;/a>, if you&amp;rsquo;re interested.
+Let&amp;rsquo;s rebuild the project (again, &lt;code>--reconfigure&lt;/code> may not detect this change, so &lt;code>rm builddir&lt;/code>), and as we can see - we&amp;rsquo;ve got static libs now!&lt;/p>
+&lt;pre tabindex="0">&lt;code>meson_c_cpp_project_template\builddir\lib
+├───calc
+│ │ libcalc.a
+│ │
+│ └───libcalc.a.p
+│ calc.cpp.obj
+│
+└───greeter
+│ libgreeter.a
+│
+└───libgreeter.a.p
+greeter.cpp.obj
+&lt;/code>&lt;/pre>&lt;h3 id="adding-an-executable">Adding an executable&lt;/h3>
+&lt;p>Next, let&amp;rsquo;s use those libs with our executable.
+Example &lt;code>hello_world.cpp&lt;/code> may look like this:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;calc.hpp&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;greeter.hpp&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;iostream&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> greet(&lt;span style="color:#e6db74">&amp;#34;random developer&amp;#34;&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*F == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> fahrenheit_to_celcius(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*C&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*C == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> celcius_to_fahrenheit(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*F&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Of course, the LSP will not be able to detect those headers properly yet, so ignore all the errors.
+Let the toolchain speak the truth.
+This is the content of &lt;code>hello_world&lt;/code>&amp;rsquo;s directory &lt;code>meson.build&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>hello_world &lt;span style="color:#f92672">=&lt;/span> executable(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;hello_world&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;hello_world.cpp&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> link_with: [calc, greeter]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Notice that we&amp;rsquo;ve used previously defined &lt;code>calc&lt;/code> and &lt;code>greeter&lt;/code> variables.
+In order to do that, &lt;code>lib&lt;/code> subdirectory must be evaluated before &lt;code>apps&lt;/code>, and that&amp;rsquo;s why &lt;code>subdir('apps')&lt;/code> call must be put below &lt;code>subdir('lib')&lt;/code> in our main &lt;code>meson.build&lt;/code> file.
+&lt;code>subdir&lt;/code> basically evaluates the &lt;code>meson.build&lt;/code> from the directory provided via the argument, and retains the environment after that.
+Pretty useful, but we have to be careful not to misuse that feature, otherwise our Meson scripts may become very fragile and complicated to maintain.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;lib&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;apps&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>We also have to create &lt;code>meson.build&lt;/code> for &lt;code>apps&lt;/code> directory.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;hello_world&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;p>And yes, we probably could just &lt;code>subdir('apps/hello_world')&lt;/code>, but I wanna keep everything as local as possible.
+You may add &lt;code>meson.build&lt;/code> to every directory of the project now, because we&amp;rsquo;re gonna need them.&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;code>meson setup builddir&lt;/code> tells me that there are 3 targets now.
+That&amp;rsquo;s what we want.
+But after running &lt;code>meson compile -C builddir&lt;/code>, it seems that we have a problem.&lt;/p>
+&lt;pre tabindex="0">&lt;code>../apps/hello_world/hello_world.cpp:1:10: fatal error: calc.hpp: No such file or directory
+1 | #include &amp;lt;calc.hpp&amp;gt;
+| ^~~~~~~~~~
+compilation terminated.
+&lt;/code>&lt;/pre>&lt;p>Yeah, that checks out.
+We&amp;rsquo;ve linked the libs, but we never told &lt;code>executable()&lt;/code> where are their include files.
+To do that, we need to use &lt;code>include_directories&lt;/code> argument of &lt;code>executable()&lt;/code>, which expects a list of objects created using &lt;code>include_directories()&lt;/code> function.
+And &lt;code>include_directories()&lt;/code> accepts string with relative paths, so we can just add them to the &lt;code>meson.build&lt;/code> of our libraries and use them just like the objects returned from &lt;code>library()&lt;/code>.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>calc_lib &lt;span style="color:#f92672">=&lt;/span> library(&lt;span style="color:#e6db74">&amp;#39;calc&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;calc.cpp&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>calc_includes &lt;span style="color:#f92672">=&lt;/span> include_directories(&lt;span style="color:#e6db74">&amp;#39;.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>I&amp;rsquo;ve also added the suffix to lib.
+We need to do the same for &lt;code>greeter&lt;/code>, and fix our &lt;code>hello_world&lt;/code>.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>hello_world &lt;span style="color:#f92672">=&lt;/span> executable(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;hello_world&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;hello_world.cpp&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> link_with: [calc_lib, greeter_lib],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> include_directories: [calc_includes, greeter_includes],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And voila, we should have a green build now!
+Let&amp;rsquo;s see if the executable actually works.&lt;/p>
+&lt;pre tabindex="0">&lt;code>PS&amp;gt; .\builddir\apps\hello_world\hello_world.exe
+Hello random developer
+12.5*F == -10.8333*C
+12.5*C == 54.5*F
+&lt;/code>&lt;/pre>&lt;p>Yeah, the output checks out.
+And that is where I&amp;rsquo;d like to finish this part, because it&amp;rsquo;s already long enough, but there&amp;rsquo;s just one tiny thing that annoys me&amp;hellip;&lt;/p>
+&lt;h2 id="feeding-the-lsp">Feeding the LSP&lt;/h2>
+&lt;p>I assume that you&amp;rsquo;re using an editor/IDE with LSP support, and will be using &lt;code>clangd&lt;/code>.
+If that&amp;rsquo;s not the case, i strongly recommend getting one.
+I personally use &lt;a href="https://neovim.io/">neovim&lt;/a>, but I cannot really recommend it to everyone, so &lt;a href="https://code.visualstudio.com/">Visual Studio Code&lt;/a> with &lt;a href="https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd">clangd plugin&lt;/a> should be more than enough.
+You may want to look at my older guide to see how to setup that combination.
+&lt;strong>You can find it &lt;a href="https://steelph0enix.github.io/posts/vscode-cpp-setup/#bonus-clangd-setup">here&lt;/a>.&lt;/strong>
+Meson generates &lt;code>compile_commands.json&lt;/code> by default, automatically on every build (i think).
+However, &lt;code>clangd&lt;/code> will not be aware of that, because this file will be stored in &lt;code>builddir&lt;/code> instead of our project&amp;rsquo;s root directory, so we have two options:&lt;/p>
+&lt;ol>
+&lt;li>Tell &lt;code>clangd&lt;/code> that &lt;code>compile_commands.json&lt;/code> is in &lt;code>builddir/&lt;/code>&lt;/li>
+&lt;li>Copy/link &lt;code>compile_commands.json&lt;/code> into root directory of our project&lt;/li>
+&lt;/ol>
+&lt;p>Fortunately, we can go with the first solution, because &lt;code>clangd&lt;/code> supports configuration, and has an option for telling it where the compilation database is.
+Let&amp;rsquo;s create &lt;code>.clangd&lt;/code> file in the root of our project, and put it there:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">CompileFlags&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">CompilationDatabase&lt;/span>: &lt;span style="color:#ae81ff">builddir/&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>You can also add some &lt;a href="https://clangd.llvm.org/config">additional config&lt;/a> for the LSP.&lt;/p>
+&lt;p>aaaand&amp;hellip; It looks like it&amp;rsquo;s working for me, so that&amp;rsquo;s it, we&amp;rsquo;re done here.
+I&amp;rsquo;ve made a tag and release on &lt;a href="https://github.com/SteelPh0enix/meson_c_cpp_project_template/tree/part-1">this project&amp;rsquo;s repository&lt;/a> if you want to go the easy route and just &lt;code>git clone&lt;/code> everything we&amp;rsquo;ve done here.
+See you next time.&lt;/p></content></item><item><title>When should you choose C++ as your starting language?</title><link>https://steelph0enix.github.io/posts/choosing-first-language/</link><pubDate>Tue, 14 Nov 2023 00:00:00 +0000</pubDate><guid>https://steelph0enix.github.io/posts/choosing-first-language/</guid><description>When I&amp;rsquo;m lurking through the internet, I often see posts asking about &amp;ldquo;what language should I pick as a beginner???&amp;rdquo;. As someone who struggled a lot with this choice, and ultimately picked C++ (for reasons that made no real sense—but, of course, I didn&amp;rsquo;t know that back then), I think I can say a few words about this specific choice and how it can affect the learning process of an individual.</description><content>&lt;p>When I&amp;rsquo;m lurking through the internet, I often see posts asking about &amp;ldquo;what language should I pick as a beginner???&amp;rdquo;. As someone who struggled a lot with this choice, and ultimately picked C++ (for reasons that made no real sense—but, of course, I didn&amp;rsquo;t know that back then), I think I can say a few words about this specific choice and how it can affect the learning process of an individual.&lt;/p>
 &lt;h2 id="its-a-trap">It&amp;rsquo;s a trap!&lt;/h2>
 &lt;p>TL;DR of this post - it&amp;rsquo;s usually not a good idea to pick C++ as your starting language. After working with C++ for a long time, and tasting many different programming languages, I feel like C++ is a convoluted mess taped together using subpar-quality duct tape, somehow still holding on, maybe even going in a relatively good direction with recent changes, but certainly not good enough for a beginner to learn the programming principles on at its current state.&lt;/p>
 &lt;h2 id="why-would-you-even-want-to-do-that">Why would you even want to do that?&lt;/h2>
