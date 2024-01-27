@@ -12,29 +12,28 @@ showFullContent = false
 ## Intro
 
 One of the things that I dislike about C and C++ in particular is lack of standardized build environment, package manager, and all that stuff.
-And although CMake is de-facto "standard" over here, I'm not gonna go that way.
-You see, I don't really *like* CMake. It's not a *bad* tool, I've used it few times, I've seen some non-trivial projects made with CMake, but I did not like what I've seen.
-I cannot really put a finger on it, but I feel that it's maybe a bit overcomplicated, or non-friendly to new users.
-And yes, I should **expect** that, considering that I'm trying to make something using C/C++ after all... But I don't have to **accept** that.
+And although CMake is de-facto "standard" over here, and even tries to double as a "package manager", I find it hard to like this tool.
+It's not a *bad* tool, I've used it few times, I've seen some non-trivial projects made with CMake, but I did not like what I've seen.
 
-For a very long time I've been missing a proper C/C++ project template.
+I've also been missing a proper C/C++ project template for a very long time.
 I was not aware I'm missing one, until i got a hang of the codebase of one of the projects I've been working on in my work, and experienced the true power of scripting and automation.
 I've been tinkering with many build systems over the years, but I've never found one that really "clicked" for me.
 And since I still cannot lift the curse of C/C++ from my life, it seems the only alternative I have is to pick *something* and force myself through.
 And I'm taking You for a ride with me.
 
 So we're going with [Meson Build system](https://mesonbuild.com/), which was recommended to me by a colleague few years ago.
-Since then I've read the docs and also experimented with it a bit, but I haven't made a proper project based on it, as of writing this sentence yet.
+Since then I've read the docs and also experimented with it a bit, but I haven't really made a proper project based on it yet, as of writing this sentence.
 This is about to change.
 
 I will try to make this series of blog posts as "followable" as possible, so You should be able to reproduce most of my work by yourself, and understand the choices I make. 
 Remember that the best tool for the job is sometimes the one you make yourself, not the one you blindly copy&paste without deeper understanding.
 ~~But please, don't reinvent the wheel if that's not necessary.~~
+~~Use the right tools for the job, and whatnot.~~
 
 ## Goals
 
-Our main goal here is *seemingly* simple: **Make a generic, compiler/platform-independent, easy-to-expand project template in Meson for small-to-medium size C/C++ projects**.
-I also want it to have some specific features that I believe are "must have" in any project.
+Our main goal here is to **make a generic, compiler/platform-independent, easy-to-expand project template in Meson for small-to-medium size C/C++ projects**.
+I also want it to have some specific features that I believe are "must have" in any self-respecting project.
 In the end, we will use that template to write some kind of application and maybe play with the project's structure afterwards, until I'm satisfied with the results.
 After that, I have a plan to use this template as a basis for ARM Cortex-M project template, but we'll cross that bridge when we'll get to it.
 
@@ -42,9 +41,9 @@ The first thing that I'm interested in is unit and integration test support.
 I don't want to make assumptions about test harnesses though, so we'll just have to make sure that the project's structure is *testable* and Meson can build the tests.
 Unit tests have built-in support in Meson, so let's go with that.
 There's also some support for code coverage, and we will surely explore that too.
-Integration tests are much more project-dependent, so the only requirements there are that they must be possible to define via Meson (as build targets, for example) and runnable, but running them might be done via external script.
+Integration tests are much more project-dependent, so the only requirements is that Meson should recognize them as targets, but running them might be done via external script or program (executed by Meson).
 Meson is our *build* system, not necessarily the runner, nor the harness, so let's not expect it to be able to handle generic integration tests by itself.
-Some external tooling/scripting may still be required, but everything should eventually be held together by Meson.
+Some external tooling/scripting may still be required (especially when we'll get to the embedded part...), but everything should eventually be held together by Meson.
 
 The second thing that I wanna see there is support for C/C++ LSP.
 My primary choice there is `clangd`, so we'll have to generate `compile_commands.json` using Meson. Fortunately, it does that automatically.
@@ -66,28 +65,28 @@ This also includes coverage reports, and we will most likely use `lcov`/`gcov` f
 
 Before we start, let's check our prerequisites, because there's gonna be some.
 
-* Meson - on Linux, should be in your package manager, it's fairly popular piece of software. On Windows, i recommend grabbing an installer from [Github](https://github.com/mesonbuild/meson/releases). Just make sure it's in your `PATH` variable - check if opening a terminal and running `meson --version` returns expected version string. I'm currently running 1.3.1. *Technically Meson is available via `winget`, but their repo currently provides outdated version, so i recommend installing it manually on Windows.*
-* Ninja - I'll describe it's purpose in a bit. It should be bundled with Meson on Windows, and should be installed automatically on Linux when installing Meson via package manager. Should be in your `PATH` too. In any case, verify if it's installed correctly by running `ninja --version`. I'm currently running 1.11.1. If you're missing it, you can install it manually [by downloading a zip from Github](https://github.com/ninja-build/ninja/releases) and extracting it into a directory that's in `PATH` variable.
-* C/C++ toolchain - In theory, we don't have to choose any specific toolchain, because we're using Meson and Ninja which support the popular ones. **However**, I've mentioned that I want to have coverage report generation, and the only coverage tools that I'm familiar with are `lcov`/`gcov`, and this pretty much forces me to use GCC. If you don't care about code coverage reports, pick your treat. If you somehow got here as a complete newbie and you don't have any C/C++ toolchain installed, either grab GCC from your package manager if you're running Linux (look for package called `build-essentials` or `base-devel` or something like that), or - if you're running Windows - [download latest WinLibs package and add it's `bin` subdirectory to PATH](/posts/vscode-cpp-setup/#cc-toolchain). Or install Microsoft's Visual C++ toolchain via Visual Studio Build Tools (you may need to do that even after installing WinLibs, if you want to use `clang`, but I recommend **not** using MSVC for pure C unless you don't value your sanity). **TL;DR install latest GCC**.
-* LLVM tools - mostly `clangd`. If you're running Linux, again - find them in your package manager. If you're running Windows and WinLibs, you already got them. If you don't use WinLibs, install latest LLVM release (`winget install llvm`, should be "recent enough", or get it from [Github](https://github.com/llvm/llvm-project/releases)), it should contain everything we'll need. Again, if manually installed - make sure it's in PATH by running `clangd --version`. I'm currently using 17.0.5.
+* Meson - on Linux, should be in your package manager. If it's not, i assume you know what to do. On Windows, i recommend grabbing an installer from [Github](https://github.com/mesonbuild/meson/releases). Just make sure it's in your `PATH` variable - check if opening a terminal and running `meson --version` returns expected version string. I'm currently running 1.3.1. *Technically Meson is available via `winget`, but their repo currently provides outdated version, so i recommend installing it manually on Windows.*
+* Ninja - I'll describe it's purpose in a bit. It should be bundled with Meson on Windows, and should be installed automatically on Linux when installing Meson via package manager. Should be in your `PATH` too. In any case, verify if it's installed correctly by running `ninja --version`. I'm currently running 1.11.1. You can also install it manually if needed [by downloading a zip from Github](https://github.com/ninja-build/ninja/releases) and extracting it into a directory that's in `PATH` variable.
+* C/C++ toolchain - **TL;DR install latest GCC**. In theory, we don't have to choose any specific toolchain, because we're using Meson and Ninja which support the popular ones. **However**, I've mentioned that I want to have coverage report generation, and the only coverage tools that I'm familiar with are `lcov`/`gcov`, and this pretty much forces me to use GCC. If you don't care about code coverage reports, pick your treat. If you somehow got here as a complete newbie and you don't have any C/C++ toolchain installed, either grab GCC from your package manager if you're running Linux (look for package called `build-essentials` or `base-devel` or something like that), or - if you're running Windows - [download latest WinLibs package and add it's `bin` subdirectory to PATH](/posts/vscode-cpp-setup/#cc-toolchain). Or install Microsoft's Visual C++ toolchain via Visual Studio Build Tools (you may need to do that even after installing WinLibs, if you want to use `clang`, but I recommend **not** using MSVC for pure C unless you don't value your sanity).
+* LLVM tools - mostly `clangd`, but we're also gonna use `clang-tidy` at some point. If you're running Linux, again - find those tools in your package manager. If you're running Windows and WinLibs, you already got them. If you don't use WinLibs, install latest LLVM release (`winget install llvm`, should be "recent enough", or get it from [Github](https://github.com/llvm/llvm-project/releases)), it should contain everything we'll need. Again, if manually installed - make sure it's in PATH by running `clangd --version`. I'm currently using 17.0.5.
 * Doxygen - we're not gonna be using it any time soon, but let's make sure it's available. Linux - install from repo, Windows - it's already in WinLibs, if not using WinLibs (or you want the latest version), install manually - `winget install doxygen` or grab installer from [here](https://www.doxygen.nl/download.html). Run `doxygen --version` to verify, I'm using 1.10.0. **Note - Winget may not add it to PATH, it's installed in `Program Files/doxygen` by default. Add `bin` subdirectory to `PATH` manually if that's the case.**
 
 Oh, and there's a small issue of `lcov` not having official Windows support. There are some unofficial releases, but we're not gonna use them - instead, we're gonna lock the coverage report generation feature to Linux and GCC only.
 I don't want to completely lock this template to GCC because of that feature, so we will have to separate this part appropriately.
 
+>We can always use containers to get this running with all features on Windows.
+
 Also; i *assume* that we're gonna be using Ninja as our building "back-end", but it doesn't really matter because Meson should handle whatever "back-end" you'd like to use.
 Just make sure to check the "whatever "back-end" you'd like to use" output when I'm talking about Ninja output.
-
->You can always use containers to get this running with all features on Windows.
->Just saying.
+This is an "I assume you know what you're doing" warning.
 
 ## Hello, world!
 
 Assuming that everything is installed, we are ready to get going.
 I've made a [repository](https://github.com/SteelPh0enix/meson_c_cpp_project_template) for this project, I'll try to make a tag after each part so You can easily follow.
 
-Let's start with initializing a new Meson project in an empty directory.
-The arguments don't really matter here - we're gonna be building our `meson.build` from scratch anyway, but right now we want to verify if our environment is set up correctly, so let's go with those for now.
+Let's start by initializing a new Meson project in an empty directory.
+The arguments don't really matter here - we're gonna be building our `meson.build` from scratch anyway, but right now we want to verify if our environment is set up correctly, so let's go with those for now:
 
 ```sh
 meson init --name project_template --language cpp --type executable
@@ -125,9 +124,13 @@ int main(int argc, char **argv) {
 ```
 
 Let's try building it.
-First, we need to generate actual build scripts via Meson, as it's (similarly to CMake) a meta-build system.
-Which means that it's only a *generator* for an actual build system (like Ninja, or GNU Make :^) ) that performs the heavy lifting.
-It's an important distinction, because it underlines that we're using an additional layer of abstraction, that allows us to ignore the details and annoyances of *proper* build systems (ever tried writing Makefiles manually?) while maintaining compatibility across multiple compilers and build systems.
+But first, we need to generate actual build scripts via Meson, as it's (similarly to CMake) a meta-build system.
+Which means that it's only a *generator* for an actual build system (like Ninja, or GNU Make) that performs the heavy lifting.
+If you're not used to this approach, it may make no sense at first - why use two tools instead of one, right?
+Unfortunately, building stuff is not easy in C/C++, especially when you're working on a big project with multiple dependencies, that must be supported on many different platforms.
+As far as I know, the earliest successful application of this approach is [GNU Autotools](https://en.wikipedia.org/wiki/GNU_Autotools) project with it's `configure`-`make`-`make install` routine.
+Apparently, it's good to have an additional layer of abstraction over the target build system.
+I have already mentioned some reasons for that (multi-platform, yadda yadda yadda), also - meta-build systems are usually easier to use and have more features.
 Anyway, to generate a build directory with all the stuff required for compilation, run this from project's directory
 
 ```sh
@@ -192,7 +195,7 @@ meson test
 
 Oh, if you haven't noticed yet - the `-C` argument changes the working directory of Meson, so it's necessary only when you're outside of it.
 I assume that we `cd`'d into it in previous step, so we don't need it now.
-I'll also stop adding it to future example invocations, just remember that it exists.
+I'll also stop adding it to future example invocations, just remember that it exists and that Meson's working directory must be the one that was generated via `meson setup` for most commands.
 
 Let's look at the output:
 
@@ -228,8 +231,9 @@ Let's gather what we already assumed about our project.
 We assumed that it's supposed to be testable.
 Unit tests are the bare minimum that we want to support.
 We also assumed that we'd like our code to be checked by external tools, but we can ignore that, because those tools should work no matter how we structure our project.
+It's just the matter of invoking them properly.
 Same thing with Doxygen.
-As for `clangd`, Meson provides `compile_commands.json`, so it doesn't matter either.
+As for `clangd`, Meson provides `compile_commands.json`, therefore it will work as long as the structure is valid.
 
 Considering the usual good design practices, we'll probably want to split our codebase into modules according to their responsibility.
 No, not [*those*](https://en.cppreference.com/w/cpp/language/modules) modules, let's ignore the existence of C++20 for now.
@@ -237,10 +241,10 @@ We can store each module in a separate directory, with it's own `meson.build` fi
 Modules can be built as static libraries and linked to executables.
 That way, it's trivial to test them - we can just link the same binary that's used with our program executable to the test executable, and validate it's behavior.
 
->This is how it's done in [some projects](https://github.com/n7space/SAMV71-BSP) that I've been working on in my current job, and if it's good enough choice for space-grade projects, it's sure as hell good enough choice for me.
+>This is how it's done in some projects that I've been working on in my current job, and if it's good enough choice for space-grade projects, it's sure as hell good enough choice for me.
 >But really, I've seen this approach in action and it should work well.
 
-Let's also assume that our project can contain more than one executable.
+Let's also assume that our project can contain more than one executable, because it should be simple to setup for that.
 We're gonna put them in `apps` directory.
 Modules will go to `lib`, and tests into `tests`.
 
@@ -323,17 +327,17 @@ std::string greet(std::string const& name) {
 ```
 
 And now, let's fill `meson.build` files.
-In order to build a library, we have to use `library` function. Duh.
+In order to build a library, we have to use `library()` function. Duh.
 
 ```meson
 calc = library('calc', 'calc.cpp')
 ```
 
 The first argument is name of the library, followed by 0 or more sources in next arguments.
-There are some options that we can set here using keyword arguments, but we're gonna ignore them for now.
+There are some options that we can set here using keyword arguments, but we're gonna ignore them for now because we don't need any.
 We also save the result of this function to `calc` variable, which we're gonna use later.
-We need to do the same thing for the other module, and the next step is changing our top-level `meson.build` to recognize this dependency.
-Let's remove the `executable` and `test` calls, and call `subdir` instead, to include `lib` directory.
+We need to do the same thing for the other module, and the next step is modifying our top-level `meson.build` to recognize this dependency.
+Let's remove the `executable()` and `test()` calls generated by Meson, and call `subdir` instead, to include `lib` directory.
 
 ```meson
 project('project_template', 'cpp',
@@ -355,7 +359,7 @@ And now, we should be able to build them.
 I recommend removing `builddir` directory after every big change, although I'm pretty sure that there is a way to do it in more elegant fashion (re-`setup`?), and re-generating the build files.
 Oh, yeah, it's `meson setup --reconfigure builddir`.
 There you go.
-And I got instantly reminded why I'm not using it - it doesn't really reconfigure *everything*, so it's better to stick to the ol' `rm builddir` technique, at least until our project's structure stabilizes a bit.
+And I got instantly reminded why I'm not using it - it doesn't really reconfigure *everything*, so it's better to stick to the ol' reliable `rm builddir` technique, at least until our project's structure stabilizes a bit.
 
 ```
 PS> meson setup builddir
@@ -405,9 +409,9 @@ meson_c_cpp_project_template\builddir\lib
             greeter.cpp.obj
 ```
 
-Okay, but we got DLLs.
-I don't want DLLs, i want static libs.
-Fortunately, there's an easy fix, straight from the docs - `library` respects the `default_library` project option, so we just have to change it in our project's settings before building the libs.
+Okay, but we got DLLs (or `.so`'s, if you're running Linux).
+We don't want dynamic libs, we want static libs.
+Fortunately, there's an easy fix, straight from the docs - `library()` respects the `default_library` project option, so we just have to change it in our project's settings before building the libs.
 
 ```meson
 project('project_template', 'cpp',
@@ -421,7 +425,8 @@ project('project_template', 'cpp',
 )
 ```
 
-I took an opportunity to refactor that ugly array list into a proper dict, and set default C standard to C11.
+I took an opportunity to refactor that ugly array list into a proper dict, and set the default C standard to C11.
+You can find the list of available default options [here](https://mesonbuild.com/Builtin-options.html#base-options), if you're interested.
 Let's rebuild the project (again, `--reconfigure` may not detect this change, so `rm builddir`), and as we can see - we've got static libs now!
 
 ```
@@ -458,7 +463,7 @@ int main() {
 
 Of course, the LSP will not be able to detect those headers properly yet, so ignore all the errors.
 Let the toolchain speak the truth.
-This is the content of `hello_world`'s `meson.build`
+This is the content of `hello_world`'s directory `meson.build`
 
 ```meson
 hello_world = executable(
@@ -469,9 +474,9 @@ hello_world = executable(
 ```
 
 Notice that we've used previously defined `calc` and `greeter` variables.
-In order to do that, `lib` subdirectory must be evaluated before `apps`, but that's the matter of putting the `subdir('apps')` call below `subdir('lib')` in our main `meson.build` file.
+In order to do that, `lib` subdirectory must be evaluated before `apps`, and that's why `subdir('apps')` call must be put below `subdir('lib')` in our main `meson.build` file.
 `subdir` basically evaluates the `meson.build` from the directory provided via the argument, and retains the environment after that.
-Pretty useful, but we have to be careful not to overuse that feature.
+Pretty useful, but we have to be careful not to misuse that feature, otherwise our Meson scripts may become very fragile and complicated to maintain.
 
 ```meson
 subdir('lib')
@@ -488,6 +493,7 @@ subdir('hello_world')
 >You may add `meson.build` to every directory of the project now, because we're gonna need them.
 
 `meson setup builddir` tells me that there are 3 targets now.
+That's what we want.
 But after running `meson compile -C builddir`, it seems that we have a problem.
 
 ```
@@ -498,18 +504,9 @@ compilation terminated.
 ```
 
 Yeah, that checks out.
-We've linked the libs, but we never told `executable` where are their include files.
-To do that, we need to use `include_directories` argument of `executable`, which expects a list of objects created using `include_directories()` function.
-And `include_directories()` accepts string with relative paths, so we can just add them to the `meson.build` of our libraries and use them like the objects returned from `library()`.
-
-Now, I'd like to take a moment here to think. Our modules just became *two* objects instead of one, can we somehow make them a single object that would be passed to the `executable`?
-The reason for that is that I'd prefer to reduce the possibility of forgetting about a part of the module, and spending X hours debugging that issue on a bad day.
-And there *kinda* is - `declare_dependency()`.
-However, as far as i can understand the documentation, it's not created for this use case.
-Instead, this is used for the external dependencies - and our `libs` are supposed to be core parts of our program, not something external.
-That also reminds me we're gonna need to talk about managing those dependencies pretty soon, but i believe it's gonna be easy with Meson, so let's go back to our includes.
-I will accept our fate for now - we're sticking to multiple objects per lib.
-After all, some modules may not contain any headers, being purely implementations that only require linking, and other may not contain any pre-compiled source code - being header-only.
+We've linked the libs, but we never told `executable()` where are their include files.
+To do that, we need to use `include_directories` argument of `executable()`, which expects a list of objects created using `include_directories()` function.
+And `include_directories()` accepts string with relative paths, so we can just add them to the `meson.build` of our libraries and use them just like the objects returned from `library()`.
 
 ```meson
 calc_lib = library('calc', 'calc.cpp')
@@ -548,17 +545,13 @@ If that's not the case, i strongly recommend getting one.
 I personally use [neovim](https://neovim.io/), but I cannot really recommend it to everyone, so [Visual Studio Code](https://code.visualstudio.com/) with [clangd plugin](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) should be more than enough.
 You may want to look at my older guide to see how to setup that combination.
 **You can find it [here](/posts/vscode-cpp-setup/#bonus-clangd-setup).**
-Meson generates `compile_commands.json` by default, automatically.
-However, `clangd` will not be aware of that, because this file will be stored in `builddir`, so we have two options:
+Meson generates `compile_commands.json` by default, automatically on every build (i think).
+However, `clangd` will not be aware of that, because this file will be stored in `builddir` instead of our project's root directory, so we have two options:
 
 1. Tell `clangd` that `compile_commands.json` is in `builddir/`
 1. Copy/link `compile_commands.json` into root directory of our project
 
-The 2nd option seems more annoying, because it would require the developer to manually link this file for every local copy of the project (or maybe we could script this w/ `meson`?).
-Also; i know that not every piece of software likes or tolerates links to files, so I'd rather prevent making them.
-Copying the file after every build is not an option (unless automated).
-Fortunately, there's a better solution.
-Instead, we can use `clangd`'s configuration file to tell it where to look for `compile_commands.json`.
+Fortunately, we can go with the first solution, because `clangd` supports configuration, and has an option for telling it where the compilation database is.
 Let's create `.clangd` file in the root of our project, and put it there:
 
 ```yaml
@@ -569,4 +562,5 @@ CompileFlags:
 You can also add some [additional config](https://clangd.llvm.org/config) for the LSP.
 
 aaaand... It looks like it's working for me, so that's it, we're done here.
+I've made a tag and release on [this project's repository](https://github.com/SteelPh0enix/meson_c_cpp_project_template/tree/part-1) if you want to go the easy route and just `git clone` everything we've done here.
 See you next time.
