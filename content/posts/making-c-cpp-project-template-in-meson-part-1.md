@@ -1,6 +1,6 @@
 +++
 title = "Making C/C++ project template in Meson - part 1"
-date = "2024-01-21"
+date = "2024-01-27"
 author = "SteelPh0enix"
 authorTwitter = "steel_ph0enix"
 tags = ["c", "cpp", "meson", "guide"]
@@ -279,6 +279,8 @@ meson_c_cpp_project_template
             meson.build
 ```
 
+### Adding libraries
+
 Let's ignore the fact that we don't have a test harness yet, and focus on making the libraries build.
 But first, we have to put some code into them:
 
@@ -437,6 +439,8 @@ meson_c_cpp_project_template\builddir\lib
             greeter.cpp.obj
 ```
 
+### Adding an executable
+
 Next, let's use those libs with our executable.
 Example `hello_world.cpp` may look like this:
 
@@ -481,6 +485,88 @@ subdir('hello_world')
 ```
 
 >And yes, we probably could just `subdir('apps/hello_world')`, but I wanna keep everything as local as possible.
+>You may add `meson.build` to every directory of the project now, because we're gonna need them.
 
 `meson setup builddir` tells me that there are 3 targets now.
 But after running `meson compile -C builddir`, it seems that we have a problem.
+
+```
+../apps/hello_world/hello_world.cpp:1:10: fatal error: calc.hpp: No such file or directory
+    1 | #include <calc.hpp>
+      |          ^~~~~~~~~~
+compilation terminated.
+```
+
+Yeah, that checks out.
+We've linked the libs, but we never told `executable` where are their include files.
+To do that, we need to use `include_directories` argument of `executable`, which expects a list of objects created using `include_directories()` function.
+And `include_directories()` accepts string with relative paths, so we can just add them to the `meson.build` of our libraries and use them like the objects returned from `library()`.
+
+Now, I'd like to take a moment here to think. Our modules just became *two* objects instead of one, can we somehow make them a single object that would be passed to the `executable`?
+The reason for that is that I'd prefer to reduce the possibility of forgetting about a part of the module, and spending X hours debugging that issue on a bad day.
+And there *kinda* is - `declare_dependency()`.
+However, as far as i can understand the documentation, it's not created for this use case.
+Instead, this is used for the external dependencies - and our `libs` are supposed to be core parts of our program, not something external.
+That also reminds me we're gonna need to talk about managing those dependencies pretty soon, but i believe it's gonna be easy with Meson, so let's go back to our includes.
+I will accept our fate for now - we're sticking to multiple objects per lib.
+After all, some modules may not contain any headers, being purely implementations that only require linking, and other may not contain any pre-compiled source code - being header-only.
+
+```meson
+calc_lib = library('calc', 'calc.cpp')
+calc_includes = include_directories('.')
+```
+
+I've also added the suffix to lib.
+We need to do the same for `greeter`, and fix our `hello_world`.
+
+```meson
+hello_world = executable(
+  'hello_world',
+  'hello_world.cpp',
+  link_with: [calc_lib, greeter_lib],
+  include_directories: [calc_includes, greeter_includes],
+)
+```
+
+And voila, we should have a green build now!
+Let's see if the executable actually works.
+
+```
+PS> .\builddir\apps\hello_world\hello_world.exe
+Hello random developer
+12.5*F == -10.8333*C
+12.5*C == 54.5*F
+```
+
+Yeah, the output checks out. 
+And that is where I'd like to finish this part, because it's already long enough, but there's just one tiny thing that annoys me...
+
+## Feeding the LSP
+
+I assume that you're using an editor/IDE with LSP support, and will be using `clangd`.
+If that's not the case, i strongly recommend getting one.
+I personally use [neovim](https://neovim.io/), but I cannot really recommend it to everyone, so [Visual Studio Code](https://code.visualstudio.com/) with [clangd plugin](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) should be more than enough.
+You may want to look at my older guide to see how to setup that combination.
+**You can find it [here](/posts/vscode-cpp-setup/#bonus-clangd-setup).**
+Meson generates `compile_commands.json` by default, automatically.
+However, `clangd` will not be aware of that, because this file will be stored in `builddir`, so we have two options:
+
+1. Tell `clangd` that `compile_commands.json` is in `builddir/`
+1. Copy/link `compile_commands.json` into root directory of our project
+
+The 2nd option seems more annoying, because it would require the developer to manually link this file for every local copy of the project (or maybe we could script this w/ `meson`?).
+Also; i know that not every piece of software likes or tolerates links to files, so I'd rather prevent making them.
+Copying the file after every build is not an option (unless automated).
+Fortunately, there's a better solution.
+Instead, we can use `clangd`'s configuration file to tell it where to look for `compile_commands.json`.
+Let's create `.clangd` file in the root of our project, and put it there:
+
+```yaml
+CompileFlags:
+  CompilationDatabase: builddir/
+```
+
+You can also add some [additional config](https://clangd.llvm.org/config) for the LSP.
+
+aaaand... It looks like it's working for me, so that's it, we're done here.
+See you next time.
