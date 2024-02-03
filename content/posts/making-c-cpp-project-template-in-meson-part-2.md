@@ -57,9 +57,50 @@ Now that we know what happens, we can easely deduce that it's not supposed to wo
 The simplest solution is to move the include directory one level up, to `lib` dir.
 And in retrospect, that's how it should be done from the beginning, so excuse my blunder there.
 
-In order to fix our mistake, we have to revisit `lib/meson.build`
+In order to fix our mistake, we have to revisit some `meson.build` files.
+First, let's create an include directory object in `lib/meson.build`.
 
-also change `lib` to `libs`
+```meson
+libs_includes = include_directories('.')
+
+subdir('calc')
+subdir('greeter')
+```
+
+I've added it before the `subdir()` calls just in case some modules would depend on each other.
+This is not something we want to do often, because for every dependency we will probably have to create a mock in order to properly test the modules that use them, but it's sometimes necessary.
+
+After that, remove the `include_directories()` calls from `greeter` and `calc` modules `meson.build`, and fix the `executable()` call arguments in `hello_world/meson.build`.
+
+```meson
+hello_world = executable(
+  'hello_world',
+  'hello_world.cpp',
+  link_with: [calc_lib, greeter_lib],
+  include_directories: [libs_includes],
+)
+```
+
+And fix the includes in `hello_world.cpp`.
+We can also remove the `utils.hpp` and restore the original `hello_world.cpp`.
+
+```cpp
+#include <calc/calc.hpp>
+#include <greeter/greeter.hpp>
+#include <iostream>
+
+int main() {
+    std::cout << greet("random developer") << std::endl;
+    std::cout << "12.5*F == " << fahrenheit_to_celcius(12.5) << "*C" << std::endl;
+    std::cout << "12.5*C == " << celcius_to_fahrenheit(12.5) << "*F" << std::endl;
+}
+```
+
+Also; let's rename our `lib/` directory to `libs/`, this is a very small change but my brain automatically tries to write `libs/` instead of `lib/` because there are *multiple* libraries there, so I think it reflects this directory's content better.
+Remember to also change the argument of `subdir()` in the root `meson.build`.
+
+Verify if the project still builds and the executable still works. Remove the `builddir` first, as we made pretty big change and I honestly don't expect Meson to correctly re-generate it.
+
 
 ## Harnessing the power of unit tests
 
@@ -72,8 +113,8 @@ I dunno.
 When You write some code, it's usually a good habit to test it.
 After all, *how do you know if the code working correctly?*
 You run it, and see if it does what it's supposed to.
-The simplest way of doing that is writinghttps://itsfoss.community/t/stop-cat-abuse-sorry-if-it-is-old/8923 some small programs that use the code in question in various ways, and check if the outputs of this code are correct.
-For example, let's assume you've written a function that calculates the amount of damage an attack does in a RPG game.
+The simplest way of doing that is writing some small programs that use the code in question in various ways, and check if the outputs of this code are correct.
+For example, let's assume you've written a function that calculates the amount of damage an attack does in an RPG game.
 To test it, You can create some attack scenarios with various items, statistics, and whatever else can influence damage.
 Then, calculate the results manually beforehand, and write the code that will perform those calculations using that function and verify if they match your calculations.
 Tests that verify those small pieces of code, like functions or classes, are usually called **unit tests**.
@@ -93,6 +134,9 @@ int main() {
     assert(calculate_damage(&weapon, &enemy) == 3.14);
 }
 ```
+
+Although I'd replace that magic number with some very approximate manual calculation, if possible.
+Tests should not be cryptic - this is, but only because it's an unspecified example.
 
 Fortunately, the humanity have *(mostly)* progressed past the need for `assert`, and invented **test harnesses** that are *(usually)* less painful to use.
 Trust me on that.
