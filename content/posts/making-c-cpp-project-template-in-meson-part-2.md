@@ -154,5 +154,10 @@ Meson also provides [**Wrap dependency system**](https://mesonbuild.com/Wrap-dep
 I recommend reading the linked documentation, but if you want a TL;DR: this is a package manager.
 Sort of.
 You put a valid `.wrap` file in `subprojects/` directory and voila, Meson can download and build the dependency, allowing us to use it in our project - automagically.
-And I really do hope that it works like that, because with C and C++ - if something sounds too good to be true, it usually isn't (or there's a *humongous* catch attached).
+
+After looking at available [wraps](https://mesonbuild.com/Wrapdb-projects.html), and considering the fact that I'd like to use that template for ARM projects, I have decided i'm going with [CppUTest](https://github.com/cpputest/cpputest).
+If you want to try another test harness, feel free to do that and experiment - the setup process for x86 should be practically the same on the Meson side, unless the library you choose has some quirks.
+CppUTest is relatively simple, which is nice if you're looking for something without much complexity, but it won't provide as many features as some other harnessed - like [Catch2](https://github.com/catchorg/Catch2) or [Google Test](https://github.com/google/googletest).
+I like simple, and it should probably make porting everything to ARM easier, so I'm going with CppUTest.
+
 
