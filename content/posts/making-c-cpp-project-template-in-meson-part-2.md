@@ -50,11 +50,11 @@ int main() {
 }
 ```
 
-Aaand... in my case, it prints `Hello i am calc`, which is caused by the fact that `calc_includes` are before `greeter_includes` in my `hello_world/meson.build`'s `executable()` call.
+Aaand... In my case, it prints `Hello i am calc`, which is caused by the fact that `calc_includes` are before `greeter_includes` in my `hello_world/meson.build`'s `executable()` call.
 After swapping them, `Hello i am greeter` is printed.
 
-Now that we know what happens, we can easely deduce that it's not supposed to work like that - because we don't have a reasonable way to access the other `utils.hpp`.
-The simplest solution is to move the include directory one level up, to `lib` dir.
+Now that we know what happens, we can easily deduce that it's not supposed to work like that - because we don't have a reasonable way to access the other `utils.hpp`.
+The simplest solution is to move the include directory one level up, to `lib` directory.
 And in retrospect, that's how it should be done from the beginning, so excuse my blunder there.
 
 In order to fix our mistake, we have to revisit some `meson.build` files.
@@ -155,9 +155,154 @@ I recommend reading the linked documentation, but if you want a TL;DR: this is a
 Sort of.
 You put a valid `.wrap` file in `subprojects/` directory and voila, Meson can download and build the dependency, allowing us to use it in our project - automagically.
 
-After looking at available [wraps](https://mesonbuild.com/Wrapdb-projects.html), and considering the fact that I'd like to use that template for ARM projects, I have decided i'm going with [CppUTest](https://github.com/cpputest/cpputest).
-If you want to try another test harness, feel free to do that and experiment - the setup process for x86 should be practically the same on the Meson side, unless the library you choose has some quirks.
+After looking at available [wraps](https://mesonbuild.com/Wrapdb-projects.html), and considering the fact that I'd like to use that template for ARM projects, I have decided I'm going with [CppUTest](https://github.com/cpputest/cpputest).
+If you want to try another test harness, feel free to do that and experiment - but keep in mind that the setup process may vary a bit, depending on the library needs.
 CppUTest is relatively simple, which is nice if you're looking for something without much complexity, but it won't provide as many features as some other harnessed - like [Catch2](https://github.com/catchorg/Catch2) or [Google Test](https://github.com/google/googletest).
 I like simple, and it should probably make porting everything to ARM easier, so I'm going with CppUTest.
 
+Let's create `subprojects/` directory and run `meson wrap install cpputest` (or your preferred test harness).
+Installation should proceed automatically, and `subprojects/cpputest.wrap` file should appear.
+Then, to use it, we have to declare a `subproject()` in one of our `meson.build` files.
+Let's do that in our `tests/meson.build`.
+We'll also add our tests subdirectories, since we're already editing that file.
+Add them below the `subproject()` to make sure the test harness is available there.
 
+```meson
+cpputest_project = subproject('cpputest', required: true)
+cpputest_dependency = cpputest_project.get_variable('cpputest_dep')
+
+subdir('calc')
+subdir('greeter')
+```
+
+Now, we also have to declare `tests` directory as a `subdir()` in main `meson.build`.
+I've put it after `apps`, because integration tests may require built apps as dependencies to run.
+
+```meson
+subdir('libs')
+subdir('apps')
+subdir('tests')
+```
+
+And finally, we can check if this works by deleting `builddir`, and running `meson setup builddir` and `meson compile -C builddir`.
+You should see some new logs after running `setup`:
+
+```
+Executing subproject cpputest 
+
+cpputest| Project name: cpputest
+cpputest| Project version: 4.0
+cpputest| C++ compiler for the host machine: ccache c++ (gcc 13.2.0 "c++ (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders) 13.2.0")
+cpputest| C++ linker for the host machine: c++ ld.bfd 2.41
+cpputest| Build targets in project: 5
+cpputest| Subproject cpputest finished.
+
+Build targets in project: 5
+
+project_template 0.1
+
+  Subprojects
+    cpputest: YES
+```
+
+That tells us Meson found the wrap and should've downloaded it.
+Compilation should also take significantly longer, because our test harness must be compiled for the first time.
+If that's the case, our first step is done.
+Now, we have to actually write a test.
+Create `test.cpp` file in `tests/calc/` and put this there:
+
+```cpp
+#include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTest/TestHarness.h>
+
+TEST_GROUP(FirstTestGroup){};
+
+TEST(FirstTestGroup, FirstTest) {
+    FAIL("Fail me!");
+}
+
+int main(int ac, char** av) {
+    return CommandLineTestRunner::RunAllTests(ac, av);
+}
+```
+
+Now, let's make it compile. Open `tests/calc/meson.build` and put it there:
+
+```meson
+calc_test_exec = executable('calc_test', 'test.cpp', dependencies: cpputest_dependency)
+test('calc test', calc_test_exec)
+```
+
+In theory, this should build just fine.
+However, in practice...
+
+```
+[44/44] Linking target tests/calc/calc_test.exe
+FAILED: tests/calc/calc_test.exe
+"c++"  -o tests/calc/calc_test.exe tests/calc/calc_test.exe.p/test.cpp.obj "-Wl,--allow-shlib-undefined" "-Wl,--start-group" "subprojects/cpputest-4.0/src/CppUTestExt/libCppUTestExt.a" "-Wl,--subsystem,console" "-lkernel32" "-luser32" "-lgdi32" "-lwinspool" "-lshell32" "-lole32" "-loleaut32" "-luuid" "-lcomdlg32" "-ladvapi32" "-Wl,--end-group"
+C:/gcc/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: tests/calc/calc_test.exe.p/test.cpp.obj: in function `TEST_FirstTestGroup_FirstTest_Test::testBody()':
+F:\Projects\C_C++\meson_c_cpp_project_template\builddir/../tests/calc/test.cpp:7:(.text+0x11): undefined reference to `UtestShell::getCurrent()'
+```
+
+In practice, I get a massive linking error.
+Gee, I wonder why.
+
+After few minutes of investigation, I've reached the conclusion: the *"official"* CppUTest wrap is **very bad**.
+And by that, I mean it's completely broken.
+If you've used a different test harness, and it works (i know for a fact that Catch2 should, last i tried at least...) - congratulations, you can skip the next part!
+For the rest of you, don't worry - we're fix that issue. It'll just take a bit longer for you, and much longer for me.
+
+## Side quest - fixing CppUTest!
+
+Let's look at it's build files, as everything is stored in `subprojects/cpputest-4.0`.
+First thing that I've noticed was spelling error - the author used `extinctions` instead of `extensions` (in multiple places, so this was... Intentional?)
+Then, I've noticed something worse.
+
+```meson
+cpputest_dep = declare_dependency(
+    link_with : cpputest_lib,
+    version : meson.project_version(),
+    include_directories : cpputest_dirs)
+
+if get_option('extinctions')
+    cpputest_dep = declare_dependency(
+        link_with : cpputest_ext_lib,
+        version : meson.project_version(),
+        include_directories : cpputest_dirs)
+endif
+```
+
+You see this, right?
+Extensions are enabled by default, by the way.
+See `meson_options.txt` in CppUTest directory:
+
+```meson
+option('extinctions',
+    type : 'boolean',
+    value : true,
+    description : 'Use the CppUTest extension library'
+)
+```
+
+So, what happens when we fix that? We can do it pretty easily, just declare a second dependency, we don't even have to link the extensions because at this point we're not using them.
+Rename `cpputest_dep` for extensions to `cpputest_ext_dep` and let's add the second dependency to `cpputest.wrap`:
+
+```meson
+if get_option('extinctions')
+    cpputest_ext_dep = declare_dependency(
+        link_with : cpputest_ext_lib,
+        version : meson.project_version(),
+        include_directories : cpputest_dirs)
+endif
+```
+
+```
+[provide]
+cpputest = cpputest_dep
+cpputest_ext = cpputest_ext_dep
+```
+
+And after clean compilation, unfortunately, this doesn't solve my issue.
+I get multiple undefined references to platform-related functions, because apparently someone forgot to add platform-specific implementations that CppUTest provides as dependencies...
+
+Well, the fix is easy - I just have to make a proper wrap myself.
