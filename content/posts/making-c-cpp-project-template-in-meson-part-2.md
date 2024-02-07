@@ -306,7 +306,9 @@ cpputest_ext = cpputest_ext_dep
 And after clean compilation, unfortunately, this doesn't solve my issue.
 I get multiple undefined references to platform-related functions, because apparently someone forgot to add platform-specific implementations that CppUTest provides as dependencies...
 
-Well, the fix is easy - I just have to make a proper wrap myself.
-
+Well, the fix is *easy* - I just have to make a proper wrap myself.
 To be continued, after I make it working.
-Yeah, I could jump the ship and just use different library, but *where's the fun in that?*
+
+>Yeah, I could jump the ship and just use different library, but *where's the fun in that?*
+>I've already vibe checked that one.
+>Also; there is no tag in the repository for now, I'm gonna make one after making that wrap and finishing up this part in next post(s).
