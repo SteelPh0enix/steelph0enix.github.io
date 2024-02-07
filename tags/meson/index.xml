@@ -1,4 +1,219 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>meson on</title><link>https://steelph0enix.github.io/tags/meson/</link><description>Recent content in meson on</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>SteelPh0enix's Blog © 2021-2024 by SteelPh0enix is licensed under CC BY-SA 4.0</copyright><lastBuildDate>Sat, 27 Jan 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://steelph0enix.github.io/tags/meson/index.xml" rel="self" type="application/rss+xml"/><item><title>Making C/C++ project template in Meson - part 1</title><link>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-1/</link><pubDate>Sat, 27 Jan 2024 00:00:00 +0000</pubDate><guid>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-1/</guid><description>Intro One of the things that I dislike about C and C++ in particular is lack of standardized build environment, package manager, and all that stuff. And although CMake is de-facto &amp;ldquo;standard&amp;rdquo; over here, and even tries to double as a &amp;ldquo;package manager&amp;rdquo;, I find it hard to like this tool. It&amp;rsquo;s not a bad tool, I&amp;rsquo;ve used it few times, I&amp;rsquo;ve seen some non-trivial projects made with CMake, but I did not like what I&amp;rsquo;ve seen.</description><content>&lt;h2 id="intro">Intro&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>meson on</title><link>https://steelph0enix.github.io/tags/meson/</link><description>Recent content in meson on</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>SteelPh0enix's Blog © 2021-2024 by SteelPh0enix is licensed under CC BY-SA 4.0</copyright><lastBuildDate>Sun, 28 Jan 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://steelph0enix.github.io/tags/meson/index.xml" rel="self" type="application/rss+xml"/><item><title>Making C/C++ project template in Meson - part 2</title><link>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-2/</link><pubDate>Sun, 28 Jan 2024 00:00:00 +0000</pubDate><guid>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-2/</guid><description>Intro In previous part, we&amp;rsquo;ve created the base of our project by defining it&amp;rsquo;s structure and making our first modules and executable. In this one, we&amp;rsquo;re gonna add unit tests support.
+But before that&amp;hellip;
+Fixing our mistakes So, uhh, let&amp;rsquo;s look at our project. Specifically, at our hello_world.cpp. More specifically, at includes. It&amp;rsquo;s not that something is wrong with them right now, but think about it - what would happen if we&amp;rsquo;d put an utils.</description><content>&lt;h2 id="intro">Intro&lt;/h2>
+&lt;p>In &lt;a href="https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-1">previous part&lt;/a>, we&amp;rsquo;ve created the base of our project by defining it&amp;rsquo;s structure and making our first modules and executable.
+In this one, we&amp;rsquo;re gonna add unit tests support.&lt;/p>
+&lt;p>But before that&amp;hellip;&lt;/p>
+&lt;h3 id="fixing-our-mistakes">Fixing our mistakes&lt;/h3>
+&lt;p>So, uhh, let&amp;rsquo;s look at our project.
+Specifically, at our &lt;code>hello_world.cpp&lt;/code>.
+More specifically, at includes.
+It&amp;rsquo;s not that something is wrong with them &lt;em>right now&lt;/em>, but think about it - what would happen if we&amp;rsquo;d put an &lt;code>utils.hpp&lt;/code> file in both libraries?
+That is actually a question that can be answered using the &amp;ldquo;fuck around and find out&amp;rdquo; method, so let&amp;rsquo;s find out.&lt;/p>
+&lt;p>This is the content of our &lt;code>utils.hpp&lt;/code>.
+Adjust the returned string appropriately for the other module.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#pragma once
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;string&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">inline&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>string what_am_i() { &lt;span style="color:#66d9ef">return&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>string(&lt;span style="color:#e6db74">&amp;#34;i am calc&amp;#34;&lt;/span>); }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Now, our new &lt;code>hello_world.cpp&lt;/code> will become this:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;calc.hpp&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;greeter.hpp&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;utils.hpp&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;iostream&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> greet(what_am_i()) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*F == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> fahrenheit_to_celcius(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*C&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*C == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> celcius_to_fahrenheit(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*F&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Aaand&amp;hellip; In my case, it prints &lt;code>Hello i am calc&lt;/code>, which is caused by the fact that &lt;code>calc_includes&lt;/code> are before &lt;code>greeter_includes&lt;/code> in my &lt;code>hello_world/meson.build&lt;/code>&amp;rsquo;s &lt;code>executable()&lt;/code> call.
+After swapping them, &lt;code>Hello i am greeter&lt;/code> is printed.&lt;/p>
+&lt;p>Now that we know what happens, we can easily deduce that it&amp;rsquo;s not supposed to work like that - because we don&amp;rsquo;t have a reasonable way to access the other &lt;code>utils.hpp&lt;/code>.
+The simplest solution is to move the include directory one level up, to &lt;code>lib&lt;/code> directory.
+And in retrospect, that&amp;rsquo;s how it should be done from the beginning, so excuse my blunder there.&lt;/p>
+&lt;p>In order to fix our mistake, we have to revisit some &lt;code>meson.build&lt;/code> files.
+First, let&amp;rsquo;s create an include directory object in &lt;code>lib/meson.build&lt;/code>.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>libs_includes &lt;span style="color:#f92672">=&lt;/span> include_directories(&lt;span style="color:#e6db74">&amp;#39;.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;calc&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;greeter&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>I&amp;rsquo;ve added it before the &lt;code>subdir()&lt;/code> calls just in case some modules would depend on each other.
+This is not something we want to do often, because for every dependency we will probably have to create a mock in order to properly test the modules that use them, but it&amp;rsquo;s sometimes necessary.&lt;/p>
+&lt;p>After that, remove the &lt;code>include_directories()&lt;/code> calls from &lt;code>greeter&lt;/code> and &lt;code>calc&lt;/code> modules &lt;code>meson.build&lt;/code>, and fix the &lt;code>executable()&lt;/code> call arguments in &lt;code>hello_world/meson.build&lt;/code>.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>hello_world &lt;span style="color:#f92672">=&lt;/span> executable(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;hello_world&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;hello_world.cpp&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> link_with: [calc_lib, greeter_lib],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> include_directories: [libs_includes],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And fix the includes in &lt;code>hello_world.cpp&lt;/code>.
+We can also remove the &lt;code>utils.hpp&lt;/code> and restore the original &lt;code>hello_world.cpp&lt;/code>.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;calc/calc.hpp&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;greeter/greeter.hpp&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;iostream&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> greet(&lt;span style="color:#e6db74">&amp;#34;random developer&amp;#34;&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*F == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> fahrenheit_to_celcius(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*C&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*C == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> celcius_to_fahrenheit(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*F&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Also; let&amp;rsquo;s rename our &lt;code>lib/&lt;/code> directory to &lt;code>libs/&lt;/code>, this is a very small change but my brain automatically tries to write &lt;code>libs/&lt;/code> instead of &lt;code>lib/&lt;/code> because there are &lt;em>multiple&lt;/em> libraries there, so I think it reflects this directory&amp;rsquo;s content better.
+Remember to also change the argument of &lt;code>subdir()&lt;/code> in the root &lt;code>meson.build&lt;/code>.&lt;/p>
+&lt;p>Verify if the project still builds and the executable still works. Remove the &lt;code>builddir&lt;/code> first, as we made pretty big change and I honestly don&amp;rsquo;t expect Meson to correctly re-generate it.&lt;/p>
+&lt;h2 id="harnessing-the-power-of-unit-tests">Harnessing the power of unit tests&lt;/h2>
+&lt;p>I want to assume that You have at least minimal experience with testing your code, but i know some people who don&amp;rsquo;t, so i will not.
+But I&amp;rsquo;ll also try not to over explain, there are other resources for that.
+If you already know a thing or two about unit testing, you can ignore the rest of this chapter.
+Or maybe don&amp;rsquo;t, maybe you&amp;rsquo;ll learn something new.
+I dunno.&lt;/p>
+&lt;p>When You write some code, it&amp;rsquo;s usually a good habit to test it.
+After all, &lt;em>how do you know if the code working correctly?&lt;/em>
+You run it, and see if it does what it&amp;rsquo;s supposed to.
+The simplest way of doing that is writing some small programs that use the code in question in various ways, and check if the outputs of this code are correct.
+For example, let&amp;rsquo;s assume you&amp;rsquo;ve written a function that calculates the amount of damage an attack does in an RPG game.
+To test it, You can create some attack scenarios with various items, statistics, and whatever else can influence damage.
+Then, calculate the results manually beforehand, and write the code that will perform those calculations using that function and verify if they match your calculations.
+Tests that verify those small pieces of code, like functions or classes, are usually called &lt;strong>unit tests&lt;/strong>.
+The most basic unit test can be something like this:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-c" data-lang="c">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;assert.h&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;DamageCalculation.h&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;#34;test_utils.h&amp;#34;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Weapon &lt;span style="color:#66d9ef">const&lt;/span> weapon &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">create_test_weapon&lt;/span>();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Enemy &lt;span style="color:#66d9ef">const&lt;/span> enemy &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">create_test_enemy&lt;/span>();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">assert&lt;/span>(&lt;span style="color:#a6e22e">calculate_damage&lt;/span>(&lt;span style="color:#f92672">&amp;amp;&lt;/span>weapon, &lt;span style="color:#f92672">&amp;amp;&lt;/span>enemy) &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#ae81ff">3.14&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Although I&amp;rsquo;d replace that magic number with some very approximate manual calculation, if possible.
+Tests should not be cryptic - this is, but only because it&amp;rsquo;s an unspecified example.&lt;/p>
+&lt;p>Fortunately, the humanity have &lt;em>(mostly)&lt;/em> progressed past the need for &lt;code>assert&lt;/code>, and invented &lt;strong>test harnesses&lt;/strong> that are &lt;em>(usually)&lt;/em> less painful to use.
+Trust me on that.
+Even C guys didn&amp;rsquo;t like rawdogging &lt;code>assert&lt;/code>, and jumped on &lt;a href="http://www.throwtheswitch.org/unity">Unity&lt;/a> (not &lt;a href="https://www.axios.com/2023/09/22/unity-apologizes-runtime-fees">&lt;em>that&lt;/em>&lt;/a> Unity) and other similar &amp;ldquo;wrappers&amp;rdquo;.
+In any case, using a test harness is easier than making one ourselves (or not using one at all), so we are going to use one.
+I&amp;rsquo;d prefer if it also were multi-platform and supported both C and C++, and fortunately we have some options in the open-source market for that.&lt;/p>
+&lt;h2 id="managing-external-dependencies-with-meson">Managing external dependencies with Meson&lt;/h2>
+&lt;p>Before we choose a test harness, however, let&amp;rsquo;s check how Meson handles external dependencies.
+Fortunately, &lt;a href="https://mesonbuild.com/Dependencies.html">documentation&lt;/a> got us covered.
+And it seems that Meson supports &lt;em>a lot&lt;/em> of popular libraries in very specific ways, which is very, very nice.
+However, the &lt;code>dependency()&lt;/code> function seems to work only for locally available packages, which would usually mean that we have to manually download and set up the libraries for development each time we set up a new project environment - but there&amp;rsquo;s a nice catch!
+Meson also provides &lt;a href="https://mesonbuild.com/Wrap-dependency-system-manual.html">&lt;strong>Wrap dependency system&lt;/strong>&lt;/a>.
+I recommend reading the linked documentation, but if you want a TL;DR: this is a package manager.
+Sort of.
+You put a valid &lt;code>.wrap&lt;/code> file in &lt;code>subprojects/&lt;/code> directory and voila, Meson can download and build the dependency, allowing us to use it in our project - automagically.&lt;/p>
+&lt;p>After looking at available &lt;a href="https://mesonbuild.com/Wrapdb-projects.html">wraps&lt;/a>, and considering the fact that I&amp;rsquo;d like to use that template for ARM projects, I have decided I&amp;rsquo;m going with &lt;a href="https://github.com/cpputest/cpputest">CppUTest&lt;/a>.
+If you want to try another test harness, feel free to do that and experiment - but keep in mind that the setup process may vary a bit, depending on the library needs.
+CppUTest is relatively simple, which is nice if you&amp;rsquo;re looking for something without much complexity, but it won&amp;rsquo;t provide as many features as some other harnessed - like &lt;a href="https://github.com/catchorg/Catch2">Catch2&lt;/a> or &lt;a href="https://github.com/google/googletest">Google Test&lt;/a>.
+I like simple, and it should probably make porting everything to ARM easier, so I&amp;rsquo;m going with CppUTest.&lt;/p>
+&lt;p>Let&amp;rsquo;s create &lt;code>subprojects/&lt;/code> directory and run &lt;code>meson wrap install cpputest&lt;/code> (or your preferred test harness).
+Installation should proceed automatically, and &lt;code>subprojects/cpputest.wrap&lt;/code> file should appear.
+Then, to use it, we have to declare a &lt;code>subproject()&lt;/code> in one of our &lt;code>meson.build&lt;/code> files.
+Let&amp;rsquo;s do that in our &lt;code>tests/meson.build&lt;/code>.
+We&amp;rsquo;ll also add our tests subdirectories, since we&amp;rsquo;re already editing that file.
+Add them below the &lt;code>subproject()&lt;/code> to make sure the test harness is available there.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>cpputest_project &lt;span style="color:#f92672">=&lt;/span> subproject(&lt;span style="color:#e6db74">&amp;#39;cpputest&amp;#39;&lt;/span>, required: &lt;span style="color:#66d9ef">true&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cpputest_dependency &lt;span style="color:#f92672">=&lt;/span> cpputest_project.get_variable(&lt;span style="color:#e6db74">&amp;#39;cpputest_dep&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;calc&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;greeter&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Now, we also have to declare &lt;code>tests&lt;/code> directory as a &lt;code>subdir()&lt;/code> in main &lt;code>meson.build&lt;/code>.
+I&amp;rsquo;ve put it after &lt;code>apps&lt;/code>, because integration tests may require built apps as dependencies to run.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;libs&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;apps&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>subdir(&lt;span style="color:#e6db74">&amp;#39;tests&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And finally, we can check if this works by deleting &lt;code>builddir&lt;/code>, and running &lt;code>meson setup builddir&lt;/code> and &lt;code>meson compile -C builddir&lt;/code>.
+You should see some new logs after running &lt;code>setup&lt;/code>:&lt;/p>
+&lt;pre tabindex="0">&lt;code>Executing subproject cpputest
+cpputest| Project name: cpputest
+cpputest| Project version: 4.0
+cpputest| C++ compiler for the host machine: ccache c++ (gcc 13.2.0 &amp;#34;c++ (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders) 13.2.0&amp;#34;)
+cpputest| C++ linker for the host machine: c++ ld.bfd 2.41
+cpputest| Build targets in project: 5
+cpputest| Subproject cpputest finished.
+Build targets in project: 5
+project_template 0.1
+Subprojects
+cpputest: YES
+&lt;/code>&lt;/pre>&lt;p>That tells us Meson found the wrap and should&amp;rsquo;ve downloaded it.
+Compilation should also take significantly longer, because our test harness must be compiled for the first time.
+If that&amp;rsquo;s the case, our first step is done.
+Now, we have to actually write a test.
+Create &lt;code>test.cpp&lt;/code> file in &lt;code>tests/calc/&lt;/code> and put this there:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;CppUTest/CommandLineTestRunner.h&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;lt;CppUTest/TestHarness.h&amp;gt;&lt;/span>&lt;span style="color:#75715e">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>TEST_GROUP(FirstTestGroup){};
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>TEST(FirstTestGroup, FirstTest) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> FAIL(&lt;span style="color:#e6db74">&amp;#34;Fail me!&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>(&lt;span style="color:#66d9ef">int&lt;/span> ac, &lt;span style="color:#66d9ef">char&lt;/span>&lt;span style="color:#f92672">**&lt;/span> av) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> CommandLineTestRunner&lt;span style="color:#f92672">::&lt;/span>RunAllTests(ac, av);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Now, let&amp;rsquo;s make it compile. Open &lt;code>tests/calc/meson.build&lt;/code> and put it there:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>calc_test_exec &lt;span style="color:#f92672">=&lt;/span> executable(&lt;span style="color:#e6db74">&amp;#39;calc_test&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;test.cpp&amp;#39;&lt;/span>, dependencies: cpputest_dependency)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>test(&lt;span style="color:#e6db74">&amp;#39;calc test&amp;#39;&lt;/span>, calc_test_exec)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>In theory, this should build just fine.
+However, in practice&amp;hellip;&lt;/p>
+&lt;pre tabindex="0">&lt;code>[44/44] Linking target tests/calc/calc_test.exe
+FAILED: tests/calc/calc_test.exe
+&amp;#34;c++&amp;#34; -o tests/calc/calc_test.exe tests/calc/calc_test.exe.p/test.cpp.obj &amp;#34;-Wl,--allow-shlib-undefined&amp;#34; &amp;#34;-Wl,--start-group&amp;#34; &amp;#34;subprojects/cpputest-4.0/src/CppUTestExt/libCppUTestExt.a&amp;#34; &amp;#34;-Wl,--subsystem,console&amp;#34; &amp;#34;-lkernel32&amp;#34; &amp;#34;-luser32&amp;#34; &amp;#34;-lgdi32&amp;#34; &amp;#34;-lwinspool&amp;#34; &amp;#34;-lshell32&amp;#34; &amp;#34;-lole32&amp;#34; &amp;#34;-loleaut32&amp;#34; &amp;#34;-luuid&amp;#34; &amp;#34;-lcomdlg32&amp;#34; &amp;#34;-ladvapi32&amp;#34; &amp;#34;-Wl,--end-group&amp;#34;
+C:/gcc/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: tests/calc/calc_test.exe.p/test.cpp.obj: in function `TEST_FirstTestGroup_FirstTest_Test::testBody()&amp;#39;:
+F:\Projects\C_C++\meson_c_cpp_project_template\builddir/../tests/calc/test.cpp:7:(.text+0x11): undefined reference to `UtestShell::getCurrent()&amp;#39;
+&lt;/code>&lt;/pre>&lt;p>In practice, I get a massive linking error.
+Gee, I wonder why.&lt;/p>
+&lt;p>After few minutes of investigation, I&amp;rsquo;ve reached the conclusion: the &lt;em>&amp;ldquo;official&amp;rdquo;&lt;/em> CppUTest wrap is &lt;strong>very bad&lt;/strong>.
+And by that, I mean it&amp;rsquo;s completely broken.
+If you&amp;rsquo;ve used a different test harness, and it works (i know for a fact that Catch2 should, last i tried at least&amp;hellip;) - congratulations, you can skip the next part!
+For the rest of you, don&amp;rsquo;t worry - we&amp;rsquo;re fix that issue. It&amp;rsquo;ll just take a bit longer for you, and much longer for me.&lt;/p>
+&lt;h2 id="side-quest---fixing-cpputest">Side quest - fixing CppUTest!&lt;/h2>
+&lt;p>Let&amp;rsquo;s look at it&amp;rsquo;s build files, as everything is stored in &lt;code>subprojects/cpputest-4.0&lt;/code>.
+First thing that I&amp;rsquo;ve noticed was spelling error - the author used &lt;code>extinctions&lt;/code> instead of &lt;code>extensions&lt;/code> (in multiple places, so this was&amp;hellip; Intentional?)
+Then, I&amp;rsquo;ve noticed something worse.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>cpputest_dep &lt;span style="color:#f92672">=&lt;/span> declare_dependency(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> link_with : cpputest_lib,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> version : meson.project_version(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> include_directories : cpputest_dirs)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">if&lt;/span> get_option(&lt;span style="color:#e6db74">&amp;#39;extinctions&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cpputest_dep &lt;span style="color:#f92672">=&lt;/span> declare_dependency(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> link_with : cpputest_ext_lib,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> version : meson.project_version(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> include_directories : cpputest_dirs)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">endif&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>You see this, right?
+Obviously, a typo, someone forgot to add &lt;code>_ext&lt;/code>, but one that completely breaks the wrap.
+Extensions are enabled by default, by the way.
+See &lt;code>meson_options.txt&lt;/code> in CppUTest directory:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>option(&lt;span style="color:#e6db74">&amp;#39;extinctions&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> type : &lt;span style="color:#e6db74">&amp;#39;boolean&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> value : &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> description : &lt;span style="color:#e6db74">&amp;#39;Use the CppUTest extension library&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>So, what happens when we fix that? We can do it pretty easily, just declare a second dependency, we don&amp;rsquo;t even have to link the extensions because at this point we&amp;rsquo;re not using them.
+Rename &lt;code>cpputest_dep&lt;/code> for extensions to &lt;code>cpputest_ext_dep&lt;/code> and let&amp;rsquo;s add the second dependency to &lt;code>cpputest.wrap&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-meson" data-lang="meson">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">if&lt;/span> get_option(&lt;span style="color:#e6db74">&amp;#39;extinctions&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cpputest_ext_dep &lt;span style="color:#f92672">=&lt;/span> declare_dependency(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> link_with : cpputest_ext_lib,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> version : meson.project_version(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> include_directories : cpputest_dirs)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">endif&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;pre tabindex="0">&lt;code>[provide]
+cpputest = cpputest_dep
+cpputest_ext = cpputest_ext_dep
+&lt;/code>&lt;/pre>&lt;p>And after clean compilation, unfortunately, this doesn&amp;rsquo;t solve my issue.
+I get multiple undefined references to platform-related functions, because apparently someone forgot to add platform-specific implementations that CppUTest provides as dependencies&amp;hellip;&lt;/p>
+&lt;p>Well, the fix is &lt;em>easy&lt;/em> - I just have to make a proper wrap myself.
+To be continued, after I make it working.&lt;/p>
+&lt;blockquote>
+&lt;p>Yeah, I could jump the ship and just use different library, but &lt;em>where&amp;rsquo;s the fun in that?&lt;/em>
+I&amp;rsquo;ve already vibe checked that one.
+Also; there is no tag in the repository for now, I&amp;rsquo;m gonna make one after making that wrap and finishing up this part in next post(s).&lt;/p>
+&lt;/blockquote></content></item><item><title>Making C/C++ project template in Meson - part 1</title><link>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-1/</link><pubDate>Sat, 27 Jan 2024 00:00:00 +0000</pubDate><guid>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-1/</guid><description>Intro One of the things that I dislike about C and C++ in particular is lack of standardized build environment, package manager, and all that stuff. And although CMake is de-facto &amp;ldquo;standard&amp;rdquo; over here, and even tries to double as a &amp;ldquo;package manager&amp;rdquo;, I find it hard to like this tool. It&amp;rsquo;s not a bad tool, I&amp;rsquo;ve used it few times, I&amp;rsquo;ve seen some non-trivial projects made with CMake, but I did not like what I&amp;rsquo;ve seen.</description><content>&lt;h2 id="intro">Intro&lt;/h2>
 &lt;p>One of the things that I dislike about C and C++ in particular is lack of standardized build environment, package manager, and all that stuff.
 And although CMake is de-facto &amp;ldquo;standard&amp;rdquo; over here, and even tries to double as a &amp;ldquo;package manager&amp;rdquo;, I find it hard to like this tool.
 It&amp;rsquo;s not a &lt;em>bad&lt;/em> tool, I&amp;rsquo;ve used it few times, I&amp;rsquo;ve seen some non-trivial projects made with CMake, but I did not like what I&amp;rsquo;ve seen.&lt;/p>
