@@ -273,6 +273,7 @@ endif
 ```
 
 You see this, right?
+Obviously, a typo, someone forgot to add `_ext`, but one that completely breaks the wrap.
 Extensions are enabled by default, by the way.
 See `meson_options.txt` in CppUTest directory:
 
@@ -306,3 +307,6 @@ And after clean compilation, unfortunately, this doesn't solve my issue.
 I get multiple undefined references to platform-related functions, because apparently someone forgot to add platform-specific implementations that CppUTest provides as dependencies...
 
 Well, the fix is easy - I just have to make a proper wrap myself.
+
+To be continued, after I make it working.
+Yeah, I could jump the ship and just use different library, but *where's the fun in that?*
