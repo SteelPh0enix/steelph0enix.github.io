@@ -1,6 +1,6 @@
 +++
 title = "Making C/C++ project template in Meson - part 2"
-date = "2024-01-28"
+date = "2024-02-07"
 author = "SteelPh0enix"
 authorTwitter = "steel_ph0enix"
 tags = ["c", "cpp", "meson", "guide"]
