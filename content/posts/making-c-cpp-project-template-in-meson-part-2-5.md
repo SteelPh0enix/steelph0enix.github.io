@@ -88,12 +88,11 @@ Now, we should also be able to run our test via `meson test` command.
 
 ```
 > meson test -C builddir
-ninja: Entering directory `C:\Users\phoen\Projects\meson_c_cpp_project_template\builddir'  
+ninja: Entering directory `\builddir'  
 ninja: no work to do.
 1/1 calc test        FAIL            0.01s   exit status 1
 >>> MALLOC_PERTURB_=245 ASAN_OPTIONS=halt_on_error=1:abort_on_error=1:print_summary=1 UBSAN
-_OPTIONS=halt_on_error=1:abort_on_error=1:print_summary=1:print_stacktrace=1 C:\Users\phoen
-\Projects\meson_c_cpp_project_template\builddir\tests\calc\calc_test.exe
+_OPTIONS=halt_on_error=1:abort_on_error=1:print_summary=1:print_stacktrace=1 \builddir\tests\calc\calc_test.exe
 
 
 Ok:                 0
@@ -103,8 +102,56 @@ Unexpected Pass:    0
 Skipped:            0
 Timeout:            0
 
-Full log written to C:\Users\phoen\Projects\meson_c_cpp_project_template\builddir\meson-log
-s\testlog.txt
+Full log written to \builddir\meson-logs\testlog.txt
 ```
 
+It will fail, because in the previous part we've written a test that should fail, so it's all good.
+Your `MALLOC_PERTURB_` may be different, as it's randomly chosen every test run.
+It's used for some magic involving `malloc` that helps detecting memory-related issues.
 
+So, it seems like we have a working unit test setup.
+Let's write some meaningful tests for both modules and we'll check if we can call them separately.
+We also have to finish up our Meson script for `calc` test, because we're not linking to `calc` yet, and we should!
+We also have to add `libs_includes` to includes for our test exec.
+
+```meson
+calc_test_exec = executable(
+  'calc_test',
+  sources: 'test.cpp',
+  dependencies: cpputest,
+  link_with: calc_lib,
+  include_directories: libs_includes,
+)
+
+test('calc test', calc_test_exec)
+```
+
+And our test may look like this:
+
+```cpp
+#include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTest/TestHarness.h>
+
+#include <calc/calc.hpp>
+
+TEST_GROUP(TemperatureCalcTests){};
+
+TEST(TemperatureCalcTests, convertsCelciusToFahrenheit) {
+    auto const givenCelcius = 37.7778;
+    auto const expectedFahrenheit = 100.0;
+    auto const gotFahrenheit = celcius_to_fahrenheit(givenCelcius);
+    DOUBLES_EQUAL(expectedFahrenheit, gotFahrenheit, 0.001);
+}
+
+
+TEST(TemperatureCalcTests, convertsFahrenheitToCelcius) {
+    auto const givenFahrenheit = 212;
+    auto const expectedCelcius = 100.0;
+    auto const gotCelcius = fahrenheit_to_celcius(givenFahrenheit);
+    DOUBLES_EQUAL(expectedCelcius, gotCelcius, 0.001);
+}
+
+int main(int ac, char** av) {
+    return CommandLineTestRunner::RunAllTests(ac, av);
+}
+```
