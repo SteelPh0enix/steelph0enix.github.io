@@ -112,7 +112,9 @@ It's used for some magic involving `malloc` that helps detecting memory-related 
 So, it seems like we have a working unit test setup.
 Let's write some meaningful tests for both modules and we'll check if we can call them separately.
 We also have to finish up our Meson script for `calc` test, because we're not linking to `calc` yet, and we should!
-We also have to add `libs_includes` to includes for our test exec.
+And we also have to add `libs_includes` to includes for our test exec.
+
+tests/calc/meson.build
 
 ```meson
 calc_test_exec = executable(
@@ -127,6 +129,8 @@ test('calc test', calc_test_exec)
 ```
 
 And our test may look like this:
+
+tests/calc/test.cpp
 
 ```cpp
 #include <CppUTest/CommandLineTestRunner.h>
@@ -155,3 +159,63 @@ int main(int ac, char** av) {
     return CommandLineTestRunner::RunAllTests(ac, av);
 }
 ```
+
+We should create similar meson and source file for greeter.
+
+tests/greeter/meson.build
+
+```meson
+greeter_test_exec = executable(
+  'greeter_test',
+  sources: 'test.cpp',
+  dependencies: cpputest,
+  link_with: greeter_lib,
+  include_directories: libs_includes,
+)
+
+test('greeter test', greeter_test_exec)
+```
+
+tests/greeter/test.cpp
+
+```cpp
+#include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTest/TestHarness.h>
+
+#include <greeter/greeter.hpp>
+#include <string>
+
+TEST_GROUP(GreeterTests){};
+
+TEST(GreeterTests, greetsUser) {
+    auto const user = std::string("user");
+    auto const expectedMessage = std::string("Hello user");
+    auto const actualMessage = greet(user);
+    CHECK_EQUAL(expectedMessage, actualMessage);
+}
+
+int main(int ac, char** av) {
+    return CommandLineTestRunner::RunAllTests(ac, av);
+}
+```
+
+And now, after running `meson test -C builddir`, we should get something like this:
+
+```
+PS .> meson test -C builddir
+ninja: Entering directory `.\builddir'
+ninja: no work to do.
+1/2 calc test           OK              0.01s
+2/2 greeter test        OK              0.01s
+
+Ok:                 2   
+Expected Fail:      0
+Fail:               0
+Unexpected Pass:    0
+Skipped:            0
+Timeout:            0
+
+Full log written to .\builddir\meson-logs\testlog.txt
+```
+
+And here we go, we finally have working unit tests in our project.
