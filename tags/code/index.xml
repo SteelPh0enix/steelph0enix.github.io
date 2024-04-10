@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>code on</title><link>https://steelph0enix.github.io/tags/code/</link><description>Recent content in code on</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>SteelPh0enix's Blog © 2021-2024 by SteelPh0enix is licensed under CC BY-SA 4.0</copyright><lastBuildDate>Thu, 16 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://steelph0enix.github.io/tags/code/index.xml" rel="self" type="application/rss+xml"/><item><title>VSCode CubeMX Project Setup</title><link>https://steelph0enix.github.io/posts/vscode-cubemx-setup/</link><pubDate>Thu, 16 Sep 2021 00:00:00 +0000</pubDate><guid>https://steelph0enix.github.io/posts/vscode-cubemx-setup/</guid><description>Up until now, i&amp;rsquo;ve used STM32CubeIDE with STM32CubeMX as my primary development tools for STM32 microcontrollers. CubeIDE has lots of useful features available out-of-the-box. However, it also suffers from pretty feelable bloat, caused by the fact that it&amp;rsquo;s heavily modified Eclipse IDE with lots of plugins that pile up pretty quickly. It also lacks some features that i&amp;rsquo;m used to having in more&amp;hellip; &amp;ldquo;civilized&amp;rdquo; IDE&amp;rsquo;s (dark theme which is not hurting the eyes with contrast by default?</description><content>&lt;p>Up until now, i&amp;rsquo;ve used STM32CubeIDE with STM32CubeMX as my primary development tools for STM32 microcontrollers. CubeIDE has lots of useful features available out-of-the-box. However, it also suffers from pretty feelable bloat, caused by the fact that it&amp;rsquo;s heavily modified Eclipse IDE with lots of plugins that pile up pretty quickly. It also lacks some features that i&amp;rsquo;m used to having in more&amp;hellip; &amp;ldquo;civilized&amp;rdquo; IDE&amp;rsquo;s (dark theme which is not hurting the eyes with contrast by default? better Git integration? and probably lots of other, smaller thingies). So, i&amp;rsquo;ve decided to try something new and the first obvious choice was Visual Studio Code.&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Code on</title><link>https://steelph0enix.github.io/tags/code/</link><description>Recent content in Code on</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>SteelPh0enix's Blog © 2021-2024 by SteelPh0enix is licensed under CC BY-SA 4.0</copyright><lastBuildDate>Thu, 16 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://steelph0enix.github.io/tags/code/index.xml" rel="self" type="application/rss+xml"/><item><title>VSCode CubeMX Project Setup</title><link>https://steelph0enix.github.io/posts/vscode-cubemx-setup/</link><pubDate>Thu, 16 Sep 2021 00:00:00 +0000</pubDate><guid>https://steelph0enix.github.io/posts/vscode-cubemx-setup/</guid><description>Up until now, i&amp;rsquo;ve used STM32CubeIDE with STM32CubeMX as my primary development tools for STM32 microcontrollers. CubeIDE has lots of useful features available out-of-the-box. However, it also suffers from pretty feelable bloat, caused by the fact that it&amp;rsquo;s heavily modified Eclipse IDE with lots of plugins that pile up pretty quickly. It also lacks some features that i&amp;rsquo;m used to having in more&amp;hellip; &amp;ldquo;civilized&amp;rdquo; IDE&amp;rsquo;s (dark theme which is not hurting the eyes with contrast by default?</description><content>&lt;p>Up until now, i&amp;rsquo;ve used STM32CubeIDE with STM32CubeMX as my primary development tools for STM32 microcontrollers. CubeIDE has lots of useful features available out-of-the-box. However, it also suffers from pretty feelable bloat, caused by the fact that it&amp;rsquo;s heavily modified Eclipse IDE with lots of plugins that pile up pretty quickly. It also lacks some features that i&amp;rsquo;m used to having in more&amp;hellip; &amp;ldquo;civilized&amp;rdquo; IDE&amp;rsquo;s (dark theme which is not hurting the eyes with contrast by default? better Git integration? and probably lots of other, smaller thingies). So, i&amp;rsquo;ve decided to try something new and the first obvious choice was Visual Studio Code.&lt;/p>
 &lt;blockquote>
 &lt;p>The second choice would be CLion, which has pretty decent CubeMX project support out-of-the-box, but it is sometimes a little bit buggy with debugging the projects&amp;hellip; or at least it was few months ago, when i tried it. Maybe it got fixed.&lt;/p>
 &lt;/blockquote>
@@ -30,19 +30,19 @@
 &lt;p>And that should be just about it. If you have everything set-up, can get to work on our project.&lt;/p>
 &lt;h2 id="creating-a-project">Creating a project&lt;/h2>
 &lt;p>Open up STM32CubeMX and make a new project. I&amp;rsquo;ll assume that you already have basic knowledge of STM32CubeMX usage, so you can create a project for your board. After that, set up your peripherals (i&amp;rsquo;ll just use onboard LED which is set up by default to test stuff out), make sure the debug is enabled (System Core -&amp;gt; SYS -&amp;gt; Debug), clocks are configured correctly (Clock Configuration tab on the top of the window), and go to Project Manager tab. Fill up the project name and location, and set &lt;strong>Toolchain/IDE&lt;/strong> to &lt;strong>Makefile&lt;/strong>. Save the project after that.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/cubemx-config-1.png" alt="cubemx-project-config-1">&lt;/p>
+&lt;p>&lt;img alt="cubemx-project-config-1" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/cubemx-config-1.png">&lt;/p>
 &lt;p>Next, i recommend going to &lt;strong>Code Generator&lt;/strong> tab on the left and selecting all the checkboxes in &lt;strong>Generated files&lt;/strong> section. I do it as force of habit, to have a bit better organized project.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/cubemx-config-2.png" alt="cubemx-project-config-2">&lt;/p>
+&lt;p>&lt;img alt="cubemx-project-config-2" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/cubemx-config-2.png">&lt;/p>
 &lt;p>When you&amp;rsquo;re done with CubeMX config, &lt;strong>Generate the code&lt;/strong> and open the directory with the project in Visual Studio Code.&lt;/p>
 &lt;h2 id="setting-up-the-project-in-vscode">Setting up the project in VSCode&lt;/h2>
 &lt;h3 id="building-the-project">Building the project&lt;/h3>
 &lt;p>Now, time for the fun part. First, we&amp;rsquo;ll make sure we can build the project. Open integrated terminal (&lt;code>Ctrl+` &lt;/code> to open existing one, or &lt;code>Ctrl+Shift+` &lt;/code> to create a new one) and run &lt;code>make&lt;/code>. You should see some output - the commands ran by Make, and size of output binary - and a new directory called &lt;code>build&lt;/code> should appear. The project directory should look like this now:&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/post-build-files-tree.png" alt="post-build-file-tree">&lt;/p>
+&lt;p>&lt;img alt="post-build-file-tree" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/post-build-files-tree.png">&lt;/p>
 &lt;blockquote>
 &lt;p>If the build failed, read the error message, check if you have all required prerequisites, and look around the internet for support - most of basic issues have been solved by someone already, and solutions are out there.&lt;/p>
 &lt;/blockquote>
 &lt;p>The &lt;code>build&lt;/code> directory should contain a lot of object (&lt;code>*.o&lt;/code>) , listing (&lt;code>*.lst&lt;/code>), and &lt;code>*.d&lt;/code> files, along with few binaries with the same name as your project, and also a &lt;code>*.map&lt;/code> file, which contains the memory map of whole program.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/post-build-files-out.png" alt="post-build-file-out">&lt;/p>
+&lt;p>&lt;img alt="post-build-file-out" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/post-build-files-out.png">&lt;/p>
 &lt;p>The only file here that&amp;rsquo;s currently interesting for us is the &lt;code>*.elf&lt;/code> file - this is the actual compiled binary we&amp;rsquo;ll flash to MCU using OpenOCD. &lt;code>*.bin&lt;/code> and &lt;code>*.hex&lt;/code> files are compiled binary files too, created out of the &lt;code>*.elf&lt;/code> file, but they are usually used in different scenarios (for example, &lt;code>*.bin&lt;/code> file can easily be used by custom bootloaders, as it&amp;rsquo;s basically raw compiled code, stripped out of unnecessary stuff).&lt;/p>
 &lt;h3 id="configuring-the-language-server-clangd">Configuring the language server (clangd)&lt;/h3>
 &lt;p>If you&amp;rsquo;re able to build project successfully, then it&amp;rsquo;s time to set up our language server. Clangd requires &lt;code>compile_commands.json&lt;/code> file to work properly - this file contains translated output from your build system, that tells Clangd how the project is built. Thanks to that, Clangd can automatically detect the configuration you&amp;rsquo;re using and you doesn&amp;rsquo;t have to manually set anything up, unlike in default language server, where you&amp;rsquo;d have to set the include directories, flags and toolchain manually in JSON file.&lt;/p>
@@ -53,7 +53,7 @@
 &lt;p>Tip: You can tell &lt;code>make&lt;/code> to build using multiple threads with &lt;code>-j&lt;/code> argument. This will &lt;strong>significantly&lt;/strong> decrease compilation time. For example: &lt;code>make -j8&lt;/code> will build the program using 8 threads. Modify this argument according to your CPU capabilities (amount of cores and thread per core).&lt;/p>
 &lt;/blockquote>
 &lt;p>Compiledb will run &lt;code>make&lt;/code> and pass all the arguments to it, &lt;code>-j8&lt;/code> in our case. After running this command from the project root, the &lt;code>compile_commands.json&lt;/code> should appear there. Open any &lt;code>*.c&lt;/code> or &lt;code>*.h&lt;/code> file, or re-open, if you opened them already, and check if the language server works - you should now see no errors related to missing includes or unrecognized function, see the tooltips for code on hover, and have all the other language-server-related features working.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/clangd-working.png" alt="clangd-working">&lt;/p>
+&lt;p>&lt;img alt="clangd-working" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/clangd-working.png">&lt;/p>
 &lt;h4 id="configuring-standard-library-visibility">Configuring standard library visibility&lt;/h4>
 &lt;p>After playing with &lt;code>clangd&lt;/code> a bit more in this project, i found out that even though project builds successfully when i use standard library, clangd doesn&amp;rsquo;t recognize it&amp;rsquo;s headers for some reason. I suppose it&amp;rsquo;s because the target platform is not the native one, so it doesn&amp;rsquo;t know where to look for headers. I&amp;rsquo;ve fixed it by adding include path with stdlib headers to &lt;code>C_INCLUDES&lt;/code> variable in Makefile, and clean-building the project.&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-make" data-lang="make">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># C includes
@@ -75,12 +75,12 @@ It also requires &lt;code>all&lt;/code> rule, so the project will build itself a
 To delete all the build files (to do a clean build for example), use &lt;code>make clean&lt;/code> command.&lt;/p>
 &lt;h3 id="configuring-vscode-tasks">Configuring VSCode tasks&lt;/h3>
 &lt;p>To get some degree of automation, we&amp;rsquo;ll create VSCode tasks for building, cleaning and flashing the project. Open command prompt in VSCode (&lt;code>Ctrl+Shift+P&lt;/code>), and look for &lt;code>Tasks: Configure Default Build Task&lt;/code> command (or &lt;code>Task: Configure Task&lt;/code>).&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/make-build-task-1.png" alt="create-build-task-1">&lt;/p>
+&lt;p>&lt;img alt="create-build-task-1" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/make-build-task-1.png">&lt;/p>
 &lt;p>Then, select &lt;code>Create tasks.json file from template&lt;/code>, and select &lt;code>Others&lt;/code> template.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/make-build-task-2.png" alt="create-build-task-2">
-&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/make-build-task-3.png" alt="create-build-task-3">&lt;/p>
+&lt;p>&lt;img alt="create-build-task-2" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/make-build-task-2.png">
+&lt;img alt="create-build-task-3" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/make-build-task-3.png">&lt;/p>
 &lt;p>After that, you should see this &lt;code>tasks.json&lt;/code> file, which happened to be added to &lt;code>.vscode&lt;/code> directory in project root. If you&amp;rsquo;re using VCS (Git or Mercurial for example), you should be able to store it in repository without any issues, so don&amp;rsquo;t wildcard out the entire &lt;code>.vscode&lt;/code> directory in your &lt;code>.gitignore&lt;/code> (or any other VCS-related ignorefile) to keep the tasks.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/make-build-task-4.png" alt="create-build-task-4">&lt;/p>
+&lt;p>&lt;img alt="create-build-task-4" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/make-build-task-4.png">&lt;/p>
 &lt;p>Copy this task and modify label and command accordingly, to create a build, clean and flash task. After that, run &lt;code>Tasks: Configure Default Build Task&lt;/code> command again, and select your build task. &lt;strong>Remember that we&amp;rsquo;re using &lt;code>Bear&lt;/code>/&lt;code>compiledb&lt;/code> to generate compilation database for Clangd! Don&amp;rsquo;t call &lt;code>make&lt;/code> for building the project directly, to always have updated and correct database!&lt;/strong> Now, your &lt;code>tasks.json&lt;/code> file should look similar to this (change the thread amount accordingly to your CPU capabilities):&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// See https://go.microsoft.com/fwlink/?LinkId=733558
@@ -122,16 +122,16 @@ To delete all the build files (to do a clean build for example), use &lt;code>ma
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ]
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Test the tasks out by running &lt;code>Clean&lt;/code> task (&lt;code>Tasks: Run Task&lt;/code> command -&amp;gt; select &lt;code>Clean&lt;/code> task -&amp;gt; don&amp;rsquo;t scan the output, if you&amp;rsquo;re asked for that), and using &lt;code>Tasks: Run Build Task&lt;/code> shortcut - &lt;code>Ctrl+Shift+B&lt;/code>. The program should first clean, then build itself, and you should see &lt;code>make&lt;/code> output in integrated console window.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/task-output.png" alt="task-output">&lt;/p>
+&lt;p>&lt;img alt="task-output" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/task-output.png">&lt;/p>
 &lt;p>Make a backup of this &lt;code>tasks.json&lt;/code> file, because it should be exactly the same for every project configured this way.
 Also, reminder: instead of putting &lt;code>openocd&lt;/code> call in &lt;code>Makefile&lt;/code>, you can do it directly in VSCode task if you want - just split the arguments correctly (the command after &lt;code>-c&lt;/code> should be a single argument), and set the &lt;code>Build&lt;/code> task as &lt;code>Flash&lt;/code> task dependency &lt;a href="https://code.visualstudio.com/docs/editor/tasks#_compound-tasks">with &lt;code>dependsOn&lt;/code> list option&lt;/a>. You can also create a flash-only task like that. It&amp;rsquo;s up to your preference.&lt;/p>
 &lt;h3 id="configuring-the-debugger">Configuring the debugger&lt;/h3>
 &lt;p>Time to configure the debugging task. Go to the debug tab, and click on &lt;code>create a launch.json file&lt;/code>. Then, from the list, select &lt;code>Cortex Debug&lt;/code> option.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/debug-task-1.png" alt="debug-task-1">&lt;/p>
+&lt;p>&lt;img alt="debug-task-1" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/debug-task-1.png">&lt;/p>
 &lt;p>You should now have this file created, with default task for Cortex Debug plugin. We&amp;rsquo;ll have to change few things to make it working with OpenOCD, our debugger and MCU.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/debug-task-2.png" alt="debug-task-2">&lt;/p>
+&lt;p>&lt;img alt="debug-task-2" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/debug-task-2.png">&lt;/p>
 &lt;p>First, we&amp;rsquo;ll have to change the path to &lt;code>executable&lt;/code>, so it points to the &lt;code>elf&lt;/code> file with our program, which is in &lt;code>${workspaceRoot}/build/&lt;/code> directory. Then, we have to change &lt;code>servertype&lt;/code> to &lt;code>openocd&lt;/code>. It&amp;rsquo;s not the only debugger that Cortex Debug can use, you can see the whole list by calling autocompletion in empty field. Most of them should work with STM32, but i&amp;rsquo;ll focus on OpenOCD.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/debug-task-3.png" alt="debug-task-3">&lt;/p>
+&lt;p>&lt;img alt="debug-task-3" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/debug-task-3.png">&lt;/p>
 &lt;p>Then, we have to configure some OpenOCD-related stuff. We have to specify &lt;code>device&lt;/code>, and put the microcontroller name in it (without &lt;code>Tx&lt;/code> suffix, which corresponds to the temperature version of chip: for example, i&amp;rsquo;m using &lt;code>STM32G474RET6&lt;/code>, but in &lt;code>device&lt;/code> i have to put only &lt;code>STM32G474RE&lt;/code>, because all the temperature versions have exactly the same silicon inside). We also have to specify the configuration files for OpenOCD - the same ones that we specified for flashing. You can do it via &lt;code>configFiles&lt;/code> list.&lt;/p>
 &lt;p>You should also specify &lt;code>preLaunchTask&lt;/code>, so VSCode will &lt;strong>always&lt;/strong> build and flash the binary before starting debug session. It&amp;rsquo;s important, because if you&amp;rsquo;d forget about it and start debugging session with different program on MCU than on your PC, debugger - at some point - will start showing you complete junk and unreasonable code flow, and if you are not aware of that, you will probably spend &lt;strong>a lot&lt;/strong> of time thinking what&amp;rsquo;s wrong with your code or MCU.&lt;/p>
 &lt;p>The &lt;code>launch.json&lt;/code> file content should now look like this, except the &lt;code>device&lt;/code> and target config files should conform to MCU and debugger you&amp;rsquo;re using, &lt;code>preLaunchTask&lt;/code> should have the same name as your flash task, and &lt;code>executable&lt;/code> should point to your ELF file.&lt;/p>
@@ -158,15 +158,15 @@ Also, reminder: instead of putting &lt;code>openocd&lt;/code> call in &lt;code>M
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ]
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>If everything has been configured correctly, you should be able to debug your program now. Add a breakpoint in the first line of &lt;code>main&lt;/code> function (click left to line number, red dot should appear) and run the debugging session (&lt;code>F5&lt;/code> by default, or click a button on top of Debug menu).&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/debug-session.png" alt="debug-session">&lt;/p>
+&lt;p>&lt;img alt="debug-session" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/debug-session.png">&lt;/p>
 &lt;p>VSCode should switch to debug perspective, and you should be able to see variables/objects (expand Global section), call stack, and add variables/objects to the watch. You should also be able to step through the program - either via controls on top, or keyboard shortcuts (&lt;code>F5&lt;/code> to let the program run until the next breakpoint, &lt;code>F10&lt;/code> to step over current line, &lt;code>F11&lt;/code> to step into current line, &lt;code>Shift+F11&lt;/code> to step out of current scope, &lt;code>Ctrl+Shift+F5&lt;/code> to restart debugging session, and &lt;code>Shift+F5&lt;/code> to stop debugging session). There&amp;rsquo;s also a button to reset the MCU (first from left).&lt;/p>
 &lt;h4 id="configuring-the-peripheral-view">Configuring the peripheral view&lt;/h4>
 &lt;p>Finally, to see all the peripherals of our MCU and their registers content, we can download and specify SVD (or rather, to be precise, CMSIS-SVD - System View Description) file. &lt;strong>This step is optional, but being able to see the peripherals is useful, so i recommend doing this anyway&lt;/strong>. For ST MCU&amp;rsquo;s, you can get SVD files from the MCU page on st.com. For example, in case of my MCU i go &lt;a href="https://www.st.com/en/microcontrollers-microprocessors/stm32g474re.html">here&lt;/a>, into &lt;code>CAD Resources&lt;/code> tab, and i download &lt;code>STM32G4 System view description&lt;/code> (ST account not required).&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/svd-config-1.png" alt="svd-config-1">&lt;/p>
+&lt;p>&lt;img alt="svd-config-1" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/svd-config-1.png">&lt;/p>
 &lt;p>After that, i unpack it. Inside unpacked archive, there should be a directory wih &lt;code>*.svd&lt;/code> files - find one compatible with your MCU (in my case it&amp;rsquo;s named &lt;code>STM32G474xx.svd&lt;/code>) and copy it to project root directory. Now, open &lt;code>launch.json&lt;/code> and add new option in debug configuration:&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;svdFile&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;${workspaceRoot}/STM32G474xx.svd&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">,&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Of course, change the name of the file to correct one. To check if it&amp;rsquo;s working, start debug session (&lt;code>F5&lt;/code>) and look for &lt;code>Cortex Peripherals&lt;/code> section in debug view. Open it and check if you can see the peripherals, along with their addresses, registers and register fields content.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/peripherals-view.png" alt="peripherals-view">&lt;/p>
+&lt;p>&lt;img alt="peripherals-view" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/peripherals-view.png">&lt;/p>
 &lt;p>And that&amp;rsquo;s all. If you did all the steps, and verified they&amp;rsquo;re working, congratulations - you now have an alternative for CubeIDE for STM32 development with CubeMX, that isn&amp;rsquo;t very painful to configure and has most of the features you&amp;rsquo;ll need. I&amp;rsquo;ve heard that Cortex Debug also allows to configure ITM output, but i haven&amp;rsquo;t tried that yet, so i&amp;rsquo;ll probably describe it in different blog post in the future.&lt;/p>
 &lt;p>Now, for the bonus part&amp;hellip;&lt;/p>
 &lt;h2 id="stm32-hal-vs-ll-libraries-and-how-to-change-between-them-in-cubemx">STM32 HAL vs LL libraries, and how to change between them in CubeMX&lt;/h2>
@@ -174,7 +174,7 @@ Also, reminder: instead of putting &lt;code>openocd&lt;/code> call in &lt;code>M
 &lt;p>The solution of these issues doesn&amp;rsquo;t have to be throwing away CubeMX, and going back to the registers and CMSIS level, writing everything manually. There is an alternative - Low Layer libraries. These exist for all the peripherals that don&amp;rsquo;t require upper-level stack (like USB or Ethernet), and are significantly lighter than HAL. However, they are also more complicated to use, as they don&amp;rsquo;t cover the functionality as HAL libraries do. LL offers a low-level API that&amp;rsquo;s just above the registers. In other words, LL is an almost unnoticeable (performance and memory-wise) layer that abstracts the registers away, giving you fairly well documented and more readable API instead, that doesn&amp;rsquo;t take away much control from you.&lt;/p>
 &lt;p>To learn about HAL and LL differences in detail, i suggest going to CubeMX package site for your STM32 MCU (in my case: &lt;a href="https://www.st.com/en/embedded-software/stm32cubeg4.html">this one&lt;/a>), into &lt;code>Documentation&lt;/code> section, and reading User Manual called &lt;code>Description of STM32XY HAL and low-layer drivers&lt;/code>, where &lt;code>XY&lt;/code> symbolize you series. You can find full documentation of both HAL and LL libraries there, along with their philosophy.&lt;/p>
 &lt;p>There is an easy way of changing between HAL and LL drivers in CubeMX: open the project and go to &lt;code>Project Manager -&amp;gt; Advanced Settings&lt;/code>.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cubemx-setup/cubemx-hal-ll.png" alt="cubemx-hal-ll">&lt;/p>
+&lt;p>&lt;img alt="cubemx-hal-ll" src="https://steelph0enix.github.io/img/vscode-cubemx-setup/cubemx-hal-ll.png">&lt;/p>
 &lt;p>You can do three things there:&lt;/p>
 &lt;ul>
 &lt;li>Change between HAL and LL drivers for every peripheral, and even every instance of peripheral;&lt;/li>
@@ -207,12 +207,12 @@ However, as C and C++ environment is pretty janky for today&amp;rsquo;s standard
 &lt;p>&lt;strong>For Windows&lt;/strong>:&lt;/p>
 &lt;p>My usual way of installing C++ toolchain on Windows is via &lt;a href="https://winlibs.com/">WinLibs&lt;/a> package. To install it:&lt;/p>
 &lt;ul>
-&lt;li>Download latest UCRT runtime version for Win64 (i assume you&amp;rsquo;re running at least Win10 64bit, otherwise read the instructions on WinLibs page). &lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/winlibs_download.png" alt="winlibs download">&lt;/li>
-&lt;li>Extract it somewhere - preferably directly to a hard drive, for example &lt;code>C:\&lt;/code>, but it can be anywhere. I recommend avoiding paths with spaces and non-ASCII characters though, they may cause headaches in the future. &lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/mingw_unzipped.png" alt="mingw unzipped">&lt;/li>
-&lt;li>Add &lt;code>/bin&lt;/code> subdirectory to system or user &lt;code>PATH&lt;/code> variable. &lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/env_vars.png" alt="env vars">&lt;/li>
-&lt;li>Open terminal and run &lt;code>gcc --version&lt;/code> command. You should see similar message to the one below. You may also want to run &lt;code>where.exe gcc&lt;/code> to make sure you&amp;rsquo;re using correct GCC executable, in case you&amp;rsquo;d have other GCC installation in the system that you forgot about - usually, WinLibs provides most recent one, so this is the one you should be using. &lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/gcc_version.png" alt="check install">&lt;/li>
+&lt;li>Download latest UCRT runtime version for Win64 (i assume you&amp;rsquo;re running at least Win10 64bit, otherwise read the instructions on WinLibs page). &lt;img alt="winlibs download" src="https://steelph0enix.github.io/img/vscode-cpp-setup/winlibs_download.png">&lt;/li>
+&lt;li>Extract it somewhere - preferably directly to a hard drive, for example &lt;code>C:\&lt;/code>, but it can be anywhere. I recommend avoiding paths with spaces and non-ASCII characters though, they may cause headaches in the future. &lt;img alt="mingw unzipped" src="https://steelph0enix.github.io/img/vscode-cpp-setup/mingw_unzipped.png">&lt;/li>
+&lt;li>Add &lt;code>/bin&lt;/code> subdirectory to system or user &lt;code>PATH&lt;/code> variable. &lt;img alt="env vars" src="https://steelph0enix.github.io/img/vscode-cpp-setup/env_vars.png">&lt;/li>
+&lt;li>Open terminal and run &lt;code>gcc --version&lt;/code> command. You should see similar message to the one below. You may also want to run &lt;code>where.exe gcc&lt;/code> to make sure you&amp;rsquo;re using correct GCC executable, in case you&amp;rsquo;d have other GCC installation in the system that you forgot about - usually, WinLibs provides most recent one, so this is the one you should be using. &lt;img alt="check install" src="https://steelph0enix.github.io/img/vscode-cpp-setup/gcc_version.png">&lt;/li>
 &lt;/ul>
-&lt;p>If you&amp;rsquo;d rather use different toolchain than GCC, i recommend Visual C++, which you can install via Build Tools for Visual Studio 2022. You can download it from &lt;a href="https://aka.ms/vs/17/release/vs_BuildTools.exe">here&lt;/a>. To install C++ toolchain, run the installer and select the option &amp;ldquo;Desktop development with C++&amp;rdquo;. &lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/msvc_cpp.png" alt="msvc install">
+&lt;p>If you&amp;rsquo;d rather use different toolchain than GCC, i recommend Visual C++, which you can install via Build Tools for Visual Studio 2022. You can download it from &lt;a href="https://aka.ms/vs/17/release/vs_BuildTools.exe">here&lt;/a>. To install C++ toolchain, run the installer and select the option &amp;ldquo;Desktop development with C++&amp;rdquo;. &lt;img alt="msvc install" src="https://steelph0enix.github.io/img/vscode-cpp-setup/msvc_cpp.png">
 Note that &lt;strong>you don&amp;rsquo;t need both toolchains, one is enough&lt;/strong>, and that build tools do not include Visual Studio - if you want Visual Studio, you can install it as separate product using the same installer. Since this guide is about &lt;strong>Visual Studio Code&lt;/strong>, which is a different product, i&amp;rsquo;m not going to provide instructions for that.&lt;/p>
 &lt;p>&lt;strong>For Linux&lt;/strong>:&lt;/p>
 &lt;p>Usually, you should have GCC in your repository. On Ubuntu, Debian and similar distributions (Mint, Kubuntu, Lubuntu, PopOS!, Zorin, and so on), you have &lt;code>build-essential&lt;/code> package with most tools needed to build C/C++ programs.&lt;/p>
@@ -223,7 +223,7 @@ Note that &lt;strong>you don&amp;rsquo;t need both toolchains, one is enough&lt;
 &lt;p>&lt;strong>For MacOS&lt;/strong>: probably same thing as on Linux, look for GCC (or any other preferred toolchain) in package manager and install it from there. Verify the installation the same way as on Linux.&lt;/p>
 &lt;h2 id="vscode-essential-plugins">VSCode Essential Plugins&lt;/h2>
 &lt;p>If you already have working C/C++ toolchain, time to run VSCode and install some plugins. Run VSCode and go to the &lt;em>Extensions&lt;/em> menu.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/vscode-ext-1.png" alt="vsc-ext-1">&lt;/p>
+&lt;p>&lt;img alt="vsc-ext-1" src="https://steelph0enix.github.io/img/vscode-cpp-setup/vscode-ext-1.png">&lt;/p>
 &lt;p>Now, for some general C++ plugins:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>C/C++&lt;/strong> - that&amp;rsquo;s the core extension we&amp;rsquo;ll need. It contains the fundamental stuff to work with C/C++ in VSCode.&lt;/li>
@@ -240,7 +240,7 @@ Note that &lt;strong>you don&amp;rsquo;t need both toolchains, one is enough&lt;
 &lt;li>&lt;strong>Material Icon Theme&lt;/strong> - better looking than default ones&lt;/li>
 &lt;/ul>
 &lt;p>With these plugins, you will have a pretty decent bare-bones environment to work with C and C++. You&amp;rsquo;ll have autocompletion, some refactoring features, some code generation and a pretty decent syntax highlighting. &lt;em>The screenshot below is outdated - use the list above for updated recommended plugins&lt;/em>&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/installed-ext-vscode.png" alt="installed-ext">&lt;/p>
+&lt;p>&lt;img alt="installed-ext" src="https://steelph0enix.github.io/img/vscode-cpp-setup/installed-ext-vscode.png">&lt;/p>
 &lt;blockquote>
 &lt;p>I have one more plugin to show you, an alternative language server with many useful features, but i&amp;rsquo;ll leave it as a bonus at the end of this guide, because it needs a bit more configuration. Make sure to check it out!&lt;/p>
 &lt;/blockquote>
@@ -270,7 +270,7 @@ Note that &lt;strong>you don&amp;rsquo;t need both toolchains, one is enough&lt;
 &lt;p>Some toolchains - like GCC, MinGW or Visual C++ - come with their own build systems. In case of GCC/MinGW, it&amp;rsquo;s GNU Make. In case of Visual C++, it&amp;rsquo;s MSBuild. CMake can generate the necessary files for these build systems, and then we can use them to build the whole project with a single command. Pretty convenient.&lt;/p>
 &lt;h3 id="creating-a-simple-project">Creating a simple project&lt;/h3>
 &lt;p>Let&amp;rsquo;s open VSCode (or restart, if you had it opened while installing CMake) and add some extensions.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-ext.png" alt="cmake-ext">&lt;/p>
+&lt;p>&lt;img alt="cmake-ext" src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-ext.png">&lt;/p>
 &lt;p>These two plugins will enable &lt;code>CMakeLists.txt&lt;/code> syntax highlighting and CMake integration for VSCode. And this integration is a very powerful and helpful tool, as we&amp;rsquo;ll see in a bit. &lt;em>You can also install a &lt;code>cmake-format&lt;/code> extension, if you have Python installed and follow the &lt;a href="https://marketplace.visualstudio.com/items?itemName=cheshirekow.cmake-format">plugin&amp;rsquo;s installation guide&lt;/a>&lt;/em>&lt;/p>
 &lt;p>Now, make a folder for our new project and create a simple &lt;code>main.cpp&lt;/code> (or &lt;code>main.c&lt;/code>, if you want to code in C):&lt;/p>
 &lt;p>C++ version:&lt;/p>
@@ -289,7 +289,7 @@ Note that &lt;strong>you don&amp;rsquo;t need both toolchains, one is enough&lt;
 &lt;p>C++: &lt;code>g++ main.cpp -o main&lt;/code>&lt;/p>
 &lt;p>C: &lt;code>gcc main.c -o main&lt;/code>&lt;/p>
 &lt;p>And then run the app with &lt;code>./main&lt;/code> command. You should see your Hello World printed in terminal.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/hello-world-first-run.png" alt="hello-world-manual">&lt;/p>
+&lt;p>&lt;img alt="hello-world-manual" src="https://steelph0enix.github.io/img/vscode-cpp-setup/hello-world-first-run.png">&lt;/p>
 &lt;p>&lt;em>If that doesn&amp;rsquo;t work, make sure you have correctly added your toolchain to PATH variable.&lt;/em>&lt;/p>
 &lt;p>Now, we can proceed with CMake. Delete the compiled program &lt;code>main&lt;/code> you just created and tested, and create a &lt;code>CMakeLists.txt&lt;/code> file in the same directory as your code file. We&amp;rsquo;ll start with bare-bones template and then we&amp;rsquo;ll expand it a little.&lt;/p>
 &lt;p>Put this code into &lt;code>CMakeLists.txt&lt;/code>:&lt;/p>
@@ -301,32 +301,32 @@ Note that &lt;strong>you don&amp;rsquo;t need both toolchains, one is enough&lt;
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># Change main.cpp to main.c, if you&amp;#39;re making a C program
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>add_executable(&lt;span style="color:#f92672">${&lt;/span>PROJECT_NAME&lt;span style="color:#f92672">}&lt;/span> &lt;span style="color:#e6db74">main.cpp&lt;/span>)&lt;span style="color:#960050;background-color:#1e0010">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And then open up the VSCode command list with &lt;code>Ctrl+Shift+P&lt;/code> shortcut, and look for &lt;code>CMake: Configure&lt;/code> option. Run it.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-configure-cmd.png" alt="cmake-config">&lt;/p>
+&lt;p>&lt;img alt="cmake-config" src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-configure-cmd.png">&lt;/p>
 &lt;p>Next, you should see a list of detected toolchains installed in your system. Pick one.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-select-kit.png" alt="cmake-select-kit">&lt;/p>
+&lt;p>&lt;img alt="cmake-select-kit" src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-select-kit.png">&lt;/p>
 &lt;p>After that, VSCode will run CMake and configure the project for the first time. You should see similar output in your VSCode output window:&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-output.png" alt="cmake-config-out">&lt;/p>
+&lt;p>&lt;img alt="cmake-config-out" src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-output.png">&lt;/p>
 &lt;p>From now on, VSCode will automatically run CMake every time you change &lt;code>CMakeLists.txt&lt;/code> to re-generate the project files. You should also see a new menu on left-side toolbar&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-menu.png" alt="cmake-menu">&lt;/p>
+&lt;p>&lt;img alt="cmake-menu" src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-menu.png">&lt;/p>
 &lt;h4 id="building-your-program">Building your program&lt;/h4>
 &lt;p>So, we have a project now. How do we build it, and how do we run our program?&lt;/p>
 &lt;p>Thankfully, CMake plugin for VSCode got us covered. To build the program, either use &lt;code>F7&lt;/code> shortcut, look for the &lt;code>CMake: Build&lt;/code> command in command list, or press the &lt;code>Build&lt;/code> button either on VSCode bottom bar, or in CMake menu.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/build-bottom-bar.png" alt="build-from-bar">&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/build-cmake-menu.png" alt="build-from-menu">&lt;/p>
+&lt;p>&lt;img alt="build-from-bar" src="https://steelph0enix.github.io/img/vscode-cpp-setup/build-bottom-bar.png">&lt;/p>
+&lt;p>&lt;img alt="build-from-menu" src="https://steelph0enix.github.io/img/vscode-cpp-setup/build-cmake-menu.png">&lt;/p>
 &lt;p>You should see similar output in VSCode output window:&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/build-output.png" alt="build-output">&lt;/p>
+&lt;p>&lt;img alt="build-output" src="https://steelph0enix.github.io/img/vscode-cpp-setup/build-output.png">&lt;/p>
 &lt;h4 id="running-your-program">Running your program&lt;/h4>
 &lt;p>Now, let&amp;rsquo;s run it. Press the &lt;code>Run&lt;/code> button on the bottom VSCode bar:&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/run-bottom-bar.png" alt="run-app">&lt;/p>
+&lt;p>&lt;img alt="run-app" src="https://steelph0enix.github.io/img/vscode-cpp-setup/run-bottom-bar.png">&lt;/p>
 &lt;p>And the app should run without any issues. The output should be in terminal window.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/vscode-run.png" alt="app-run">&lt;/p>
+&lt;p>&lt;img alt="app-run" src="https://steelph0enix.github.io/img/vscode-cpp-setup/vscode-run.png">&lt;/p>
 &lt;h4 id="is-that-it">Is that it?&lt;/h4>
 &lt;p>&lt;strong>Of course not - there&amp;rsquo;s always more!&lt;/strong>&lt;/p>
 &lt;p>But yeah, we just created a very simple project with CMake + VSCode, built it and ran it. Now, let&amp;rsquo;s talk what actually happened and how can we expand our project.&lt;/p>
 &lt;h2 id="cmake-101---how-does-it-work">CMake 101 - how does it work?&lt;/h2>
 &lt;p>CMake, as i&amp;rsquo;ve mentioned multiple times, is a tool that generates the project files used to build it. However, it can also be used for some other things - like application packaging, managing tests, configuring the project, and so on. At the moment CMake is an &lt;em>industry standard&lt;/em>, which means that most of the C and C++ projects have CMake support, therefore it&amp;rsquo;s a very versatile tool. Not the best, but versatile.&lt;/p>
 &lt;p>You may notice that after configuring the project a new directory appeared in your project folder, called &lt;code>build&lt;/code>. Let&amp;rsquo;s peek into it.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-build-dir.png" alt="cmake-build-dir">&lt;/p>
+&lt;p>&lt;img alt="cmake-build-dir" src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmake-build-dir.png">&lt;/p>
 &lt;p>You are usually not supposed to touch and modify these files, as CMake manages them, but i&amp;rsquo;ll still explain the function of some of the more important ones:&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>CMakeCache.txt&lt;/code> - inside that file, you can find a list of CMake variables that are used in project generation process. You can find the toolchain paths, compiler flags, user and many different configuration variables there.&lt;/li>
@@ -351,7 +351,7 @@ Note that &lt;strong>you don&amp;rsquo;t need both toolchains, one is enough&lt;
 &lt;p>It&amp;rsquo;s important that &lt;code>add_executable&lt;/code> requires a full list of all the source files making up the program. So, in theory, you would have to add every single source file to the list manually, like that: &lt;code>add_executable(${PROJECT_NAME} main.cpp a.cpp b.cpp [...])&lt;/code>, but fortunately that&amp;rsquo;s not necessary. We can use &lt;code>file&lt;/code> command to generate that list for us.&lt;/p>
 &lt;h3 id="expanding-our-project---adding-more-files">Expanding our project - adding more files&lt;/h3>
 &lt;p>Let&amp;rsquo;s add some more files for our project. First, create two new directories - &lt;code>include&lt;/code> and &lt;code>src&lt;/code> in root project directory:&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/src-include-dirs.png" alt="src-include-dirs">&lt;/p>
+&lt;p>&lt;img alt="src-include-dirs" src="https://steelph0enix.github.io/img/vscode-cpp-setup/src-include-dirs.png">&lt;/p>
 &lt;p>Now, move the &lt;code>main.cpp&lt;/code> (or &lt;code>main.c&lt;/code>) to &lt;code>src&lt;/code> directory, and make a new file called &lt;code>lib.cpp&lt;/code> (or &lt;code>lib.c&lt;/code>) there. Put this code inside:&lt;/p>
 &lt;p>C++ version:&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;#34;lib.hpp&amp;#34;&lt;/span>&lt;span style="color:#75715e">
@@ -372,7 +372,7 @@ Note that &lt;strong>you don&amp;rsquo;t need both toolchains, one is enough&lt;
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">f&lt;/span>(&lt;span style="color:#66d9ef">int&lt;/span> x);
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The project should look like this now:&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/project-new-files.png" alt="project-expanded">&lt;/p>
+&lt;p>&lt;img alt="project-expanded" src="https://steelph0enix.github.io/img/vscode-cpp-setup/project-new-files.png">&lt;/p>
 &lt;p>Let&amp;rsquo;s update the &lt;code>CMakeLists.txt&lt;/code>.&lt;/p>
 &lt;p>We&amp;rsquo;ll use two new commands now: &lt;code>file&lt;/code> and &lt;code>include_directories&lt;/code>. &lt;code>file&lt;/code> command will generate the list of source files, while &lt;code>include_directories&lt;/code> will tell our toolchain where to look for header files.&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cmake" data-lang="cmake">&lt;span style="display:flex;">&lt;span>cmake_minimum_required(&lt;span style="color:#e6db74">VERSION&lt;/span> &lt;span style="color:#e6db74">3.12&lt;/span>)&lt;span style="color:#960050;background-color:#1e0010">
@@ -393,7 +393,7 @@ Note that &lt;strong>you don&amp;rsquo;t need both toolchains, one is enough&lt;
 &lt;p>The &lt;code>PROJECT_SOURCE_FILES&lt;/code> variable should have a list of all of our code files, and we&amp;rsquo;ll pass it to &lt;code>add_executable&lt;/code> instead of adding a new file manually.
 Of course, this variable can be called anyhow you want - it&amp;rsquo;s not a special name or anything.&lt;/p>
 &lt;p>Now, let&amp;rsquo;s configure our project again (VSCode should do this automatically, but i wanna show you how to do it in case it doesn&amp;rsquo;t). Right-click on &lt;code>CMakeLists.txt&lt;/code> and select &amp;ldquo;Configure All Projects&amp;rdquo;&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmakelists-config.png" alt="cmake-reconfig">&lt;/p>
+&lt;p>&lt;img alt="cmake-reconfig" src="https://steelph0enix.github.io/img/vscode-cpp-setup/cmakelists-config.png">&lt;/p>
 &lt;blockquote>
 &lt;p>Sometimes, when something goes wrong and CMake or VSCode starts behaving strange or getting buggy, it&amp;rsquo;s good to clean up and reconfigure the project (&amp;ldquo;Clean Reconfigure All Projects&amp;rdquo; and &amp;ldquo;Clean Rebuild All Projects&amp;rdquo;). This can sometimes happen when playing with CMakeLists.&lt;/p>
 &lt;/blockquote>
@@ -415,34 +415,34 @@ Of course, this variable can be called anyhow you want - it&amp;rsquo;s not a sp
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">f&lt;/span>(&lt;span style="color:#ae81ff">42&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Now, we should be able to build our program&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/lib-build.png" alt="lib-build">&lt;/p>
+&lt;p>&lt;img alt="lib-build" src="https://steelph0enix.github.io/img/vscode-cpp-setup/lib-build.png">&lt;/p>
 &lt;p>And run it&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/lib-run.png" alt="lib-run">&lt;/p>
+&lt;p>&lt;img alt="lib-run" src="https://steelph0enix.github.io/img/vscode-cpp-setup/lib-run.png">&lt;/p>
 &lt;p>At this point, everything should work automatically. You should be able to add new source files to &lt;code>src&lt;/code> dir, and new headers to &lt;code>include&lt;/code>, and CMake should handle them without having to touch &lt;code>CMakeLists.txt&lt;/code> manually. Adding new directories with source/include files is done the same way - just &lt;code>file&lt;/code> the source files, add include path with &lt;code>include_directories&lt;/code> and voila.&lt;/p>
 &lt;h3 id="debugging-our-code">Debugging our code&lt;/h3>
 &lt;p>Time for a last step in our setup - using a debugger. Fortunately, CMake integration does most of the work for us here.&lt;/p>
 &lt;p>Let&amp;rsquo;s add a breakpoint in the first line of our &lt;code>main&lt;/code> function - click on the left of line number, you should see a red dot:&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/vsc-breakpoint.png" alt="vsc-breakpoint">&lt;/p>
+&lt;p>&lt;img alt="vsc-breakpoint" src="https://steelph0enix.github.io/img/vscode-cpp-setup/vsc-breakpoint.png">&lt;/p>
 &lt;p>And start a debugging session by pressing a little bug icon on the bottom of VSCode window, or by using &lt;code>CMake: Debug&lt;/code> command&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/vsc-debug-icon.png" alt="vsc-debug-cmd">&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/vscode-debug.png" alt="vsc-debug-icon">&lt;/p>
+&lt;p>&lt;img alt="vsc-debug-cmd" src="https://steelph0enix.github.io/img/vscode-cpp-setup/vsc-debug-icon.png">&lt;/p>
+&lt;p>&lt;img alt="vsc-debug-icon" src="https://steelph0enix.github.io/img/vscode-cpp-setup/vscode-debug.png">&lt;/p>
 &lt;p>VSCode should now switch into debugging perspective and program should stop at breakpoint.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/vscode-debug-perspective.png" alt="vsc-debug-perspective">&lt;/p>
+&lt;p>&lt;img alt="vsc-debug-perspective" src="https://steelph0enix.github.io/img/vscode-cpp-setup/vscode-debug-perspective.png">&lt;/p>
 &lt;p>And that&amp;rsquo;s basically it. Don&amp;rsquo;t worry about lack of configuration for run/debug in VSCode - CMake integration does everything for us, so there&amp;rsquo;s no need to make them. Just make sure you run/debug the program via CMake commands in VSCode, instead of it&amp;rsquo;s own. Setting up the run/debug configs manually can be pretty annoying at the times, so that&amp;rsquo;s a subject for another guide.&lt;/p>
 &lt;p>There&amp;rsquo;s one subject i haven&amp;rsquo;t touched yet, and it&amp;rsquo;s adding external libraries. Since this guide is already long enough, i&amp;rsquo;ll make another one for that.
 Now, it&amp;rsquo;s the time for some bonus content.&lt;/p>
 &lt;h2 id="bonus-clangd-setup">Bonus: clangd setup&lt;/h2>
 &lt;p>&lt;code>clangd&lt;/code> is a language server for C++. It provides functionalities like code completion, code linting (showing warning and errors in real-time), simple refactoring, and so on. There is a C++ language server in VSCode already, as we installed &lt;code>C/C++&lt;/code> extension, but &lt;code>clangd&lt;/code> is better in some ways, and it&amp;rsquo;s more multi-platform (default VSCode C++ language server doesn&amp;rsquo;t work on ARM yet, so if you wanna code on RaspberryPi via SSH - &lt;code>clangd&lt;/code> is your best friend).&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/ext-clang.png" alt="clangd-plugin">&lt;/p>
+&lt;p>&lt;img alt="clangd-plugin" src="https://steelph0enix.github.io/img/vscode-cpp-setup/ext-clang.png">&lt;/p>
 &lt;p>In order to work, &lt;code>clangd&lt;/code> requires &lt;code>compile_commands.json&lt;/code> file to know how your code is compiled and with what flags. Fortunately for us, CMake generates that file automatically, so no further configuration is required on our side!&lt;/p>
 &lt;p>Right after the plugin installation, you should see a popup like this one:&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/clangd-install.png" alt="clangd-install">&lt;/p>
+&lt;p>&lt;img alt="clangd-install" src="https://steelph0enix.github.io/img/vscode-cpp-setup/clangd-install.png">&lt;/p>
 &lt;p>In order for &lt;code>clangd&lt;/code> to work, you have to disable the default Intellisense server (press &lt;code>Disable IntelliSense&lt;/code>), and download &lt;code>clangd&lt;/code> binary (which VSCode does for us). After it&amp;rsquo;s downloaded, you should see this popup:&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/clangd-installed.png" alt="clangd-installed">&lt;/p>
+&lt;p>&lt;img alt="clangd-installed" src="https://steelph0enix.github.io/img/vscode-cpp-setup/clangd-installed.png">&lt;/p>
 &lt;p>Reload the window, open up a C/C++ source file, and check if &lt;code>clangd&lt;/code> info is displayed on the bottom of the screen&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/clangd-idle.png" alt="clangd-idle">&lt;/p>
+&lt;p>&lt;img alt="clangd-idle" src="https://steelph0enix.github.io/img/vscode-cpp-setup/clangd-idle.png">&lt;/p>
 &lt;p>If that&amp;rsquo;s the case, congratulations, it should work now. Check if there&amp;rsquo;s no &lt;code>include&lt;/code> errors, and if the autocompletion works (you can manually trigger autocompletion with &lt;code>Ctrl+Space&lt;/code> shortcut). There should also be a &lt;code>.cache&lt;/code> directory in your project folder now, with &lt;code>clangd&lt;/code>&amp;rsquo;s cache files - make sure to add it to &lt;code>.gitignore&lt;/code> before making a commit :P&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/clangd-cache.png" alt="clangd-cache">&lt;/p>
+&lt;p>&lt;img alt="clangd-cache" src="https://steelph0enix.github.io/img/vscode-cpp-setup/clangd-cache.png">&lt;/p>
 &lt;p>Full list of &lt;code>clangd&lt;/code> features can be found here: &lt;a href="https://clangd.llvm.org/features.html">https://clangd.llvm.org/features.html&lt;/a>. I strongly recommend checking it out.&lt;/p>
 &lt;h3 id="clang-format-setup">Clang-Format setup&lt;/h3>
 &lt;p>&lt;code>clangd&lt;/code> embeds &lt;code>clang-format&lt;/code> support, which is a code formatting tool - one of the best in C and C++ environment. &lt;code>clang-format&lt;/code> allows you to manually or automatically format the code (for example, on-save, format-while-typing is not yet supported with &lt;code>clangd&lt;/code>) according to your preferences, which you can set by creating &lt;code>.clang-format&lt;/code> file in your workspace root, with configuration options for &lt;code>clang-format&lt;/code>.&lt;/p>
@@ -452,14 +452,14 @@ Now, it&amp;rsquo;s the time for some bonus content.&lt;/p>
 IndentWidth: 2
 Standard: c++17
 BreakBeforeBraces: Linux
-&lt;/code>&lt;/pre>&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/clang-format.png" alt="clang-format">&lt;/p>
+&lt;/code>&lt;/pre>&lt;p>&lt;img alt="clang-format" src="https://steelph0enix.github.io/img/vscode-cpp-setup/clang-format.png">&lt;/p>
 &lt;p>If &lt;code>clangd&lt;/code> is the only formatter you have installed, it should be treated as default. If not, make sure it is by opening command list (&lt;code>Ctrl+Shift+P&lt;/code>), looking for &lt;code>Format Document With...&lt;/code> option, and setting default formatter to &lt;code>clangd&lt;/code>.&lt;/p>
 &lt;p>Now, open a &lt;code>main&lt;/code> file and either right-click and pick &lt;code>Format document&lt;/code> option, or use a shortcut (&lt;code>Shift+Alt+F&lt;/code> on Windows by default). The code should now look like this:&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/main-formatted.png" alt="main-formatted">&lt;/p>
+&lt;p>&lt;img alt="main-formatted" src="https://steelph0enix.github.io/img/vscode-cpp-setup/main-formatted.png">&lt;/p>
 &lt;p>If it had been formatted differently, check the &lt;code>clangd&lt;/code> output in VSCode window. All the issues and errors with &lt;code>.clang-format&lt;/code> file should be there.&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/clangd-output.png" alt="clangd-output">&lt;/p>
+&lt;p>&lt;img alt="clangd-output" src="https://steelph0enix.github.io/img/vscode-cpp-setup/clangd-output.png">&lt;/p>
 &lt;p>You can set autoformatting in VSCode settings - open settings window with &lt;code>Ctrl+,&lt;/code> or &lt;code>File -&amp;gt; Preferences -&amp;gt; Settings&lt;/code>, and look for &lt;code>format on&lt;/code> options&lt;/p>
-&lt;p>&lt;img src="https://steelph0enix.github.io/img/vscode-cpp-setup/vsc-format-settings.png" alt="vsc-format-on">&lt;/p>
+&lt;p>&lt;img alt="vsc-format-on" src="https://steelph0enix.github.io/img/vscode-cpp-setup/vsc-format-settings.png">&lt;/p>
 &lt;h2 id="summary">Summary&lt;/h2>
 &lt;p>And that would be it. I hope it&amp;rsquo;s not too long.&lt;/p>
 &lt;p>If there are any issues or questions about the guide itself or the setup process, feel free to &lt;a href="https://steelph0enix.github.io/about/">contact me&lt;/a>!&lt;/p></content></item></channel></rss>

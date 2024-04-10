@@ -1,0 +1,143 @@
+<!doctype html><html lang=en><head><title>Making C/C++ project template in Meson - part 2.5 :: </title><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="I've fixed CppUTest wrap!"><meta name=keywords content="c,cpp,c++,meson,project,template,getting,started,guide"><meta name=robots content="noodp"><link rel=canonical href=https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-2-5/><link rel=stylesheet href=https://steelph0enix.github.io/styles.css><link rel="shortcut icon" href=https://steelph0enix.github.io/img/theme-colors/orange.png><link rel=apple-touch-icon href=https://steelph0enix.github.io/img/theme-colors/orange.png><meta name=twitter:card content="summary"><meta name=twitter:site content><meta name=twitter:creator content="steel_ph0enix"><meta property="og:locale" content="en"><meta property="og:type" content="article"><meta property="og:title" content="Making C/C++ project template in Meson - part 2.5"><meta property="og:description" content="I've fixed CppUTest wrap!"><meta property="og:url" content="https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-2-5/"><meta property="og:site_name" content><meta property="og:image" content="https://steelph0enix.github.io/img/favicon/orange.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="627"><meta property="article:published_time" content="2024-02-29 00:00:00 +0000 UTC"></head><body class=orange><div class="container center headings--one-size"><header class=header><div class=header__inner><div class=header__logo><a href=/><div class=logo>SteelPh0enix's Blog</div></a></div><ul class="menu menu--mobile"><li class=menu__trigger>Menu&nbsp;▾</li><li><ul class=menu__dropdown><li><a href=/about>About</a></li></ul></li></ul></div><nav class=navigation-menu><ul class="navigation-menu__inner menu--desktop"><li><a href=/about>About</a></li></ul></nav></header><div class=content><article class=post><h1 class=post-title><a href=https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-2-5/>Making C/C++ project template in Meson - part 2.5</a></h1><div class=post-meta><time class=post-date>2024-02-29[Updated::2024-04-10]</time><span class=post-author>SteelPh0enix</span><span class=post-reading-time>7 min read (1327 words)</span></div><span class=post-tags>#<a href=https://steelph0enix.github.io/tags/c/>c</a>&nbsp;
+#<a href=https://steelph0enix.github.io/tags/cpp/>cpp</a>&nbsp;
+#<a href=https://steelph0enix.github.io/tags/meson/>meson</a>&nbsp;
+#<a href=https://steelph0enix.github.io/tags/guide/>guide</a>&nbsp;</span><div class=table-of-contents><h2>Table of Contents</h2><nav id=TableOfContents><ul><li><a href=#fixing-cpputest-wrap-and-contributing-to-wrapdb>Fixing CppUTest wrap and contributing to WrapDB</a></li><li><a href=#adding-unit-tests-support>Adding unit tests support</a></li><li><a href=#summary>Summary</a></li></ul></nav></div><div class=post-content><div><h2 id=fixing-cpputest-wrap-and-contributing-to-wrapdb>Fixing CppUTest wrap and contributing to WrapDB<a href=#fixing-cpputest-wrap-and-contributing-to-wrapdb class=hanchor arialabel=Anchor>&#8983;</a></h2><p>As per <a href=/posts/making-c-cpp-project-template-in-meson-part-2/>my previous post</a>, <a href=https://github.com/mesonbuild/wrapdb/pull/1398>I have fixed</a> the CppUTest wrap and it&rsquo;s now available on WrapDB!
+Since this post series is strictly related to Meson, I want to talk a bit more about creating wraps and contributing there.
+If you don&rsquo;t care, and just want to continue to the guide part - jump to the <a href=/posts/making-c-cpp-project-template-in-meson-part-2-5/#adding-unit-tests-support>next section</a>.</p><p>I have started the process of creating this wrap by making a very basic example project with a single binary that uses CppUTest.
+Then, I plugged in CppUTest as a normal subproject, and began rewriting the <code>meson.build</code> files, along with the options.
+Eventually I&rsquo;ve managed to get to a point where it compiled successfully on my setup, linked to an app, and I was able to run it.
+Thinking that&rsquo;s good enough, I&rsquo;ve started worrying about wrapping it properly.</p><p>There are few different kinds of wraps that Meson supports.
+If the project supports Meson, CMake or Cargo it can be wrapped directly, either as an archive or a specific revision of code on a supported repository.
+Otherwise, it&rsquo;s possible to provide an &ldquo;overlay&rdquo; patch that adds/replaces the files of the library in order to provide Meson support - that&rsquo;s what file-wraps are.</p><p>I&rsquo;ve considered it before, but to be clear - CppUTest&rsquo;s primary build system is CMake, but I don&rsquo;t have much pleasant memories related to CMake and I&rsquo;d prefer to avoid interacting with it.</p><p>I already had the files necessary to create a file-wrap, so all I needed to do was modifying <code>cpputest.wrap</code>&mldr; Right?
+Wrong!
+This is where I&rsquo;ve spent an hour or two, thinking that I can host this on my Github repo instead of contributing to WrapDB.
+And this is my first major complaint about Meson!</p><p>First thing I wanted to try was putting the wrap patch files on my Github repository, and pointing the wrap to it.
+I&rsquo;ve figured that this way should be supported, because it enables hosting wraps on private repositories, for example in company environments.
+So i did that, created a release to have an archive, pointed the wrap to it, and&mldr; It did not work, because Meson kept putting the patch files in different directory than source files.</p><p>I was thinking that <code>directory</code> option in <code>.wrap</code> file defines the directory both archives will be extracted to, but that&rsquo;s not the case!
+This is the option that defines where the <strong>source archive</strong> will be extracted to, but not the <strong>patch archive</strong>.
+And the output directory for patch was dependent on&mldr; The name of my repository. Duh.
+Effectively, I think that I&rsquo;d have to name my repository with the wrap <code>cpputest</code> to make it working that way, and I&rsquo;d rather not do that&mldr;
+So I&rsquo;ve abandoned this idea and proceeded to read <a href=https://mesonbuild.com/Adding-new-projects-to-wrapdb.html>how to contribute to WrapDB</a>.
+Alas, I believe that this way of providing files for file-wraps should be supported.</p><p>The contribution itself was rather pleasant experience - after moving the wrap files to the WrapDB fork, I&rsquo;ve made a pull request and waited for CI to pass.
+I was happy to see the CI checked the code by running a Python script with no external dependencies, so I could run the checks locally.
+I was even more happy to see that this script actually downloaded and built every library WrapDB supports, and CI was running it on Windows, Linux and MacOS runners with Clang, GCC and MSVC.
+That is a nice thing, but as we experienced, it&rsquo;s not quite enough to guarantee quality - even practically unusable wraps can build with no issues.
+I was less happy when I&rsquo;ve enabled the CI on my fork and it ate 1/4th of my monthly free GitHub runner limit after a single full run.
+Oh well.
+Good thing they do incremental builds on PRs.</p><p>Of course, my PR it did not pass the CI first time - it forced me to add some functionality to the wrap (platform autodetection), but after that it was good to go and got merged.
+The whole process took only a few hours, the PR was reviewed, the CI did it&rsquo;s job - no complains there.</p><h2 id=adding-unit-tests-support>Adding unit tests support<a href=#adding-unit-tests-support class=hanchor arialabel=Anchor>&#8983;</a></h2><p>Now we can proceed with the actual subject of this post.</p><p>Remove everything from the <code>subprojects/</code> directory, open a terminal and run <code>meson wrap install cpputest</code>.
+This is the preferred method of installing wraps, and I forgot to mention it earlier.
+I don&rsquo;t quite understand why it&rsquo;s not able to create <code>subprojects/</code> directory by itself by default, but it&rsquo;s a non-issue.</p><p>I assume that you&rsquo;ve followed the previous part, and already added <code>tests</code> directory to main <code>meson.build</code>, and created example test in <code>tests/calc/</code>.
+If not, <a href=/posts/making-c-cpp-project-template-in-meson-part-2/#managing-external-dependencies-with-meson>go back and do that</a>.
+If you already did that, then the project should compile successfully.
+The only thing I&rsquo;d like to change is <code>cpputest_dependency</code> to just <code>cpputest</code>, because it looks better.</p><p>tests/meson.build:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-meson data-lang=meson><span style=display:flex><span>cpputest_project <span style=color:#f92672>=</span> subproject(<span style=color:#e6db74>&#39;cpputest&#39;</span>, required: <span style=color:#66d9ef>true</span>)
+</span></span><span style=display:flex><span>cpputest <span style=color:#f92672>=</span> cpputest_project.get_variable(<span style=color:#e6db74>&#39;cpputest_dep&#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>subdir(<span style=color:#e6db74>&#39;calc&#39;</span>)
+</span></span><span style=display:flex><span>subdir(<span style=color:#e6db74>&#39;greeter&#39;</span>)
+</span></span></code></pre></div><p>tests/calc/meson.build:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-meson data-lang=meson><span style=display:flex><span>calc_test_exec <span style=color:#f92672>=</span> executable(<span style=color:#e6db74>&#39;calc_test&#39;</span>, <span style=color:#e6db74>&#39;test.cpp&#39;</span>, dependencies: cpputest)
+</span></span><span style=display:flex><span>test(<span style=color:#e6db74>&#39;calc test&#39;</span>, calc_test_exec)
+</span></span></code></pre></div><p>Now, we should also be able to run our test via <code>meson test</code> command.</p><pre tabindex=0><code>&gt; meson test -C builddir
+ninja: Entering directory `\builddir&#39;  
+ninja: no work to do.
+1/1 calc test        FAIL            0.01s   exit status 1
+&gt;&gt;&gt; MALLOC_PERTURB_=245 ASAN_OPTIONS=halt_on_error=1:abort_on_error=1:print_summary=1 UBSAN
+_OPTIONS=halt_on_error=1:abort_on_error=1:print_summary=1:print_stacktrace=1 \builddir\tests\calc\calc_test.exe
+
+
+Ok:                 0
+Expected Fail:      0
+Fail:               1
+Unexpected Pass:    0
+Skipped:            0
+Timeout:            0
+
+Full log written to \builddir\meson-logs\testlog.txt
+</code></pre><p>It will fail, because in the previous part we&rsquo;ve written a test that should fail, so it&rsquo;s all good.
+Your <code>MALLOC_PERTURB_</code> may be different, as it&rsquo;s randomly chosen every test run.
+It&rsquo;s used for some magic involving <code>malloc</code> that helps detecting memory-related issues.</p><p>So, it seems like we have a working unit test setup.
+Let&rsquo;s write some meaningful tests for both modules and we&rsquo;ll check if we can call them separately.
+We also have to finish up our Meson script for <code>calc</code> test, because we&rsquo;re not linking to <code>calc</code> yet, and we should!
+And we also have to add <code>libs_includes</code> to includes for our test exec.</p><p>tests/calc/meson.build</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-meson data-lang=meson><span style=display:flex><span>calc_test_exec <span style=color:#f92672>=</span> executable(
+</span></span><span style=display:flex><span>  <span style=color:#e6db74>&#39;calc_test&#39;</span>,
+</span></span><span style=display:flex><span>  sources: <span style=color:#e6db74>&#39;test.cpp&#39;</span>,
+</span></span><span style=display:flex><span>  dependencies: cpputest,
+</span></span><span style=display:flex><span>  link_with: calc_lib,
+</span></span><span style=display:flex><span>  include_directories: libs_includes,
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>test(<span style=color:#e6db74>&#39;calc test&#39;</span>, calc_test_exec)
+</span></span></code></pre></div><p>And our test may look like this:</p><p>tests/calc/test.cpp</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-cpp data-lang=cpp><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;CppUTest/CommandLineTestRunner.h&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;CppUTest/TestHarness.h&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;calc/calc.hpp&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span>TEST_GROUP(TemperatureCalcTests){};
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>TEST(TemperatureCalcTests, convertsCelciusToFahrenheit) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>auto</span> <span style=color:#66d9ef>const</span> givenCelcius <span style=color:#f92672>=</span> <span style=color:#ae81ff>37.7778</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>auto</span> <span style=color:#66d9ef>const</span> expectedFahrenheit <span style=color:#f92672>=</span> <span style=color:#ae81ff>100.0</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>auto</span> <span style=color:#66d9ef>const</span> gotFahrenheit <span style=color:#f92672>=</span> celcius_to_fahrenheit(givenCelcius);
+</span></span><span style=display:flex><span>    DOUBLES_EQUAL(expectedFahrenheit, gotFahrenheit, <span style=color:#ae81ff>0.001</span>);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>TEST(TemperatureCalcTests, convertsFahrenheitToCelcius) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>auto</span> <span style=color:#66d9ef>const</span> givenFahrenheit <span style=color:#f92672>=</span> <span style=color:#ae81ff>212</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>auto</span> <span style=color:#66d9ef>const</span> expectedCelcius <span style=color:#f92672>=</span> <span style=color:#ae81ff>100.0</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>auto</span> <span style=color:#66d9ef>const</span> gotCelcius <span style=color:#f92672>=</span> fahrenheit_to_celcius(givenFahrenheit);
+</span></span><span style=display:flex><span>    DOUBLES_EQUAL(expectedCelcius, gotCelcius, <span style=color:#ae81ff>0.001</span>);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>int</span> <span style=color:#a6e22e>main</span>(<span style=color:#66d9ef>int</span> ac, <span style=color:#66d9ef>char</span><span style=color:#f92672>**</span> av) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> CommandLineTestRunner<span style=color:#f92672>::</span>RunAllTests(ac, av);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>We should create similar meson and source file for greeter.</p><p>tests/greeter/meson.build</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-meson data-lang=meson><span style=display:flex><span>greeter_test_exec <span style=color:#f92672>=</span> executable(
+</span></span><span style=display:flex><span>  <span style=color:#e6db74>&#39;greeter_test&#39;</span>,
+</span></span><span style=display:flex><span>  sources: <span style=color:#e6db74>&#39;test.cpp&#39;</span>,
+</span></span><span style=display:flex><span>  dependencies: cpputest,
+</span></span><span style=display:flex><span>  link_with: greeter_lib,
+</span></span><span style=display:flex><span>  include_directories: libs_includes,
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>test(<span style=color:#e6db74>&#39;greeter test&#39;</span>, greeter_test_exec)
+</span></span></code></pre></div><p>tests/greeter/test.cpp</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-cpp data-lang=cpp><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;CppUTest/CommandLineTestRunner.h&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;CppUTest/TestHarness.h&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;greeter/greeter.hpp&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;string&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span>TEST_GROUP(GreeterTests){};
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>TEST(GreeterTests, greetsUser) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>auto</span> <span style=color:#66d9ef>const</span> user <span style=color:#f92672>=</span> std<span style=color:#f92672>::</span>string(<span style=color:#e6db74>&#34;user&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>auto</span> <span style=color:#66d9ef>const</span> expectedMessage <span style=color:#f92672>=</span> std<span style=color:#f92672>::</span>string(<span style=color:#e6db74>&#34;Hello user&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>auto</span> <span style=color:#66d9ef>const</span> actualMessage <span style=color:#f92672>=</span> greet(user);
+</span></span><span style=display:flex><span>    CHECK_EQUAL(expectedMessage, actualMessage);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>int</span> <span style=color:#a6e22e>main</span>(<span style=color:#66d9ef>int</span> ac, <span style=color:#66d9ef>char</span><span style=color:#f92672>**</span> av) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> CommandLineTestRunner<span style=color:#f92672>::</span>RunAllTests(ac, av);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>And now, after running <code>meson test -C builddir</code>, we should get something like this:</p><pre tabindex=0><code>PS .&gt; meson test -C builddir
+ninja: Entering directory `.\builddir&#39;
+ninja: no work to do.
+1/2 calc test           OK              0.01s
+2/2 greeter test        OK              0.01s
+
+Ok:                 2   
+Expected Fail:      0
+Fail:               0
+Unexpected Pass:    0
+Skipped:            0
+Timeout:            0
+
+Full log written to .\builddir\meson-logs\testlog.txt
+</code></pre><p>And here we go, we finally have working unit tests in our project.</p><h2 id=summary>Summary<a href=#summary class=hanchor arialabel=Anchor>&#8983;</a></h2><p>Oh well, this part took way too long to publish.
+I blame Helldivers II for that.
+To be fair, I finished writing it in a manner of two weeks, I just didn&rsquo;t have energy to finish it and push it.
+Still, I&rsquo;m gonna try to move it forward faster because my backlog of stuff to do is incredibly long, and this template could help.
+For anyone interesed, <a href=https://github.com/SteelPh0enix/meson_c_cpp_project_template/releases/tag/part-2>there&rsquo;s a tag</a> in the repository with it&rsquo;s current state.
+In the next part, i will show you how to configure Doxygen with Meson to generate documentation of our modules and applications functions.</p></div></div><div class=pagination><div class=pagination__title><span class=pagination__title-h>Read other posts</span><hr></div><div class=pagination__buttons><span class="button next"><a href=https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-2/><span class=button__text>Making C/C++ project template in Meson - part 2</span>
+<span class=button__icon>→</span></a></span></div></div><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//steelph0enixblog.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></article></div><footer class=footer><div class=footer__inner><div class="copyright copyright--user"><span>SteelPh0enix's Blog © 2021-2024 by SteelPh0enix is licensed under CC BY-SA 4.0</span>
+<span>:: <a href=https://github.com/panr/hugo-theme-terminal target=_blank>Theme</a> made by <a href=https://github.com/panr target=_blank>panr</a></span></div></div></footer><script type=text/javascript src=/bundle.min.js></script></div></body></html>
