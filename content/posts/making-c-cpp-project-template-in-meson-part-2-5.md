@@ -219,3 +219,12 @@ Full log written to .\builddir\meson-logs\testlog.txt
 ```
 
 And here we go, we finally have working unit tests in our project.
+
+## Summary
+
+Oh well, this part took way too long to publish.
+I blame Helldivers II for that.
+To be fair, I finished writing it in a manner of two weeks, I just didn't have energy to finish it and push it.
+Still, I'm gonna try to move it forward faster because my backlog of stuff to do is incredibly long, and this template could help.
+For anyone interesed, [there's a tag](https://github.com/SteelPh0enix/meson_c_cpp_project_template/releases/tag/part-2) in the repository with it's current state.
+In the next part, i will show you how to configure Doxygen with Meson to generate documentation of our modules and applications functions.
