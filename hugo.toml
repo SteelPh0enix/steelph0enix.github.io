@@ -1,5 +1,5 @@
 baseurl = "https://steelph0enix.github.io/"
-languageCode = "en"
+languageCode = "en-us"
 theme = "terminal"
 disqusShortname = "steelph0enixblog"
 copyright = "SteelPh0enix's Blog © 2021-2024 by SteelPh0enix is licensed under CC BY-SA 4.0"
