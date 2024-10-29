@@ -1,10 +1,10 @@
 :root {
   --background: #2f2f2f;
-  --foreground: #deddda;
-  --accent: #ff7800;
+  --foreground: #eceae5;
+  --accent: #ff8844;
   --font-size: 1rem;
   --line-height: 1.54rem;
-  --radius: 4px;
+  --radius: 2px;
 }
 
 html {
