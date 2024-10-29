@@ -1,10 +1,10 @@
 +++
-title = "llama.cpp guide - Hosting local LLMs from scratch"
+title = "llama.cpp guide - Running LLMs locally, on any hardware, from scratch"
 date = "2024-10-28"
 author = "SteelPh0enix"
 authorTwitter = "steel_ph0enix"
 tags = ["llama.cpp", "llm", "ai", "guide"]
-keywords = ["llama.cpp", "llama", "llm", "ai", "building", "running", "guide", "inference"]
+keywords = ["llama.cpp", "llama", "cpp", "llm", "ai", "building", "running", "guide", "inference", "local", "scratch", "hardware"]
 description = "Psst, kid, want some cheap LLMs?"
 showFullContent = false
 draft = true
@@ -39,7 +39,20 @@ Existence of quantization made me realize that you don't need powerful hardware 
 You can even run [LLMs on RaspberryPi's](https://www.reddit.com/r/raspberry_pi/comments/1ati2ki/how_to_run_a_large_language_model_llm_on_a/) at this point (with llama.cpp too!)
 Of course, the performance will be *abysmal* if you don't run the LLM with a proper backend on a decent hardware, but the bar is currently not very high.
 
-If you came here with intention of finding some piece of software that will allow you to easily run popular models on most modern hardware - grab LM Studio and go play with it.
+If you came here with intention of finding some piece of software that will allow you to easily run popular models on most modern hardware for non-commercial purposes - grab LM Studio and go play with it.
 It fits this description very well, just make sure to use appropriate back-end for your GPU/CPU for optimal performance.
 
-If you want to know more about llama.cpp, which LM Studio uses under the hood, and/or learn how to build and use it directly - have a nice read!
+However, if you:
+
+- Want to learn more about llama.cpp (which LM Studio uses as a back-end), and LLMs in general
+- Want to use LLMs for commercial purposes ([LM Studio's terms](https://lmstudio.ai/terms) forbid that)
+- Want to run LLMs on exotic hardware (LM Studio provides only the most popular backends)
+- Don't like closed-source software (which LM Studio, unfortunately, is) and/or don't trust anything you don't build yourself
+- Want to have access to latest features and model support as soon as possible
+
+you should find the rest of this post pretty useful!
+
+## getting the basics
+
+Let's start with grabbing a copy of [llama.cpp source code](https://github.com/ggerganov/llama.cpp).
+If you are very lazy, and you have supported hardware, you can just grab a [release build](https://github.com/ggerganov/llama.cpp/releases) and ignore the "building llama.cpp" section of this post, but i prefer building my llama myself.
