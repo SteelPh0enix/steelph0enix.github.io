@@ -1,0 +1,19 @@
+---
+$schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
+version: '0.2'
+dictionaryDefinitions:
+  - name: blog-dict
+    path: './blog-dict.txt'
+    addWords: true
+dictionaries:
+  - en_US
+  - companies
+  - softwareTerms
+  - python
+  - cpp
+  - bash
+  - filetypes
+  - blog-dict
+ignorePaths:
+  - '/blog-dict.txt'
+
