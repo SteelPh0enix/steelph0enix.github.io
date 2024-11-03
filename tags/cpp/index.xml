@@ -37,7 +37,7 @@ That is a nice thing, but as we experienced, it&amp;rsquo;s not quite enough to 
 I was less happy when I&amp;rsquo;ve enabled the CI on my fork and it ate 1/4th of my monthly free GitHub runner limit after a single full run.
 Oh well.
 Good thing they do incremental builds on PRs.&lt;/p>
-&lt;p>Of course, my PR it did not pass the CI first time - it forced me to add some functionality to the wrap (platform autodetection), but after that it was good to go and got merged.
+&lt;p>Of course, my PR it did not pass the CI first time - it forced me to add some functionality to the wrap (platform auto-detection), but after that it was good to go and got merged.
 The whole process took only a few hours, the PR was reviewed, the CI did it&amp;rsquo;s job - no complains there.&lt;/p>
 &lt;h2 id="adding-unit-tests-support">Adding unit tests support&lt;/h2>
 &lt;p>Now we can proceed with the actual subject of this post.&lt;/p>
@@ -97,19 +97,19 @@ And we also have to add &lt;code>libs_includes&lt;/code> to includes for our tes
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>TEST_GROUP(TemperatureCalcTests){};
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>TEST(TemperatureCalcTests, convertsCelciusToFahrenheit) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">auto&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> givenCelcius &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">37.7778&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>TEST(TemperatureCalcTests, convertsCelsiusToFahrenheit) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">auto&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> givenCelsius &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">37.7778&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">auto&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> expectedFahrenheit &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">100.0&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">auto&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> gotFahrenheit &lt;span style="color:#f92672">=&lt;/span> celcius_to_fahrenheit(givenCelcius);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">auto&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> gotFahrenheit &lt;span style="color:#f92672">=&lt;/span> celsius_to_fahrenheit(givenCelsius);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> DOUBLES_EQUAL(expectedFahrenheit, gotFahrenheit, &lt;span style="color:#ae81ff">0.001&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>TEST(TemperatureCalcTests, convertsFahrenheitToCelcius) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>TEST(TemperatureCalcTests, convertsFahrenheitToCelsius) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">auto&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> givenFahrenheit &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">212&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">auto&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> expectedCelcius &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">100.0&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">auto&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> gotCelcius &lt;span style="color:#f92672">=&lt;/span> fahrenheit_to_celcius(givenFahrenheit);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> DOUBLES_EQUAL(expectedCelcius, gotCelcius, &lt;span style="color:#ae81ff">0.001&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">auto&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> expectedCelsius &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">100.0&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">auto&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> gotCelsius &lt;span style="color:#f92672">=&lt;/span> fahrenheit_to_celsius(givenFahrenheit);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> DOUBLES_EQUAL(expectedCelsius, gotCelsius, &lt;span style="color:#ae81ff">0.001&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>(&lt;span style="color:#66d9ef">int&lt;/span> ac, &lt;span style="color:#66d9ef">char&lt;/span>&lt;span style="color:#f92672">**&lt;/span> av) {
@@ -164,7 +164,7 @@ Full log written to .\builddir\meson-logs\testlog.txt
 I blame Helldivers II for that.
 To be fair, I finished writing it in a manner of two weeks, I just didn&amp;rsquo;t have energy to finish it and push it.
 Still, I&amp;rsquo;m gonna try to move it forward faster because my backlog of stuff to do is incredibly long, and this template could help.
-For anyone interesed, &lt;a href="https://github.com/SteelPh0enix/meson_c_cpp_project_template/releases/tag/part-2">there&amp;rsquo;s a tag&lt;/a> in the repository with it&amp;rsquo;s current state.
+For anyone interested, &lt;a href="https://github.com/SteelPh0enix/meson_c_cpp_project_template/releases/tag/part-2">there&amp;rsquo;s a tag&lt;/a> in the repository with it&amp;rsquo;s current state.
 In the next part, i will show you how to configure Doxygen with Meson to generate documentation of our modules and applications functions.&lt;/p></content></item><item><title>Making C/C++ project template in Meson - part 2</title><link>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-2/</link><pubDate>Wed, 07 Feb 2024 00:00:00 +0000</pubDate><guid>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-2/</guid><description>&lt;h2 id="intro">Intro&lt;/h2>
 &lt;p>In &lt;a href="https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-1/">previous part&lt;/a>, we&amp;rsquo;ve created the base of our project by defining it&amp;rsquo;s structure and making our first modules and executable.
 In this one, we&amp;rsquo;re gonna add unit tests support.&lt;/p>
@@ -198,8 +198,8 @@ Adjust the returned string appropriately for the other module.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> greet(what_am_i()) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*F == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> fahrenheit_to_celcius(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*C&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*C == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> celcius_to_fahrenheit(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*F&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*F == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> fahrenheit_to_celsius(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*C&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*C == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> celsius_to_fahrenheit(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*F&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Aaand&amp;hellip; In my case, it prints &lt;code>Hello i am calc&lt;/code>, which is caused by the fact that &lt;code>calc_includes&lt;/code> are before &lt;code>greeter_includes&lt;/code> in my &lt;code>hello_world/meson.build&lt;/code>&amp;rsquo;s &lt;code>executable()&lt;/code> call.
 After swapping them, &lt;code>Hello i am greeter&lt;/code> is printed.&lt;/p>
@@ -229,8 +229,8 @@ We can also remove the &lt;code>utils.hpp&lt;/code> and restore the original &lt
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> greet(&lt;span style="color:#e6db74">&amp;#34;random developer&amp;#34;&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*F == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> fahrenheit_to_celcius(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*C&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*C == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> celcius_to_fahrenheit(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*F&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*F == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> fahrenheit_to_celsius(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*C&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*C == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> celsius_to_fahrenheit(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*F&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Also; let&amp;rsquo;s rename our &lt;code>lib/&lt;/code> directory to &lt;code>libs/&lt;/code>, this is a very small change but my brain automatically tries to write &lt;code>libs/&lt;/code> instead of &lt;code>lib/&lt;/code> because there are &lt;em>multiple&lt;/em> libraries there, so I think it reflects this directory&amp;rsquo;s content better.
 Remember to also change the argument of &lt;code>subdir()&lt;/code> in the root &lt;code>meson.build&lt;/code>.&lt;/p>
@@ -519,7 +519,7 @@ ninja: Entering directory `F:/Projects/C_C++/meson_c_cpp_project_template/buildd
 PS .\builddir&amp;gt; .\project_template.exe
 This is project project_template.
 PS .\builddir&amp;gt; .\project_template.exe hello world
-F:\Projects\C_C++\meson_c_cpp_project_template\builddir\project_template.exetakes no arguments.
+F:\Projects\C_C++\meson_c_cpp_project_template\builddir\project_template.exe takes no arguments.
 &lt;/code>&lt;/pre>&lt;p>And also a test!&lt;/p>
 &lt;pre tabindex="0">&lt;code>meson test
 &lt;/code>&lt;/pre>&lt;p>Oh, if you haven&amp;rsquo;t noticed yet - the &lt;code>-C&lt;/code> argument changes the working directory of Meson, so it&amp;rsquo;s necessary only when you&amp;rsquo;re outside of it.
@@ -569,30 +569,30 @@ Modules will go to &lt;code>lib&lt;/code>, and tests into &lt;code>tests&lt;/cod
 Also; let&amp;rsquo;s add &lt;code>meson.build&lt;/code> to each directory, empty - for now.
 This is how it might look like:&lt;/p>
 &lt;pre tabindex="0">&lt;code>meson_c_cpp_project_template
-│ meson.build
-│
-├───apps
-│ └───hello_world
-│ hello_world.cpp
-│ meson.build
-│
-├───lib
-│ ├───calc
-│ │ calc.cpp
-│ │ calc.hpp
-│ │ meson.build
-│ │
-│ └───greeter
-│ greeter.cpp
-│ greeter.hpp
-│ meson.build
-│
-└───tests
-├───calc
-│ calc_test.cpp
-│ meson.build
-│
-└───greeter
+â”‚ meson.build
+â”‚
+â”œâ”€â”€â”€apps
+â”‚ â””â”€â”€â”€hello_world
+â”‚ hello_world.cpp
+â”‚ meson.build
+â”‚
+â”œâ”€â”€â”€lib
+â”‚ â”œâ”€â”€â”€calc
+â”‚ â”‚ calc.cpp
+â”‚ â”‚ calc.hpp
+â”‚ â”‚ meson.build
+â”‚ â”‚
+â”‚ â””â”€â”€â”€greeter
+â”‚ greeter.cpp
+â”‚ greeter.hpp
+â”‚ meson.build
+â”‚
+â””â”€â”€â”€tests
+â”œâ”€â”€â”€calc
+â”‚ calc_test.cpp
+â”‚ meson.build
+â”‚
+â””â”€â”€â”€greeter
 greeter_test.cpp
 meson.build
 &lt;/code>&lt;/pre>&lt;h3 id="adding-libraries">Adding libraries&lt;/h3>
@@ -601,16 +601,16 @@ But first, we have to put some code into them:&lt;/p>
 &lt;p>calc.hpp:&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#pragma once
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">celcius_to_fahrenheit&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> celcius);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">fahrenheit_to_celcius&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> fahrenheit);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">celsius_to_fahrenheit&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> celsius);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">fahrenheit_to_celsius&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> fahrenheit);
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>calc.cpp:&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#include&lt;/span> &lt;span style="color:#75715e">&amp;#34;calc.hpp&amp;#34;&lt;/span>&lt;span style="color:#75715e">
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">celcius_to_fahrenheit&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> celcius) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> (celcius &lt;span style="color:#f92672">*&lt;/span> (&lt;span style="color:#ae81ff">9.0&lt;/span> &lt;span style="color:#f92672">/&lt;/span> &lt;span style="color:#ae81ff">5.0&lt;/span>)) &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#ae81ff">32.0&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">celsius_to_fahrenheit&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> celsius) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> (celsius &lt;span style="color:#f92672">*&lt;/span> (&lt;span style="color:#ae81ff">9.0&lt;/span> &lt;span style="color:#f92672">/&lt;/span> &lt;span style="color:#ae81ff">5.0&lt;/span>)) &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#ae81ff">32.0&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">fahrenheit_to_celcius&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> fahrenheit) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">double&lt;/span> &lt;span style="color:#a6e22e">fahrenheit_to_celsius&lt;/span>(&lt;span style="color:#66d9ef">double&lt;/span> fahrenheit) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> (fahrenheit &lt;span style="color:#f92672">-&lt;/span> &lt;span style="color:#ae81ff">32.0&lt;/span>) &lt;span style="color:#f92672">*&lt;/span> (&lt;span style="color:#ae81ff">5.0&lt;/span> &lt;span style="color:#f92672">/&lt;/span> &lt;span style="color:#ae81ff">9.0&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>greeter.hpp:&lt;/p>
@@ -671,18 +671,18 @@ ninja: Entering directory `F:/Projects/C_C++/meson_c_cpp_project_template/buildd
 It detected 2 build targets in project, exactly what we wanted to see.
 Let&amp;rsquo;s look at &lt;code>builddir&lt;/code> to confirm it.&lt;/p>
 &lt;pre tabindex="0">&lt;code>meson_c_cpp_project_template\builddir\lib
-├───calc
-│ │ libcalc.dll
-│ │ libcalc.dll.a
-│ │
-│ └───libcalc.dll.p
-│ calc.cpp.obj
-│
-└───greeter
-│ libgreeter.dll
-│ libgreeter.dll.a
-│
-└───libgreeter.dll.p
+â”œâ”€â”€â”€calc
+â”‚ â”‚ libcalc.dll
+â”‚ â”‚ libcalc.dll.a
+â”‚ â”‚
+â”‚ â””â”€â”€â”€libcalc.dll.p
+â”‚ calc.cpp.obj
+â”‚
+â””â”€â”€â”€greeter
+â”‚ libgreeter.dll
+â”‚ libgreeter.dll.a
+â”‚
+â””â”€â”€â”€libgreeter.dll.p
 greeter.cpp.obj
 &lt;/code>&lt;/pre>&lt;p>Okay, but we got DLLs (or &lt;code>.so&lt;/code>&amp;rsquo;s, if you&amp;rsquo;re running Linux).
 We don&amp;rsquo;t want dynamic libs, we want static libs.
@@ -700,16 +700,16 @@ Fortunately, there&amp;rsquo;s an easy fix, straight from the docs - &lt;code>li
 You can find the list of available default options &lt;a href="https://mesonbuild.com/Builtin-options.html#base-options">here&lt;/a>, if you&amp;rsquo;re interested.
 Let&amp;rsquo;s rebuild the project (again, &lt;code>--reconfigure&lt;/code> may not detect this change, so &lt;code>rm builddir&lt;/code>), and as we can see - we&amp;rsquo;ve got static libs now!&lt;/p>
 &lt;pre tabindex="0">&lt;code>meson_c_cpp_project_template\builddir\lib
-├───calc
-│ │ libcalc.a
-│ │
-│ └───libcalc.a.p
-│ calc.cpp.obj
-│
-└───greeter
-│ libgreeter.a
-│
-└───libgreeter.a.p
+â”œâ”€â”€â”€calc
+â”‚ â”‚ libcalc.a
+â”‚ â”‚
+â”‚ â””â”€â”€â”€libcalc.a.p
+â”‚ calc.cpp.obj
+â”‚
+â””â”€â”€â”€greeter
+â”‚ libgreeter.a
+â”‚
+â””â”€â”€â”€libgreeter.a.p
 greeter.cpp.obj
 &lt;/code>&lt;/pre>&lt;h3 id="adding-an-executable">Adding an executable&lt;/h3>
 &lt;p>Next, let&amp;rsquo;s use those libs with our executable.
@@ -720,8 +720,8 @@ Example &lt;code>hello_world.cpp&lt;/code> may look like this:&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> greet(&lt;span style="color:#e6db74">&amp;#34;random developer&amp;#34;&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*F == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> fahrenheit_to_celcius(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*C&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*C == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> celcius_to_fahrenheit(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*F&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*F == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> fahrenheit_to_celsius(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*C&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>cout &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;12.5*C == &amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> celsius_to_fahrenheit(&lt;span style="color:#ae81ff">12.5&lt;/span>) &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;*F&amp;#34;&lt;/span> &lt;span style="color:#f92672">&amp;lt;&amp;lt;&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>endl;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Of course, the LSP will not be able to detect those headers properly yet, so ignore all the errors.
 Let the toolchain speak the truth.
