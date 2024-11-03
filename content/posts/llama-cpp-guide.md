@@ -3,8 +3,8 @@ title = "llama.cpp guide - Running LLMs locally, on any hardware, from scratch"
 date = "2024-10-28"
 author = "SteelPh0enix"
 authorTwitter = "steel_ph0enix"
-tags = ["llama.cpp", "llm", "ai", "guide"]
-keywords = ["llama.cpp", "llama", "cpp", "llm", "ai", "building", "running", "guide", "inference", "local", "scratch", "hardware"]
+tags = \["llama.cpp", "llm", "ai", "guide"\]
+keywords = \["llama.cpp", "llama", "cpp", "llm", "ai", "building", "running", "guide", "inference", "local", "scratch", "hardware"\]
 description = "Psst, kid, want some cheap LLMs?"
 showFullContent = false
 draft = true
@@ -19,7 +19,7 @@ Boy, was i wrong.
 I've used ChatGPT once or twice, to test the waters - it made a pretty good first impression, despite hallucinating a bit.
 That was back when GPT3.5 was the top model. We came a pretty long way since then.
 
-However, despite ChatGPT not dissapointing me, i was still skeptical.
+However, despite ChatGPT not disappointing me, i was still skeptical.
 Everything i've wrote, and every piece of response was fully available to OpenAI, or whatever other provider i'd want to use.
 This is not a big deal, but it tickles me in a wrong way, and also means i can't use LLMs for any work-related non-open-source stuff.
 Also, ChatGPT is free only to a some degree - if i'd want to go full-in on AI, i'd probably have to start paying.
@@ -57,24 +57,37 @@ you should find the rest of this post pretty useful!
 Before i proceed, i want to make some stuff clear.
 This "FAQ" answers some questions i'd like to know answers to before getting into self-hosted LLMs.
 
-**Do I need RTX 2070 Super/RX 7900 XT ot similar mid/high-end GPU to do what you did here?**
+### Do I need RTX 2070 Super/RX 7900 XT ot similar mid/high-end GPU to do what you did here?
+
 No, you don't.
 I'll elaborate later, but you can run LLMs with no GPU at all.
 As long as you have reasonably modern hardware (by that i mean *at least* a decent CPU with AVX support) - you're *compatible*.
-*Your performance may vary.*
+**But remember - your performance may vary.**
 
-**What performance can I expect?**
-If you're using CPU acceleration only, or CPU+GPU, expect relatively slow generation speeds (non-real-time).
-If you're using GPU acceleration only, you may expect real-time generation if your GPU is good enough.
-**Generation speed will vary depending on model's size, quantization and amount of context, so keep that in mind when testing models!**
+### What performance can I expect?
 
-**What quality of responses can I expect?**
+This is a very hard question to answer directly.
+The speed of text generation depends from multiple factors, but primarily
+
+- tensor/matrix operation performance on your hardware
+- memory bandwidth
+- model size
+
+I'll explain this with more details later, but you can generally get reasonable performance from the LLM by picking model small enough for your hardware.
+If you intend to use GPU, and it has enough memory for a model with it's context - expect real-time text generation.
+In case you want to use both GPU and CPU, or only CPU - you may need to go into very small models to get real-time generation, but it's certainly possible.
+
+### What quality of responses can I expect?
+
 That heavily depends on your usage and chosen model.
-I can't answer that question, you'll have to play around and find out yourself.
-From my experience, 7B models are pretty good for generic purposes and programming - and they are not *that* far from SOTA models like GPT-4o in terms of raw quality of generated responses.
-However, the choice of a model is only a part of the problem - providing proper context and system prompt, or fine-tuning LLMs can do wonders.
+I can't answer that question directly, you'll have to play around and find out yourself.
+A rule of thumb is "larger the model, better the response" - consider the fact that the size of SOTA (state-of-the-art) LLMs, like GPT-4 or Claude, are usually measured in hundreds of billions of parameters.
+Unless you have multiple GPUs or unreasonable amount of RAM and patience - you'll be most likely restricted to models with less than 20 billion parameters.
+From my experience, 7B models are pretty good for generic purposes and programming - and they are not *very* far from SOTA models like GPT-4o or Claude in terms of raw quality of generated responses, but the difference can be noticeable at times.
+Keep in mind that the choice of a model is only a part of the problem - providing proper context and system prompt, or fine-tuning LLMs can do wonders.
 
-**Can i replace ChatGPT/Claude/\[insert online LLM provider\] with that?**
+### Can i replace ChatGPT/Claude/\[insert online LLM provider\] with that?
+
 Probably yes.
 `llama.cpp` provides OpenAI-compatible server.
 As long as your tools communicate with LLMs via OpenAI API, and you are able to set custom endpoint, you will be able to use self-hosted LLM with them.
@@ -109,5 +122,5 @@ In `docs/build.md`, you'll find detailed build instructions for all the supporte
 The most basic build is for the generic CPU support.
 All we need now is a working C/C++ toolchain - preferably GCC or Clang.
 If you're using Linux, you should be good to go, unless you somehow don't have GCC installed (try `gcc -v` if you're not sure).
-If you're using Windows and you don't have your prefered toolchain installed, i personally recommend using [MSYS](https://www.msys2.org/), but Visual C++ is also supported - as long as you install the following components (see `docs/build.md` for details): C++-CMake Tools for Windows, Git for Windows, C++-Clang Compiler for Windows, MS-Build Support for LLVM-Toolset (clang).
+If you're using Windows and you don't have your preferred toolchain installed, i personally recommend using [MSYS](https://www.msys2.org/), but Visual C++ is also supported - as long as you install the following components (see `docs/build.md` for details): C++-CMake Tools for Windows, Git for Windows, C++-Clang Compiler for Windows, MS-Build Support for LLVM-Toolset (clang).
 I'll describe how to use both MSYS and MSVC, because i'm familiar with them.
