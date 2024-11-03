@@ -3,8 +3,8 @@ title = "Making C/C++ project template in Meson - part 1"
 date = "2024-01-27"
 author = "SteelPh0enix"
 authorTwitter = "steel_ph0enix"
-tags = \["c", "cpp", "meson", "guide"\]
-keywords = \["c", "cpp", "c++", "meson", "project", "template", "getting", "started", "guide"\]
+tags = ["c", "cpp", "meson", "guide"]
+keywords = ["c", "cpp", "c++", "meson", "project", "template", "getting", "started", "guide"]
 description = "We're cooking a reasonable Meson template for C/C++ projects"
 showFullContent = false
 +++
