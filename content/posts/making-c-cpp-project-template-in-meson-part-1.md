@@ -3,8 +3,8 @@ title = "Making C/C++ project template in Meson - part 1"
 date = "2024-01-27"
 author = "SteelPh0enix"
 authorTwitter = "steel_ph0enix"
-tags = ["c", "cpp", "meson", "guide"]
-keywords = ["c", "cpp", "c++", "meson", "project", "template", "getting", "started", "guide"]
+tags = \["c", "cpp", "meson", "guide"\]
+keywords = \["c", "cpp", "c++", "meson", "project", "template", "getting", "started", "guide"\]
 description = "We're cooking a reasonable Meson template for C/C++ projects"
 showFullContent = false
 +++
@@ -25,7 +25,7 @@ So we're going with [Meson Build system](https://mesonbuild.com/), which was rec
 Since then I've read the docs and also experimented with it a bit, but I haven't really made a proper project based on it yet, as of writing this sentence.
 This is about to change.
 
-I will try to make this series of blog posts as "followable" as possible, so You should be able to reproduce most of my work by yourself, and understand the choices I make. 
+I will try to make this series of blog posts as "followable" as possible, so You should be able to reproduce most of my work by yourself, and understand the choices I make.
 Remember that the best tool for the job is sometimes the one you make yourself, not the one you blindly copy&paste without deeper understanding.
 ~~But please, don't reinvent the wheel if that's not necessary.~~
 ~~Use the right tools for the job, and whatnot.~~
@@ -57,24 +57,24 @@ I want to be able to generate docs for my code via Meson.
 Probably using Doxygen, as it's relatively easy to set up.
 This also includes coverage reports, and we will most likely use `lcov`/`gcov` for that.
 
->*Did I mention that I've spent most of last year writing Rust code?*
->*Did you know that Cargo provides most of the stuff that I've described here out-of-the-box?*
->*Now you do.*
+> *Did I mention that I've spent most of last year writing Rust code?*
+> *Did you know that Cargo provides most of the stuff that I've described here out-of-the-box?*
+> *Now you do.*
 
 ## Preparations
 
 Before we start, let's check our prerequisites, because there's gonna be some.
 
-* Meson - on Linux, should be in your package manager. If it's not, i assume you know what to do. On Windows, i recommend grabbing an installer from [Github](https://github.com/mesonbuild/meson/releases). Just make sure it's in your `PATH` variable - check if opening a terminal and running `meson --version` returns expected version string. I'm currently running 1.3.1. *Technically Meson is available via `winget`, but their repo currently provides outdated version, so i recommend installing it manually on Windows.*
-* Ninja - I'll describe it's purpose in a bit. It should be bundled with Meson on Windows, and should be installed automatically on Linux when installing Meson via package manager. Should be in your `PATH` too. In any case, verify if it's installed correctly by running `ninja --version`. I'm currently running 1.11.1. You can also install it manually if needed [by downloading a zip from Github](https://github.com/ninja-build/ninja/releases) and extracting it into a directory that's in `PATH` variable.
-* C/C++ toolchain - **TL;DR install latest GCC**. In theory, we don't have to choose any specific toolchain, because we're using Meson and Ninja which support the popular ones. **However**, I've mentioned that I want to have coverage report generation, and the only coverage tools that I'm familiar with are `lcov`/`gcov`, and this pretty much forces me to use GCC. If you don't care about code coverage reports, pick your treat. If you somehow got here as a complete newbie and you don't have any C/C++ toolchain installed, either grab GCC from your package manager if you're running Linux (look for package called `build-essentials` or `base-devel` or something like that), or - if you're running Windows - [download latest WinLibs package and add it's `bin` subdirectory to PATH](/posts/vscode-cpp-setup/#cc-toolchain). Or install Microsoft's Visual C++ toolchain via Visual Studio Build Tools (you may need to do that even after installing WinLibs, if you want to use `clang`, but I recommend **not** using MSVC for pure C unless you don't value your sanity).
-* LLVM tools - mostly `clangd`, but we're also gonna use `clang-tidy` at some point. If you're running Linux, again - find those tools in your package manager. If you're running Windows and WinLibs, you already got them. If you don't use WinLibs, install latest LLVM release (`winget install llvm`, should be "recent enough", or get it from [Github](https://github.com/llvm/llvm-project/releases)), it should contain everything we'll need. Again, if manually installed - make sure it's in PATH by running `clangd --version`. I'm currently using 17.0.5.
-* Doxygen - we're not gonna be using it any time soon, but let's make sure it's available. Linux - install from repo, Windows - it's already in WinLibs, if not using WinLibs (or you want the latest version), install manually - `winget install doxygen` or grab installer from [here](https://www.doxygen.nl/download.html). Run `doxygen --version` to verify, I'm using 1.10.0. **Note - Winget may not add it to PATH, it's installed in `Program Files/doxygen` by default. Add `bin` subdirectory to `PATH` manually if that's the case.**
+- Meson - on Linux, should be in your package manager. If it's not, i assume you know what to do. On Windows, i recommend grabbing an installer from [Github](https://github.com/mesonbuild/meson/releases). Just make sure it's in your `PATH` variable - check if opening a terminal and running `meson --version` returns expected version string. I'm currently running 1.3.1. *Technically Meson is available via `winget`, but their repo currently provides outdated version, so i recommend installing it manually on Windows.*
+- Ninja - I'll describe it's purpose in a bit. It should be bundled with Meson on Windows, and should be installed automatically on Linux when installing Meson via package manager. Should be in your `PATH` too. In any case, verify if it's installed correctly by running `ninja --version`. I'm currently running 1.11.1. You can also install it manually if needed [by downloading a zip from Github](https://github.com/ninja-build/ninja/releases) and extracting it into a directory that's in `PATH` variable.
+- C/C++ toolchain - **TL;DR install latest GCC**. In theory, we don't have to choose any specific toolchain, because we're using Meson and Ninja which support the popular ones. **However**, I've mentioned that I want to have coverage report generation, and the only coverage tools that I'm familiar with are `lcov`/`gcov`, and this pretty much forces me to use GCC. If you don't care about code coverage reports, pick your treat. If you somehow got here as a complete newbie and you don't have any C/C++ toolchain installed, either grab GCC from your package manager if you're running Linux (look for package called `build-essentials` or `base-devel` or something like that), or - if you're running Windows - [download latest WinLibs package and add it's `bin` subdirectory to PATH](/posts/vscode-cpp-setup/#cc-toolchain). Or install Microsoft's Visual C++ toolchain via Visual Studio Build Tools (you may need to do that even after installing WinLibs, if you want to use `clang`, but I recommend **not** using MSVC for pure C unless you don't value your sanity).
+- LLVM tools - mostly `clangd`, but we're also gonna use `clang-tidy` at some point. If you're running Linux, again - find those tools in your package manager. If you're running Windows and WinLibs, you already got them. If you don't use WinLibs, install latest LLVM release (`winget install llvm`, should be "recent enough", or get it from [Github](https://github.com/llvm/llvm-project/releases)), it should contain everything we'll need. Again, if manually installed - make sure it's in PATH by running `clangd --version`. I'm currently using 17.0.5.
+- Doxygen - we're not gonna be using it any time soon, but let's make sure it's available. Linux - install from repo, Windows - it's already in WinLibs, if not using WinLibs (or you want the latest version), install manually - `winget install doxygen` or grab installer from [here](https://www.doxygen.nl/download.html). Run `doxygen --version` to verify, I'm using 1.10.0. **Note - Winget may not add it to PATH, it's installed in `Program Files/doxygen` by default. Add `bin` subdirectory to `PATH` manually if that's the case.**
 
 Oh, and there's a small issue of `lcov` not having official Windows support. There are some unofficial releases, but we're not gonna use them - instead, we're gonna lock the coverage report generation feature to Linux and GCC only.
 I don't want to completely lock this template to GCC because of that feature, so we will have to separate this part appropriately.
 
->We can always use containers to get this running with all features on Windows.
+> We can always use containers to get this running with all features on Windows.
 
 Also; i *assume* that we're gonna be using Ninja as our building "back-end", but it doesn't really matter because Meson should handle whatever "back-end" you'd like to use.
 Just make sure to check the "whatever "back-end" you'd like to use" output when I'm talking about Ninja output.
@@ -141,7 +141,7 @@ The argument `builddir` is the name of our build directory.
 If you've set up your compiler and Ninja correctly, you should get some info about compiler executables and your environment, and `builddir` directory should appear with some Meson and Ninja files.
 
 ```
-PS> meson setup builddir     
+PS> meson setup builddir
 The Meson build system
 Version: 1.3.1
 Source dir: F:\Projects\C_C++\meson_c_cpp_project_template
@@ -164,8 +164,8 @@ Now, we can tell Meson to compile the project:
 meson compile -C builddir
 ```
 
->We could also use `ninja` directly, but I'll stick to using Meson whenever possible instead, for compatibility reasons.
->That's actually a core part of this template - we **want** Meson to do stuff for us, we don't want to care what happens under the hood.
+> We could also use `ninja` directly, but I'll stick to using Meson whenever possible instead, for compatibility reasons.
+> That's actually a core part of this template - we **want** Meson to do stuff for us, we don't want to care what happens under the hood.
 
 We should get some output from Ninja.
 
@@ -184,7 +184,7 @@ PS .\builddir> .\project_template.exe
 This is project project_template.
 
 PS .\builddir> .\project_template.exe hello world
-F:\Projects\C_C++\meson_c_cpp_project_template\builddir\project_template.exetakes no arguments.
+F:\Projects\C_C++\meson_c_cpp_project_template\builddir\project_template.exe takes no arguments.
 ```
 
 And also a test!
@@ -205,12 +205,12 @@ ninja: Entering directory `F:\Projects\C_C++\meson_c_cpp_project_template\buildd
 ninja: no work to do.
 1/1 basic        OK              0.01s
 
-Ok:                 1   
-Expected Fail:      0   
-Fail:               0   
-Unexpected Pass:    0   
-Skipped:            0   
-Timeout:            0   
+Ok:                 1
+Expected Fail:      0
+Fail:               0
+Unexpected Pass:    0
+Skipped:            0
+Timeout:            0
 
 Full log written to F:\Projects\C_C++\meson_c_cpp_project_template\builddir\meson-logs\testlog.txt
 ```
@@ -241,8 +241,8 @@ We can store each module in a separate directory, with it's own `meson.build` fi
 Modules can be built as static libraries and linked to executables.
 That way, it's trivial to test them - we can just link the same binary that's used with our program executable to the test executable, and validate it's behavior.
 
->This is how it's done in some projects that I've been working on in my current job, and if it's good enough choice for space-grade projects, it's sure as hell good enough choice for me.
->But really, I've seen this approach in action and it should work well.
+> This is how it's done in some projects that I've been working on in my current job, and if it's good enough choice for space-grade projects, it's sure as hell good enough choice for me.
+> But really, I've seen this approach in action and it should work well.
 
 Let's also assume that our project can contain more than one executable, because it should be simple to setup for that.
 We're gonna put them in `apps` directory.
@@ -252,33 +252,32 @@ Let's create some dummy libs, tests for them, and an application to tie it toget
 Also; let's add `meson.build` to each directory, empty - for now.
 This is how it might look like:
 
-
 ```
 meson_c_cpp_project_template
-│   meson.build
-│
-├───apps
-│   └───hello_world
-│           hello_world.cpp
-│           meson.build
-│
-├───lib
-│   ├───calc
-│   │       calc.cpp
-│   │       calc.hpp
-│   │       meson.build
-│   │
-│   └───greeter
-│           greeter.cpp
-│           greeter.hpp
-│           meson.build
-│
-└───tests
-    ├───calc
-    │       calc_test.cpp
-    │       meson.build
-    │
-    └───greeter
+â”‚   meson.build
+â”‚
+â”œâ”€â”€â”€apps
+â”‚   â””â”€â”€â”€hello_world
+â”‚           hello_world.cpp
+â”‚           meson.build
+â”‚
+â”œâ”€â”€â”€lib
+â”‚   â”œâ”€â”€â”€calc
+â”‚   â”‚       calc.cpp
+â”‚   â”‚       calc.hpp
+â”‚   â”‚       meson.build
+â”‚   â”‚
+â”‚   â””â”€â”€â”€greeter
+â”‚           greeter.cpp
+â”‚           greeter.hpp
+â”‚           meson.build
+â”‚
+â””â”€â”€â”€tests
+    â”œâ”€â”€â”€calc
+    â”‚       calc_test.cpp
+    â”‚       meson.build
+    â”‚
+    â””â”€â”€â”€greeter
             greeter_test.cpp
             meson.build
 ```
@@ -289,27 +288,30 @@ Let's ignore the fact that we don't have a test harness yet, and focus on making
 But first, we have to put some code into them:
 
 calc.hpp:
+
 ```cpp
 #pragma once
 
-double celcius_to_fahrenheit(double celcius);
-double fahrenheit_to_celcius(double fahrenheit);
+double celsius_to_fahrenheit(double celsius);
+double fahrenheit_to_celsius(double fahrenheit);
 ```
 
 calc.cpp:
+
 ```cpp
 #include "calc.hpp"
 
-double celcius_to_fahrenheit(double celcius) {
-    return (celcius * (9.0 / 5.0)) + 32.0;
+double celsius_to_fahrenheit(double celsius) {
+    return (celsius * (9.0 / 5.0)) + 32.0;
 }
 
-double fahrenheit_to_celcius(double fahrenheit) {
+double fahrenheit_to_celsius(double fahrenheit) {
     return (fahrenheit - 32.0) * (5.0 / 9.0);
 }
 ```
 
 greeter.hpp:
+
 ```cpp
 #pragma once
 #include <string>
@@ -318,6 +320,7 @@ std::string greet(std::string const& name);
 ```
 
 greeter.cpp:
+
 ```cpp
 #include "greeter.hpp"
 
@@ -394,18 +397,18 @@ Let's look at `builddir` to confirm it.
 
 ```
 meson_c_cpp_project_template\builddir\lib
-├───calc
-│   │   libcalc.dll
-│   │   libcalc.dll.a
-│   │
-│   └───libcalc.dll.p
-│           calc.cpp.obj
-│
-└───greeter
-    │   libgreeter.dll
-    │   libgreeter.dll.a
-    │
-    └───libgreeter.dll.p
+â”œâ”€â”€â”€calc
+â”‚   â”‚   libcalc.dll
+â”‚   â”‚   libcalc.dll.a
+â”‚   â”‚
+â”‚   â””â”€â”€â”€libcalc.dll.p
+â”‚           calc.cpp.obj
+â”‚
+â””â”€â”€â”€greeter
+    â”‚   libgreeter.dll
+    â”‚   libgreeter.dll.a
+    â”‚
+    â””â”€â”€â”€libgreeter.dll.p
             greeter.cpp.obj
 ```
 
@@ -431,16 +434,16 @@ Let's rebuild the project (again, `--reconfigure` may not detect this change, so
 
 ```
 meson_c_cpp_project_template\builddir\lib
-├───calc
-│   │   libcalc.a
-│   │
-│   └───libcalc.a.p
-│           calc.cpp.obj
-│
-└───greeter
-    │   libgreeter.a
-    │
-    └───libgreeter.a.p
+â”œâ”€â”€â”€calc
+â”‚   â”‚   libcalc.a
+â”‚   â”‚
+â”‚   â””â”€â”€â”€libcalc.a.p
+â”‚           calc.cpp.obj
+â”‚
+â””â”€â”€â”€greeter
+    â”‚   libgreeter.a
+    â”‚
+    â””â”€â”€â”€libgreeter.a.p
             greeter.cpp.obj
 ```
 
@@ -456,8 +459,8 @@ Example `hello_world.cpp` may look like this:
 
 int main() {
     std::cout << greet("random developer") << std::endl;
-    std::cout << "12.5*F == " << fahrenheit_to_celcius(12.5) << "*C" << std::endl;
-    std::cout << "12.5*C == " << celcius_to_fahrenheit(12.5) << "*F" << std::endl;
+    std::cout << "12.5*F == " << fahrenheit_to_celsius(12.5) << "*C" << std::endl;
+    std::cout << "12.5*C == " << celsius_to_fahrenheit(12.5) << "*F" << std::endl;
 }
 ```
 
@@ -489,8 +492,8 @@ We also have to create `meson.build` for `apps` directory.
 subdir('hello_world')
 ```
 
->And yes, we probably could just `subdir('apps/hello_world')`, but I wanna keep everything as local as possible.
->You may add `meson.build` to every directory of the project now, because we're gonna need them.
+> And yes, we probably could just `subdir('apps/hello_world')`, but I wanna keep everything as local as possible.
+> You may add `meson.build` to every directory of the project now, because we're gonna need them.
 
 `meson setup builddir` tells me that there are 3 targets now.
 That's what we want.
@@ -535,7 +538,7 @@ Hello random developer
 12.5*C == 54.5*F
 ```
 
-Yeah, the output checks out. 
+Yeah, the output checks out.
 And that is where I'd like to finish this part, because it's already long enough, but there's just one tiny thing that annoys me...
 
 ## Feeding the LSP

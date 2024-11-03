@@ -45,8 +45,8 @@ Now, our new `hello_world.cpp` will become this:
 
 int main() {
     std::cout << greet(what_am_i()) << std::endl;
-    std::cout << "12.5*F == " << fahrenheit_to_celcius(12.5) << "*C" << std::endl;
-    std::cout << "12.5*C == " << celcius_to_fahrenheit(12.5) << "*F" << std::endl;
+    std::cout << "12.5*F == " << fahrenheit_to_celsius(12.5) << "*C" << std::endl;
+    std::cout << "12.5*C == " << celsius_to_fahrenheit(12.5) << "*F" << std::endl;
 }
 ```
 
@@ -91,8 +91,8 @@ We can also remove the `utils.hpp` and restore the original `hello_world.cpp`.
 
 int main() {
     std::cout << greet("random developer") << std::endl;
-    std::cout << "12.5*F == " << fahrenheit_to_celcius(12.5) << "*C" << std::endl;
-    std::cout << "12.5*C == " << celcius_to_fahrenheit(12.5) << "*F" << std::endl;
+    std::cout << "12.5*F == " << fahrenheit_to_celsius(12.5) << "*C" << std::endl;
+    std::cout << "12.5*C == " << celsius_to_fahrenheit(12.5) << "*F" << std::endl;
 }
 ```
 
@@ -188,7 +188,7 @@ And finally, we can check if this works by deleting `builddir`, and running `mes
 You should see some new logs after running `setup`:
 
 ```
-Executing subproject cpputest 
+Executing subproject cpputest
 
 cpputest| Project name: cpputest
 cpputest| Project version: 4.0

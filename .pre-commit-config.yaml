@@ -1,0 +1,14 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+    -   id: check-case-conflict
+    -   id: check-json
+    -   id: check-yaml
+    -   id: check-toml
+-   repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v8.15.2
+    hooks:
+    -   id: cspell

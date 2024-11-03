@@ -51,7 +51,7 @@ I was less happy when I've enabled the CI on my fork and it ate 1/4th of my mont
 Oh well.
 Good thing they do incremental builds on PRs.
 
-Of course, my PR it did not pass the CI first time - it forced me to add some functionality to the wrap (platform autodetection), but after that it was good to go and got merged.
+Of course, my PR it did not pass the CI first time - it forced me to add some functionality to the wrap (platform auto-detection), but after that it was good to go and got merged.
 The whole process took only a few hours, the PR was reviewed, the CI did it's job - no complains there.
 
 ## Adding unit tests support
@@ -88,7 +88,7 @@ Now, we should also be able to run our test via `meson test` command.
 
 ```
 > meson test -C builddir
-ninja: Entering directory `\builddir'  
+ninja: Entering directory `\builddir'
 ninja: no work to do.
 1/1 calc test        FAIL            0.01s   exit status 1
 >>> MALLOC_PERTURB_=245 ASAN_OPTIONS=halt_on_error=1:abort_on_error=1:print_summary=1 UBSAN
@@ -140,19 +140,19 @@ tests/calc/test.cpp
 
 TEST_GROUP(TemperatureCalcTests){};
 
-TEST(TemperatureCalcTests, convertsCelciusToFahrenheit) {
-    auto const givenCelcius = 37.7778;
+TEST(TemperatureCalcTests, convertsCelsiusToFahrenheit) {
+    auto const givenCelsius = 37.7778;
     auto const expectedFahrenheit = 100.0;
-    auto const gotFahrenheit = celcius_to_fahrenheit(givenCelcius);
+    auto const gotFahrenheit = celsius_to_fahrenheit(givenCelsius);
     DOUBLES_EQUAL(expectedFahrenheit, gotFahrenheit, 0.001);
 }
 
 
-TEST(TemperatureCalcTests, convertsFahrenheitToCelcius) {
+TEST(TemperatureCalcTests, convertsFahrenheitToCelsius) {
     auto const givenFahrenheit = 212;
-    auto const expectedCelcius = 100.0;
-    auto const gotCelcius = fahrenheit_to_celcius(givenFahrenheit);
-    DOUBLES_EQUAL(expectedCelcius, gotCelcius, 0.001);
+    auto const expectedCelsius = 100.0;
+    auto const gotCelsius = fahrenheit_to_celsius(givenFahrenheit);
+    DOUBLES_EQUAL(expectedCelsius, gotCelsius, 0.001);
 }
 
 int main(int ac, char** av) {
@@ -208,7 +208,7 @@ ninja: no work to do.
 1/2 calc test           OK              0.01s
 2/2 greeter test        OK              0.01s
 
-Ok:                 2   
+Ok:                 2
 Expected Fail:      0
 Fail:               0
 Unexpected Pass:    0
@@ -226,5 +226,5 @@ Oh well, this part took way too long to publish.
 I blame Helldivers II for that.
 To be fair, I finished writing it in a manner of two weeks, I just didn't have energy to finish it and push it.
 Still, I'm gonna try to move it forward faster because my backlog of stuff to do is incredibly long, and this template could help.
-For anyone interesed, [there's a tag](https://github.com/SteelPh0enix/meson_c_cpp_project_template/releases/tag/part-2) in the repository with it's current state.
+For anyone interested, [there's a tag](https://github.com/SteelPh0enix/meson_c_cpp_project_template/releases/tag/part-2) in the repository with it's current state.
 In the next part, i will show you how to configure Doxygen with Meson to generate documentation of our modules and applications functions.

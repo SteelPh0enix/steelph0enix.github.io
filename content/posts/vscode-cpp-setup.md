@@ -32,7 +32,7 @@ The obvious prerequisite is Visual Studio Code. Install it from the official sit
 
 **For MacOS**: same as for Linux. Probably. I don't use MacOS so i can't really tell.
 
->**Fun fact**; there are two versions of VSCode you can find on the internet and in package managers - OSS version, and Non-OSS. The OSS version is basically the VSCode you'd get by downloading it from [official repository](https://github.com/microsoft/vscode) and building it yourself. Non-OSS version is the one from Microsoft distribution (for example, their official site), and the only difference between them is that Non-OSS version uses some Microsoft propertiary code, while OSS doesn't. There is some functional difference (IIRC, OSS version lacks proprietary features like Settings Sync or Remote WSL/SSH/Containers), but both are fully compatible in terms of plugins and configuration, so you usually don't need to worry about the exact version you've installed.
+>**Fun fact**; there are two versions of VSCode you can find on the internet and in package managers - OSS version, and Non-OSS. The OSS version is basically the VSCode you'd get by downloading it from [official repository](https://github.com/microsoft/vscode) and building it yourself. Non-OSS version is the one from Microsoft distribution (for example, their official site), and the only difference between them is that Non-OSS version contains some Microsoft proprietary code, while OSS doesn't. There is some functional difference (IIRC, OSS version lacks proprietary features like Settings Sync or Remote WSL/SSH/Containers), but both are fully compatible in terms of plugins and configuration, so you usually don't need to worry about the exact version you've installed.
 
 ### C/C++ Toolchain
 
@@ -75,7 +75,7 @@ If you already have working C/C++ toolchain, time to run VSCode and install some
 Now, for some general C++ plugins:
 
 * **C/C++** - that's the core extension we'll need. It contains the fundamental stuff to work with C/C++ in VSCode.
-* **Better C++ Syntax** - it's always nice to have better syntax colouring, so i strongly recommend that one. *You might want to use one of the themes from this extension description to get full experience.*
+* **Better C++ Syntax** - it's always nice to have better syntax coloring, so i strongly recommend that one. *You might want to use one of the themes from this extension description to get full experience.*
 * **C/C++ Snippets** - pretty useful extension that adds automatic generation of snippets in C/C++ code - instead of writing loops, structures and class definitions by hand, you can generate them with autocompletion support.
 * **C++ Intellisense** - pretty good plugin with some intelligent autocompletion features.
 * **C++ Helper** - simple extension which adds automatic function definition generation feature.
@@ -187,7 +187,7 @@ Put this code into `CMakeLists.txt`:
 cmake_minimum_required(VERSION 3.12)
 
 # Change CXX to C, if you're making a C program
-project(HelloWorld LANGUAGES CXX) 
+project(HelloWorld LANGUAGES CXX)
 
 # Change main.cpp to main.c, if you're making a C program
 add_executable(${PROJECT_NAME} main.cpp)
@@ -262,7 +262,7 @@ Let's analyze our `CMakeLists.txt`
 cmake_minimum_required(VERSION 3.12)
 
 # Change CXX to C, if you're making a C program
-project(HelloWorld LANGUAGES CXX) 
+project(HelloWorld LANGUAGES CXX)
 
 # Change main.cpp to main.c, if you're making a C program
 add_executable(${PROJECT_NAME} main.cpp)
@@ -307,7 +307,7 @@ void f(int x) {
 Then, add a `lib.hpp` (or `lib.h`) file inside `include` directory. Put this inside:
 
 ```cpp
-#pragma once 
+#pragma once
 
 void f(int x);
 ```
@@ -324,7 +324,7 @@ We'll use two new commands now: `file` and `include_directories`. `file` command
 cmake_minimum_required(VERSION 3.12)
 
 # Change CXX to C, if you're making a C program
-project(HelloWorld LANGUAGES CXX) 
+project(HelloWorld LANGUAGES CXX)
 
 # Change *.cpp to *.c, if you're making a C program
 file(GLOB PROJECT_SOURCE_FILES CONFIGURE_DEPENDS src/*.cpp)
@@ -342,7 +342,7 @@ Of course, this variable can be called anyhow you want - it's not a special name
 
 Now, let's configure our project again (VSCode should do this automatically, but i wanna show you how to do it in case it doesn't). Right-click on `CMakeLists.txt` and select "Configure All Projects"
 
-![cmake-reconfig](/img/vscode-cpp-setup/cmakelists-config.png)
+![cmake-reconfiguration](/img/vscode-cpp-setup/cmakelists-config.png)
 
 >Sometimes, when something goes wrong and CMake or VSCode starts behaving strange or getting buggy, it's good to clean up and reconfigure the project ("Clean Reconfigure All Projects" and "Clean Rebuild All Projects"). This can sometimes happen when playing with CMakeLists.
 
@@ -443,7 +443,7 @@ Let's create a `.clang-format` file in our workspace root dir, and put this insi
 BasedOnStyle: Chromium
 IndentWidth: 2
 Standard: c++17
-BreakBeforeBraces: Linux 
+BreakBeforeBraces: Linux
 ```
 
 ![clang-format](/img/vscode-cpp-setup/clang-format.png)

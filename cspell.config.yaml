@@ -5,6 +5,9 @@ dictionaryDefinitions:
   - name: blog-dict
     path: './blog-dict.txt'
     addWords: true
+  - name: cursed-blog-dict
+    path: './cursed-blog-dict.txt'
+    addWords: true
 dictionaries:
   - en_US
   - companies
@@ -14,6 +17,11 @@ dictionaries:
   - bash
   - filetypes
   - blog-dict
+  - cursed-blog-dict
 ignorePaths:
   - '/blog-dict.txt'
-
+  - '/cursed-blog-dict.txt'
+  - 'static/presentations/**'
+  - 'static/img/**'
+  - '.github/**'
+  - 'LICENSE'
