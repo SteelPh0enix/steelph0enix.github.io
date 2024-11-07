@@ -69,28 +69,44 @@ As long as you have reasonably modern hardware (by that i mean *at least* a dece
 This is a very hard question to answer directly.
 The speed of text generation depends from multiple factors, but primarily
 
-- tensor/matrix operation performance on your hardware
+- matrix operations performance on your hardware
 - memory bandwidth
 - model size
 
 I'll explain this with more details later, but you can generally get reasonable performance from the LLM by picking model small enough for your hardware.
 If you intend to use GPU, and it has enough memory for a model with it's context - expect real-time text generation.
-In case you want to use both GPU and CPU, or only CPU - you may need to go into very small models to get real-time generation, but it's certainly possible.
+In case you want to use both GPU and CPU, or only CPU - you should expect much lower performance, but real-time text generation is possible with small models.
 
 ### What quality of responses can I expect?
 
 That heavily depends on your usage and chosen model.
 I can't answer that question directly, you'll have to play around and find out yourself.
-A rule of thumb is "larger the model, better the response" - consider the fact that the size of SOTA (state-of-the-art) LLMs, like GPT-4 or Claude, are usually measured in hundreds of billions of parameters.
-Unless you have multiple GPUs or unreasonable amount of RAM and patience - you'll be most likely restricted to models with less than 20 billion parameters.
-From my experience, 7B models are pretty good for generic purposes and programming - and they are not *very* far from SOTA models like GPT-4o or Claude in terms of raw quality of generated responses, but the difference can be noticeable at times.
+A rule of thumb is "larger the model, better the response" - consider the fact that size of SOTA (state-of-the-art) models, like GPT-4 or Claude, is usually measured in hundreds of billions of parameters.
+Unless you have multiple GPUs or unreasonable amount of RAM and patience - you'll most likely be restricted to models with less than 20 billion parameters.
+From my experience, 7-8B models are pretty good for generic purposes and programming - and they are not *very* far from SOTA models like GPT-4o or Claude in terms of raw quality of generated responses, but the difference is definitely noticeable.
 Keep in mind that the choice of a model is only a part of the problem - providing proper context and system prompt, or fine-tuning LLMs can do wonders.
 
 ### Can i replace ChatGPT/Claude/\[insert online LLM provider\] with that?
 
-Probably yes.
+Maybe. In theory - yes, but in practice - it depends on your tools.
 `llama.cpp` provides OpenAI-compatible server.
 As long as your tools communicate with LLMs via OpenAI API, and you are able to set custom endpoint, you will be able to use self-hosted LLM with them.
+
+## prerequisites
+
+- Reasonably modern CPU. If you're rocking any Ryzen, or Intel's 8th gen or newer, you're good to go, but all of this should work on older hardware too.
+- Optimally, a GPU. More VRAM, the better. If you have at least 8GB of VRAM, you should be able to run 7-8B models, i'd say that it's reasonable minimum. Vendor doesn't matter, llama.cpp supports NVidia, AMD and Apple GPUs (not sure about Intel, but i think i saw a backend for that - if not, Vulkan should work).
+- If you're not using GPU or it doesn't have enough VRAM, you need RAM for the model. As above, at least 8GB of free RAM is recommended, but more is better.
+
+In the guide, i'll assume you're using either Windows or Linux, with Git, [CMake](https://cmake.org/) and - if you have one - your preferred C++ toolchain. If you don't have one yet, don't worry - i'll tell you where to get one from. If you're on Mac, i'll point you to the guides in llama.cpp repository when not sure about something. Linux and Windows users are also encouraged to check them, as the knowledge in this blog post may not stay up-to-date with whatever llama.cpp does in the future.
+
+Some context-specific formatting is used in this post:
+
+> Parts of this post where i'll write about Windows-specific stuff will have this background.
+{.windows-bg}
+
+> And parts where i'll write about Linux-specific stuff will have this background.
+{.linux-bg}
 
 ## getting the basics
 
@@ -100,27 +116,59 @@ Let's start by grabbing a copy of [`llama.cpp` source code](https://github.com/g
 git clone git@github.com:ggerganov/llama.cpp.git
 ```
 
-If you are very lazy, and you have supported hardware, you can just grab a [release build](https://github.com/ggerganov/llama.cpp/releases) and ignore the "building llama.cpp" section of this post.
+If you are very lazy, and you have supported hardware, you can just grab a [release build](https://github.com/ggerganov/llama.cpp/releases) and ignore the "building the llama" section of this post.
 If you don't know which version to pick - continue reading.
-
-After cloning the repo (or downloading a zip, if you prefer that), let's see what's inside.
-Directly in the repository root, there are few Python scripts for converting models to different formats.
-We'll get back to them.
-The most interesting subdirectory for us is `examples/`.
-I'm gonna cover just few of them, because there's definitely too many for a single blog post (and i don't even know what half of them does at this point).
-Those few include a CLI interface and OpenAI-compatible server, which i primarily use for all my LLM needs.
-Other than `examples/`, we will want to look at the `docs/` for latest build guide, because whatever i write here will inevitably become outdated at some point.
-
-If you really want to dig into the implementation, you may want to look at `common/`, `src/`, and `include/` contents.
-The names are pretty self-explanatory.
-`ggml/` directory contains the implementation of GGML tensor library, which is used as a backend for all the tensor math.
-`gguf-py/` is a Python package for managing binary files in GGUF (*GGML Universal File*) format, and `requirements/` contains Python requirements for example and utility scripts.
 
 ## building the llama
 
-In `docs/build.md`, you'll find detailed build instructions for all the supported platforms.
-The most basic build is for the generic CPU support.
-All we need now is a working C/C++ toolchain - preferably GCC or Clang.
-If you're using Linux, you should be good to go, unless you somehow don't have GCC installed (try `gcc -v` if you're not sure).
-If you're using Windows and you don't have your preferred toolchain installed, i personally recommend using [MSYS](https://www.msys2.org/), but Visual C++ is also supported - as long as you install the following components (see `docs/build.md` for details): C++-CMake Tools for Windows, Git for Windows, C++-Clang Compiler for Windows, MS-Build Support for LLVM-Toolset (clang).
-I'll describe how to use both MSYS and MSVC, because i'm familiar with them.
+In [`docs/build.md`](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md), you'll find detailed build instructions for all the supported platforms.
+By default, `llama.cpp` builds with auto-detected CPU support.
+We'll talk about GPU support in a moment, first - let's try building it as-is, because it's a good baseline to start with, and it doesn't require any external dependencies.
+To do that, we only need a C++ toolchain, [CMake](https://cmake.org/) and [Ninja](https://ninja-build.org/).
+
+> On Windows, you can use [Microsoft Visual C++](https://visualstudio.microsoft.com/downloads/) toolchain, but if you don't have it already installed i recommend using [MSYS](https://www.msys2.org/) to install MinGW instead.
+> It's smaller and saves some headaches.
+> Follow the guide on the main page to install MinGW for x64 UCRT environment, which you probably should be using.
+> CMake and Ninja can be installed via `winget`:
+>
+> ```ps
+> winget install cmake ninja-build.ninja
+> ```
+>
+> However, if you're using MSVC, you should install CMake via Visual Studio installer (`Build Tools` -> `C++ CMake tools for Windows`) as a package.
+{.windows-bg}
+
+> On Linux, GCC is recommended, but you should be able to use Clang if you'd prefer, by setting `CMAKE_C_COMPILER=clang` and `CMAKE_CXX_COMPILER=clang++` variables.
+> If you don't have any toolchain installed (try `gcc --version` in terminal), check the documentation of your distribution (or Google) for installation instructions.
+{.linux-bg}
+
+After you install the toolchain, CMake and Ninja (if you haven't done that already), open terminal in directory with cloned `llama.cpp` repository.
+You may also want to install `ccache` if you intend to rebuild `llama.cpp` often, it will save you some time, but it's not required.
+
+```sh
+cd llama.cpp
+```
+
+Now we'll use CMake to generate build files, build the project, and install it.
+Run the following command to generate build files in `build/` subdirectory:
+
+```sh
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/your/install/dir -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_STANDALONE=ON
+```
+
+There's a lot of CMake variables being defined, which we could ignore and let llama.cpp use it's defaults, but we won't:
+
+- `CMAKE_BUILD_TYPE` is set to release for obvious reasons - we want maximum performance.
+- [`CMAKE_INSTALL_PREFIX`](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html) is where the `llama.cpp` binaries and python scripts will go.
+  - On Linux, default directory is `/usr/local`, you can ignore this variable if that's fine with you, but you'll need super-user permissions to install the binaries. If you don't have them, change it to point somewhere in your user directory.
+  {.linux-bg-padded}
+  - On Windows, default directory is `c:/Program Files/llama.cpp` - as above, you'll need admin privileges to install it, and you'll have to add the `bin/` subdirectory to your `PATH` to make llama.cpp binaries accessible system-wide. I prefer installing llama.cpp in `$env:LOCALAPPDATA/llama.cpp` (`C:/Users/me/AppData/Local/llama.cpp`), as it doesn't require admin privileges.
+  {.windows-bg-padded}
+
+Now, let's build the project.
+Replace `X` with amount of cores your CPU has for faster compilation.
+In theory, Ninja should automatically use all available cores, but i still prefer passing this argument manually.
+
+```sh
+cmake --build build --config Release -j X
+```
