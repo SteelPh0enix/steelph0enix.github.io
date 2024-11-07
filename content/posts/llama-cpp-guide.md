@@ -67,7 +67,7 @@ As long as you have reasonably modern hardware (by that i mean *at least* a dece
 ### What performance can I expect?
 
 This is a very hard question to answer directly.
-The speed of text generation depends from multiple factors, but primarily
+The speed of text generation depends on multiple factors, but primarily
 
 - matrix operations performance on your hardware
 - memory bandwidth
@@ -94,11 +94,18 @@ As long as your tools communicate with LLMs via OpenAI API, and you are able to 
 
 ## prerequisites
 
-- Reasonably modern CPU. If you're rocking any Ryzen, or Intel's 8th gen or newer, you're good to go, but all of this should work on older hardware too.
-- Optimally, a GPU. More VRAM, the better. If you have at least 8GB of VRAM, you should be able to run 7-8B models, i'd say that it's reasonable minimum. Vendor doesn't matter, llama.cpp supports NVidia, AMD and Apple GPUs (not sure about Intel, but i think i saw a backend for that - if not, Vulkan should work).
-- If you're not using GPU or it doesn't have enough VRAM, you need RAM for the model. As above, at least 8GB of free RAM is recommended, but more is better.
+- Reasonably modern CPU.
+  If you're rocking any Ryzen, or Intel's 8th gen or newer, you're good to go, but all of this should work on older hardware too.
+- Optimally, a GPU.
+  More VRAM, the better.
+  If you have at least 8GB of VRAM, you should be able to run 7-8B models, i'd say that it's reasonable minimum.
+  Vendor doesn't matter, llama.cpp supports NVidia, AMD and Apple GPUs (not sure about Intel, but i think i saw a backend for that - if not, Vulkan should work).
+- If you're not using GPU or it doesn't have enough VRAM, you need RAM for the model.
+  As above, at least 8GB of free RAM is recommended, but more is better.
+  Keep in mind that when only GPU is used by llama.cpp, RAM usage is very low.
 
-In the guide, i'll assume you're using either Windows or Linux, with Git, [CMake](https://cmake.org/) and - if you have one - your preferred C++ toolchain. If you don't have one yet, don't worry - i'll tell you where to get one from. If you're on Mac, i'll point you to the guides in llama.cpp repository when not sure about something. Linux and Windows users are also encouraged to check them, as the knowledge in this blog post may not stay up-to-date with whatever llama.cpp does in the future.
+In the guide, i'll assume you're using either Windows or Linux.
+I can't provide any support for Mac users, so they should follow Linux steps and consult the llama.cpp docs wherever possible.
 
 Some context-specific formatting is used in this post:
 
@@ -108,62 +115,69 @@ Some context-specific formatting is used in this post:
 > And parts where i'll write about Linux-specific stuff will have this background.
 {.linux-bg}
 
-## getting the basics
-
-Let's start by grabbing a copy of [`llama.cpp` source code](https://github.com/ggerganov/llama.cpp).
-
-```sh
-git clone git@github.com:ggerganov/llama.cpp.git
-```
-
-If you are very lazy, and you have supported hardware, you can just grab a [release build](https://github.com/ggerganov/llama.cpp/releases) and ignore the "building the llama" section of this post.
-If you don't know which version to pick - continue reading.
-
 ## building the llama
+
+> If you are **very** lazy, you can download a release from Github and skip this step.
+> Make sure you'll downloading correct version for your hardware/backend.
+> If you have troubles picking, i recommend following the build guide anyway - it's simple enough and should explain what you should be looking for.
 
 In [`docs/build.md`](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md), you'll find detailed build instructions for all the supported platforms.
 By default, `llama.cpp` builds with auto-detected CPU support.
 We'll talk about GPU support in a moment, first - let's try building it as-is, because it's a good baseline to start with, and it doesn't require any external dependencies.
 To do that, we only need a C++ toolchain, [CMake](https://cmake.org/) and [Ninja](https://ninja-build.org/).
 
-> On Windows, you can use [Microsoft Visual C++](https://visualstudio.microsoft.com/downloads/) toolchain, but if you don't have it already installed i recommend using [MSYS](https://www.msys2.org/) to install MinGW instead.
-> It's smaller and saves some headaches.
+> On Windows, i recommend using [MSYS](https://www.msys2.org/) to setup the environment for building `llama.cpp`.
+> It supports  [Microsoft Visual C++](https://visualstudio.microsoft.com/downloads/) too, but trust me on that - you'll want to use MSYS instead.
 > Follow the guide on the main page to install MinGW for x64 UCRT environment, which you probably should be using.
-> CMake and Ninja can be installed via `winget`:
+> CMake, Ninja and Git can be installed in MSYS:
 >
-> ```ps
-> winget install cmake ninja-build.ninja
+> ```sh
+> pacman -S git mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
 > ```
 >
-> However, if you're using MSVC, you should install CMake via Visual Studio installer (`Build Tools` -> `C++ CMake tools for Windows`) as a package.
+> However, if you're using MSVC, you should install CMake via Visual Studio installer (`Build Tools` -> `C++ CMake tools for Windows`) as a package, and Git with Ninja via `winget`:
+>
+> ```ps
+> winget install git.git ninja-build.ninja
+> ```
+>
 {.windows-bg}
 
-> On Linux, GCC is recommended, but you should be able to use Clang if you'd prefer, by setting `CMAKE_C_COMPILER=clang` and `CMAKE_CXX_COMPILER=clang++` variables.
-> If you don't have any toolchain installed (try `gcc --version` in terminal), check the documentation of your distribution (or Google) for installation instructions.
+> On Linux, GCC is recommended, but you should be able to use Clang if you'd prefer by setting `CMAKE_C_COMPILER=clang` and `CMAKE_CXX_COMPILER=clang++` variables.
+> You should have GCC preinstalled (check `gcc --version` in terminal), if not - get latest version for your distribution using your package manager.
+> Same applies to CMake, Ninja and Git.
 {.linux-bg}
 
-After you install the toolchain, CMake and Ninja (if you haven't done that already), open terminal in directory with cloned `llama.cpp` repository.
-You may also want to install `ccache` if you intend to rebuild `llama.cpp` often, it will save you some time, but it's not required.
+Let's start by grabbing a copy of [`llama.cpp` source code](https://github.com/ggerganov/llama.cpp), and moving into it.
 
 ```sh
+git clone git@github.com:ggerganov/llama.cpp.git
 cd llama.cpp
+git submodule update --init --recursive
 ```
 
 Now we'll use CMake to generate build files, build the project, and install it.
 Run the following command to generate build files in `build/` subdirectory:
 
 ```sh
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/your/install/dir -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_STANDALONE=ON
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/your/install/dir -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=ON -DLLAMA_BUILD_SERVER=ON
 ```
 
 There's a lot of CMake variables being defined, which we could ignore and let llama.cpp use it's defaults, but we won't:
 
 - `CMAKE_BUILD_TYPE` is set to release for obvious reasons - we want maximum performance.
 - [`CMAKE_INSTALL_PREFIX`](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html) is where the `llama.cpp` binaries and python scripts will go.
-  - On Linux, default directory is `/usr/local`, you can ignore this variable if that's fine with you, but you'll need super-user permissions to install the binaries. If you don't have them, change it to point somewhere in your user directory.
-  {.linux-bg-padded}
-  - On Windows, default directory is `c:/Program Files/llama.cpp` - as above, you'll need admin privileges to install it, and you'll have to add the `bin/` subdirectory to your `PATH` to make llama.cpp binaries accessible system-wide. I prefer installing llama.cpp in `$env:LOCALAPPDATA/llama.cpp` (`C:/Users/me/AppData/Local/llama.cpp`), as it doesn't require admin privileges.
+  - On Windows, default directory is `c:/Program Files/llama.cpp`.
+    As above, you'll need admin privileges to install it, and you'll have to add the `bin/` subdirectory to your `PATH` to make llama.cpp binaries accessible system-wide.
+    I prefer installing llama.cpp in `$env:LOCALAPPDATA/llama.cpp` (`C:/Users/me/AppData/Local/llama.cpp`), as it doesn't require admin privileges.
   {.windows-bg-padded}
+  - On Linux, default directory is `/usr/local`.
+    You can ignore this variable if that's fine with you, but you'll need superuser permissions to install the binaries there.
+    If you don't have them, change it to point somewhere in your user directory.
+  {.linux-bg-padded}
+- `LLAMA_BUILD_TESTS` is set to `OFF` because we don't need tests, it'll make the build a bit shorter.
+- `LLAMA_BUILD_EXAMPLES` is `ON` because we're gonna be using them.
+- `LLAMA_BUILD_SERVER` - see above. Note: Disabling `LLAMA_BUILD_EXAMPLES` unconditionally disables building the server, both must be `ON`.
 
 Now, let's build the project.
 Replace `X` with amount of cores your CPU has for faster compilation.
@@ -172,3 +186,101 @@ In theory, Ninja should automatically use all available cores, but i still prefe
 ```sh
 cmake --build build --config Release -j X
 ```
+
+Building should take only a few minutes.
+After that, we can install the binaries for easier usage.
+
+```sh
+cmake --install build --config Release
+```
+
+Now, after going to `CMAKE_INSTALL_PREFIX/bin` directory, we should see a list of executables and Python scripts:
+
+```sh
+/c/Users/phoen/llama-build/bin
+❯ l
+Mode  Size Date Modified Name
+-a--- 203k  7 Nov 16:14  convert_hf_to_gguf.py
+-a--- 3.9M  7 Nov 16:18  llama-batched-bench.exe
+-a--- 3.9M  7 Nov 16:18  llama-batched.exe
+-a--- 3.4M  7 Nov 16:18  llama-bench.exe
+-a--- 3.9M  7 Nov 16:18  llama-cli.exe
+-a--- 3.2M  7 Nov 16:18  llama-convert-llama2c-to-ggml.exe
+-a--- 3.9M  7 Nov 16:18  llama-cvector-generator.exe
+-a--- 3.9M  7 Nov 16:18  llama-embedding.exe
+-a--- 3.9M  7 Nov 16:18  llama-eval-callback.exe
+-a--- 3.9M  7 Nov 16:18  llama-export-lora.exe
+-a--- 3.0M  7 Nov 16:18  llama-gbnf-validator.exe
+-a--- 1.2M  7 Nov 16:18  llama-gguf-hash.exe
+-a--- 3.0M  7 Nov 16:18  llama-gguf-split.exe
+-a--- 1.1M  7 Nov 16:18  llama-gguf.exe
+-a--- 3.9M  7 Nov 16:18  llama-gritlm.exe
+-a--- 3.9M  7 Nov 16:18  llama-imatrix.exe
+-a--- 3.9M  7 Nov 16:18  llama-infill.exe
+-a--- 4.2M  7 Nov 16:18  llama-llava-cli.exe
+-a--- 3.9M  7 Nov 16:18  llama-lookahead.exe
+-a--- 3.9M  7 Nov 16:18  llama-lookup-create.exe
+-a--- 1.2M  7 Nov 16:18  llama-lookup-merge.exe
+-a--- 3.9M  7 Nov 16:18  llama-lookup-stats.exe
+-a--- 3.9M  7 Nov 16:18  llama-lookup.exe
+-a--- 4.1M  7 Nov 16:18  llama-minicpmv-cli.exe
+-a--- 3.9M  7 Nov 16:18  llama-parallel.exe
+-a--- 3.9M  7 Nov 16:18  llama-passkey.exe
+-a--- 4.0M  7 Nov 16:18  llama-perplexity.exe
+-a--- 3.0M  7 Nov 16:18  llama-quantize-stats.exe
+-a--- 3.2M  7 Nov 16:18  llama-quantize.exe
+-a--- 3.9M  7 Nov 16:18  llama-retrieval.exe
+-a--- 3.9M  7 Nov 16:18  llama-save-load-state.exe
+-a--- 5.0M  7 Nov 16:19  llama-server.exe
+-a--- 3.0M  7 Nov 16:18  llama-simple-chat.exe
+-a--- 3.0M  7 Nov 16:18  llama-simple.exe
+-a--- 3.9M  7 Nov 16:18  llama-speculative.exe
+-a--- 3.1M  7 Nov 16:18  llama-tokenize.exe
+```
+
+Don't feel overwhelmed by the amount, we're only going to be using few of them.
+You should try running one of them to check if the executables have built correctly, for example - try `llama-cli --help`.
+We can't do anything meaningful yet, because we lack a single critical component - a model to run.
+
+## getting a model
+
+The main place to look for models is [HuggingFace](https://huggingface.co/).
+You can also find datasets and other AI-related stuff there, great site.
+
+We're going to use [`SmolLM2`](https://huggingface.co/collections/HuggingFaceTB/smollm2-6723884218bcda64b34d7db9), a model series created by HuggingFace and published very recently (1st November 2024).
+The reason i've chosen this model is the size - as the name implies, it's *small*.
+Largest model from this series has 1.7 billion parameters, which means that it requires approx. 4GB of system memory to run in *raw, unquantized* form (excluding context)!
+There are also 360M and 135M variants, which are even smaller and should be easily runnable on RaspberryPi or a smartphone.
+
+There's but one issue - `llama.cpp` cannot run "raw" models directly.
+What is usually provided by most LLM creators are original weights in `.safetensors` or similar format.
+`llama.cpp` expects models in `.gguf` format.
+Fortunately, there is a very simple way of converting original model weights into `.gguf` - `llama.cpp` provides `convert_hf_to_gguf.py` script exactly for this purpose!
+You can also download models in `.gguf` format directly from HuggingFace, usually uploaded there by community.
+Sometimes the creator provides `.gguf` files - two variants of `SmolLM2` are provided by HuggingFace, for example, but that's still not very popular.
+I'll focus on quantizing our models by ourselves here, as it'll allow us to experiment and adjust the quantization parameters for our hardware/model without having to download the same model multiple times.
+
+Grab the content of [SmolLM2 1.7B Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct/tree/main) repository, but omit the LFS files - we only need a single one.
+
+If you're using Bash/ZSH or compatible shell:
+{.linux-bg-padded}
+```sh
+GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct
+```
+
+If you're using PowerShell:
+{.windows-bg-padded}
+```sh
+$env:GIT_LFS_SKIP_SMUDGE=1
+git clone https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct
+```
+
+If you're using cmd.exe:
+{.windows-bg-padded}
+```sh
+set GIT_LFS_SKIP_SMUDGE=1
+git clone https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct
+```
+
+HuggingFace also supports Git over SSH. You can look up the `git clone` command for each repo here:
+![huggingface - where to find git clone button](/img/llama-cpp/clone-hf-button.png)

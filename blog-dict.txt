@@ -77,3 +77,13 @@ Ryzen
 DCMAKE
 DLLAMA
 goldmark
+phoen
+gbnf
+gritlm
+llava
+minicpmv
+pacman
+smol
+unquantized
+cvector
+huggingface
