@@ -77,3 +77,10 @@ enableRobotsTXT = true
         identifier = "about"
         name = "About"
         url = "/about"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.parser]
+      [markup.goldmark.parser.attribute]
+        block = true
+        title = true

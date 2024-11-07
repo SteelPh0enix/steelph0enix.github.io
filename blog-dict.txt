@@ -73,3 +73,7 @@ CMSIS
 stlink
 disqus
 steelph0enixblog
+Ryzen
+DCMAKE
+DLLAMA
+goldmark
