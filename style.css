@@ -1,0 +1,17 @@
+.windows-bg {
+  background-color: rgba(0, 200, 250, 0.2);
+}
+
+.linux-bg {
+  background-color: rgba(240, 180, 30, 0.2);
+}
+
+.windows-bg-padded {
+  padding: 5px;
+  background-color: rgba(0, 200, 250, 0.2);
+}
+
+.linux-bg-padded {
+  padding: 5px;
+  background-color: rgba(240, 180, 30, 0.2);
+}
