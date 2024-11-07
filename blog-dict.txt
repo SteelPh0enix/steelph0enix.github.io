@@ -87,3 +87,4 @@ smol
 unquantized
 cvector
 huggingface
+plag

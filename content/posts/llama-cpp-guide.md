@@ -126,19 +126,33 @@ By default, `llama.cpp` builds with auto-detected CPU support.
 We'll talk about GPU support in a moment, first - let's try building it as-is, because it's a good baseline to start with, and it doesn't require any external dependencies.
 To do that, we only need a C++ toolchain, [CMake](https://cmake.org/) and [Ninja](https://ninja-build.org/).
 
-> On Windows, i recommend using [MSYS](https://www.msys2.org/) to setup the environment for building `llama.cpp`.
-> It supports  [Microsoft Visual C++](https://visualstudio.microsoft.com/downloads/) too, but trust me on that - you'll want to use MSYS instead.
+> On Windows, i recommend using [MSYS](https://www.msys2.org/) to setup the environment for building and using `llama.cpp`.
+> [Microsoft Visual C++](https://visualstudio.microsoft.com/downloads/) is supported too, but trust me on that - you'll want to use MSYS instead.
 > Follow the guide on the main page to install MinGW for x64 UCRT environment, which you probably should be using.
-> CMake, Ninja and Git can be installed in MSYS:
+> CMake, Ninja, Python and Git can be installed in UCRT MSYS environment like that:
 >
 > ```sh
-> pacman -S git mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
+> pacman -S git \
+>   mingw-w64-ucrt-x86_64-cmake \
+>   mingw-w64-ucrt-x86_64-ninja \
+>   mingw-w64-ucrt-x86_64-python \
+>   mingw-w64-ucrt-x86_64-python-pip \
+>   mingw-w64-ucrt-x86_64-python-setuptools \
+>   mingw-w64-ucrt-x86_64-python-wheel
 > ```
 >
-> However, if you're using MSVC, you should install CMake via Visual Studio installer (`Build Tools` -> `C++ CMake tools for Windows`) as a package, and Git with Ninja via `winget`:
+> However, if you're using MSVC, you should install CMake via Visual Studio installer (`Build Tools` -> `C++ CMake tools for Windows`) as a package, and Git, Python and Ninja via `winget`:
 >
 > ```ps
-> winget install git.git ninja-build.ninja
+> winget install git.git ninja-build.ninja python.python.3.13
+> ```
+>
+> (in theory, CMake installed system-wide (either manually or via `winget`) should work fine too)
+>
+> I also recommend installing `setuptools` and `wheel` packages afterwards (along with updating `pip`)
+>
+> ```ps
+> python -m pip install --upgrade pip wheel setuptools
 > ```
 >
 {.windows-bg}
@@ -247,7 +261,7 @@ We can't do anything meaningful yet, because we lack a single critical component
 The main place to look for models is [HuggingFace](https://huggingface.co/).
 You can also find datasets and other AI-related stuff there, great site.
 
-We're going to use [`SmolLM2`](https://huggingface.co/collections/HuggingFaceTB/smollm2-6723884218bcda64b34d7db9), a model series created by HuggingFace and published very recently (1st November 2024).
+We're going to use [`SmolLM2`](https://huggingface.co/collections/HuggingFaceTB/smollm2-6723884218bcda64b34d7db9) here, a model series created by HuggingFace and published very recently (1st November 2024).
 The reason i've chosen this model is the size - as the name implies, it's *small*.
 Largest model from this series has 1.7 billion parameters, which means that it requires approx. 4GB of system memory to run in *raw, unquantized* form (excluding context)!
 There are also 360M and 135M variants, which are even smaller and should be easily runnable on RaspberryPi or a smartphone.
@@ -257,30 +271,94 @@ What is usually provided by most LLM creators are original weights in `.safetens
 `llama.cpp` expects models in `.gguf` format.
 Fortunately, there is a very simple way of converting original model weights into `.gguf` - `llama.cpp` provides `convert_hf_to_gguf.py` script exactly for this purpose!
 You can also download models in `.gguf` format directly from HuggingFace, usually uploaded there by community.
-Sometimes the creator provides `.gguf` files - two variants of `SmolLM2` are provided by HuggingFace, for example, but that's still not very popular.
-I'll focus on quantizing our models by ourselves here, as it'll allow us to experiment and adjust the quantization parameters for our hardware/model without having to download the same model multiple times.
+Sometimes the creator provides `.gguf` files - for example, two variants of `SmolLM2` are provided by HuggingFace in this format.
+However, i'll ignore the existence of pre-quantized `.gguf` files here, and focus on quantizing our models by ourselves here, as it'll allow us to experiment and adjust the quantization parameters of our model without having to download it multiple times.
 
-Grab the content of [SmolLM2 1.7B Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct/tree/main) repository, but omit the LFS files - we only need a single one.
+Grab the content of [SmolLM2 1.7B Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct/tree/main) repository (you can use [360M Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/tree/main) or [135M Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/tree/main) version instead, if you have less than 4GB of free (V)RAM), but omit the LFS files - we only need a single one, and we'll download it manually.
+
+> Why *Instruct*, specifically?
+> You might have noticed that there are two variants of all those models - *Instruct* and *the other one without a suffix*.
+> *Instruct* is trained for chat conversations, base model is only trained for text completion and is usually used as a base for further training.
+> This rule applies to most LLMs, but not all, so make sure to read the model's description before using it!
 
 If you're using Bash/ZSH or compatible shell:
 {.linux-bg-padded}
+
+(MSYS uses Bash by default, so it applies to it too)
+{.windows-bg-padded}
+
 ```sh
 GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct
 ```
 
 If you're using PowerShell:
 {.windows-bg-padded}
+
 ```sh
 $env:GIT_LFS_SKIP_SMUDGE=1
 git clone https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct
 ```
 
-If you're using cmd.exe:
+If you're using cmd.exe (VS Development Prompt, for example):
 {.windows-bg-padded}
+
 ```sh
 set GIT_LFS_SKIP_SMUDGE=1
 git clone https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct
 ```
 
-HuggingFace also supports Git over SSH. You can look up the `git clone` command for each repo here:
+HuggingFace also supports Git over SSH. You can look up the `git clone` command for every repo here:
 ![huggingface - where to find git clone button](/img/llama-cpp/clone-hf-button.png)
+
+After cloning the repo, download the `model.safetensors` file from HuggingFace manually.
+The reason why we used `GIT_LFS_SKIP_SMUDGE` is because there's many other large model files hidden in repo, and we don't need them.
+Also, downloading very large files manually is faster, because Git LFS sucks in that regard.
+
+After downloading everything, our local copy of the SmolLM repo should look like this:
+
+```sh
+PS D:\LLMs\repos\SmolLM2-1.7B-Instruct> l
+Mode  Size Date Modified Name
+-a---  806  2 Nov 15:16  all_results.json
+-a---  888  2 Nov 15:16  config.json
+-a---  602  2 Nov 15:16  eval_results.json
+-a---  139  2 Nov 15:16  generation_config.json
+-a--- 515k  2 Nov 15:16  merges.txt
+-a--- 3.4G  2 Nov 15:34  model.safetensors
+d----    -  2 Nov 15:16  onnx
+-a---  11k  2 Nov 15:16  README.md
+d----    -  2 Nov 15:16  runs
+-a---  689  2 Nov 15:16  special_tokens_map.json
+-a--- 2.2M  2 Nov 15:16  tokenizer.json
+-a--- 3.9k  2 Nov 15:16  tokenizer_config.json
+-a---  240  2 Nov 15:16  train_results.json
+-a---  89k  2 Nov 15:16  trainer_state.json
+-a---  129  2 Nov 15:16  training_args.bin
+-a--- 801k  2 Nov 15:16  vocab.json
+```
+
+We're gonna (indirectly) use only four of those files:
+
+- `config.json` contains configuration/metadata of our model
+- `model.safetensors` contains model weights
+- `tokenizer.json` contains tokenizer data (mapping of text tokens to their ID's, and other stuff).
+  Sometimes this data is stored in `tokenizer.model` file instead.
+- `tokenizer_config.json` contains tokenizer configuration (for example, special tokens and chat template)
+{.pre-anti-plag}
+
+i'm leaving this sentence here as anti-plagiarism token.
+If you're not currently reading this on my blog, which is @ steelph0enix.github.io, someone probably stolen that article without permission
+{.anti-plag}
+
+### converting huggingface model to GGUF {.post-anti-plag}
+
+In order to convert this raw model to something that `llama.cpp` will understand, we'll use aforementioned `convert_hf_to_gguf.py` script that comes with `llama.cpp`.
+This script requires some Python libraries, one of which also comes with `llama.cpp`.
+For all our Python needs, we're gonna need a virtual environment.
+I recommend making it outside of `llama.cpp` repo, for example - in your home directory.
+
+```sh
+python -m venv ~/llama-cpp-venv
+```
+
+Then, activate it, depending on your shell:
