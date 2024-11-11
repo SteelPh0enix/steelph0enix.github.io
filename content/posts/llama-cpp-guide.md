@@ -117,9 +117,10 @@ Some context-specific formatting is used in this post:
 
 ## building the llama
 
-> If you are **very** lazy, you can download a release from Github and skip this step.
-> Make sure you'll downloading correct version for your hardware/backend.
+> If you are **very** lazy, you can download a release from Github and skip building steps.
+> Make sure to download correct version for your hardware/backend.
 > If you have troubles picking, i recommend following the build guide anyway - it's simple enough and should explain what you should be looking for.
+> Keep in mind that release won't contain Python scripts that we're going to use, so if you'll want to quantize models manually, you'll need to get them from repository.
 
 In [`docs/build.md`](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md), you'll find detailed build instructions for all the supported platforms.
 By default, `llama.cpp` builds with auto-detected CPU support.
@@ -127,31 +128,40 @@ We'll talk about GPU support in a moment, first - let's try building it as-is, b
 To do that, we only need a C++ toolchain, [CMake](https://cmake.org/) and [Ninja](https://ninja-build.org/).
 
 > On Windows, i recommend using [MSYS](https://www.msys2.org/) to setup the environment for building and using `llama.cpp`.
-> [Microsoft Visual C++](https://visualstudio.microsoft.com/downloads/) is supported too, but trust me on that - you'll want to use MSYS instead.
+> [Microsoft Visual C++](https://visualstudio.microsoft.com/downloads/) is supported too, but trust me on that - you'll want to use MSYS instead (it's still a bit of pain in the ass, Linux setup is much simpler).
 > Follow the guide on the main page to install MinGW for x64 UCRT environment, which you probably should be using.
-> CMake, Ninja, Python and Git can be installed in UCRT MSYS environment like that:
+> CMake, Ninja and Git can be installed in UCRT MSYS environment like that:
 >
 > ```sh
-> pacman -S git \
->   mingw-w64-ucrt-x86_64-cmake \
->   mingw-w64-ucrt-x86_64-ninja \
->   mingw-w64-ucrt-x86_64-python \
->   mingw-w64-ucrt-x86_64-python-pip \
->   mingw-w64-ucrt-x86_64-python-setuptools \
->   mingw-w64-ucrt-x86_64-python-wheel
+> pacman -S git mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
 > ```
 >
-> However, if you're using MSVC, you should install CMake via Visual Studio installer (`Build Tools` -> `C++ CMake tools for Windows`) as a package, and Git, Python and Ninja via `winget`:
+> However, if you're using any other toolchain (MSVC, or non-MSYS one), you should install CMake, Git and Ninja via `winget`:
 >
-> ```ps
-> winget install git.git ninja-build.ninja python.python.3.13
+> ```powershell
+> winget install cmake git.git ninja-build.ninja
 > ```
 >
-> (in theory, CMake installed system-wide (either manually or via `winget`) should work fine too)
+> You'll also need Python, which you can get via winget.
+> Get the latest available version, at the time of writing this post it's 3.13.
 >
-> I also recommend installing `setuptools` and `wheel` packages afterwards (along with updating `pip`)
+> **DO NOT USE PYTHON FROM MSYS, IT WILL NOT WORK PROPERLY DUE TO ISSUES WITH BUILDING `llama.cpp` DEPENDENCY PACKAGES!**
+> **We're going to be using MSYS only for *building* `llama.cpp`, nothing more.**
 >
-> ```ps
+> **If you're using MSYS, remember to add it's `/bin` (`C:\msys64\ucrt64\bin` by default) directory to PATH, so Python can use MinGW for building packages.**
+> **Check if GCC is available by opening PowerShell/Command line and trying to run `gcc --version`.**
+> Also; check if it's *correct* GCC by running `where.exe gcc.exe` and seeing where the first entry points to.
+> Reorder your PATH if you'll notice that you're using wrong GCC.
+>
+> **If you're using MSVC - ignore this disclaimer, it should be "detectable" by default.**
+>
+> ```powershell
+> winget install python.python.3.13
+> ```
+>
+> I recommend installing/upgrading `pip`, `setuptools` and `wheel` packages before continuing.
+>
+> ```powershell
 > python -m pip install --upgrade pip wheel setuptools
 > ```
 >
@@ -159,10 +169,17 @@ To do that, we only need a C++ toolchain, [CMake](https://cmake.org/) and [Ninja
 
 > On Linux, GCC is recommended, but you should be able to use Clang if you'd prefer by setting `CMAKE_C_COMPILER=clang` and `CMAKE_CXX_COMPILER=clang++` variables.
 > You should have GCC preinstalled (check `gcc --version` in terminal), if not - get latest version for your distribution using your package manager.
-> Same applies to CMake, Ninja and Git.
+> Same applies to CMake, Ninja, Python 3 (with `setuptools`, `wheel` and `pip`) and Git.
 {.linux-bg}
 
 Let's start by grabbing a copy of [`llama.cpp` source code](https://github.com/ggerganov/llama.cpp), and moving into it.
+
+> Disclaimer: this guide assumes all commands are ran from user's home directory (`/home/[yourusername]` on Linux, `C:/Users/[yourusername]` on Windows).
+> You can use any directory you'd like, just keep in mind that if "starting directory" is not explicitly mentioned, start from home dir/your chosen one.
+
+> **If you're using MSYS**, remember that MSYS home directory is different from Windows home directory. Make sure to run `cd ~` to move into it after starting MSYS.
+> You can also use `$HOME` instead of `~` on Linux/MSYS if you prefer.
+{.windows-bg}
 
 ```sh
 git clone git@github.com:ggerganov/llama.cpp.git
@@ -183,11 +200,11 @@ There's a lot of CMake variables being defined, which we could ignore and let ll
 - [`CMAKE_INSTALL_PREFIX`](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html) is where the `llama.cpp` binaries and python scripts will go.
   - On Windows, default directory is `c:/Program Files/llama.cpp`.
     As above, you'll need admin privileges to install it, and you'll have to add the `bin/` subdirectory to your `PATH` to make llama.cpp binaries accessible system-wide.
-    I prefer installing llama.cpp in `$env:LOCALAPPDATA/llama.cpp` (`C:/Users/me/AppData/Local/llama.cpp`), as it doesn't require admin privileges.
+    I prefer installing llama.cpp in `$env:LOCALAPPDATA/llama.cpp` (`C:/Users/[yourusername]/AppData/Local/llama.cpp`), as it doesn't require admin privileges.
   {.windows-bg-padded}
   - On Linux, default directory is `/usr/local`.
     You can ignore this variable if that's fine with you, but you'll need superuser permissions to install the binaries there.
-    If you don't have them, change it to point somewhere in your user directory.
+    If you don't have them, change it to point somewhere in your user directory and add it to `PATH`.
   {.linux-bg-padded}
 - `LLAMA_BUILD_TESTS` is set to `OFF` because we don't need tests, it'll make the build a bit shorter.
 - `LLAMA_BUILD_EXAMPLES` is `ON` because we're gonna be using them.
@@ -270,11 +287,11 @@ There's but one issue - `llama.cpp` cannot run "raw" models directly.
 What is usually provided by most LLM creators are original weights in `.safetensors` or similar format.
 `llama.cpp` expects models in `.gguf` format.
 Fortunately, there is a very simple way of converting original model weights into `.gguf` - `llama.cpp` provides `convert_hf_to_gguf.py` script exactly for this purpose!
-You can also download models in `.gguf` format directly from HuggingFace, usually uploaded there by community.
 Sometimes the creator provides `.gguf` files - for example, two variants of `SmolLM2` are provided by HuggingFace in this format.
+This is not a very common practice, but you can also find models in `.gguf` format uploaded there by community.
 However, i'll ignore the existence of pre-quantized `.gguf` files here, and focus on quantizing our models by ourselves here, as it'll allow us to experiment and adjust the quantization parameters of our model without having to download it multiple times.
 
-Grab the content of [SmolLM2 1.7B Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct/tree/main) repository (you can use [360M Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/tree/main) or [135M Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/tree/main) version instead, if you have less than 4GB of free (V)RAM), but omit the LFS files - we only need a single one, and we'll download it manually.
+Grab the content of [SmolLM2 1.7B Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct/tree/main) repository (you can use [360M Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/tree/main) or [135M Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/tree/main) version instead, if you have less than 4GB of free (V)RAM - or use any other model you're already familiar with, if it supports `transformers`), but omit the LFS files - we only need a single one, and we'll download it manually.
 
 > Why *Instruct*, specifically?
 > You might have noticed that there are two variants of all those models - *Instruct* and *the other one without a suffix*.
@@ -284,7 +301,8 @@ Grab the content of [SmolLM2 1.7B Instruct](https://huggingface.co/HuggingFaceTB
 If you're using Bash/ZSH or compatible shell:
 {.linux-bg-padded}
 
-(MSYS uses Bash by default, so it applies to it too)
+*MSYS uses Bash by default, so it applies to it too.*
+*From now on, assume that Linux commands work on MSYS too, unless i explicitly say otherwise.*
 {.windows-bg-padded}
 
 ```sh
@@ -357,8 +375,77 @@ This script requires some Python libraries, one of which also comes with `llama.
 For all our Python needs, we're gonna need a virtual environment.
 I recommend making it outside of `llama.cpp` repo, for example - in your home directory.
 
+To create virtual environment on Linux/MSYS, run this command:
+{.linux-bg-padded}
+
 ```sh
 python -m venv ~/llama-cpp-venv
 ```
 
-Then, activate it, depending on your shell:
+If you're using PowerShell:
+{.windows-bg-padded}
+
+```powershell
+python -m venv $env:USERPROFILE/llama-cpp-venv
+```
+
+If you're using cmd.exe:
+{.windows-bg-padded}
+
+```batch
+python -m venv %USERPROFILE%/llama-cpp-venv
+```
+
+Then, activate it, on Linux/MSYS:
+{.linux-bg-padded}
+
+```sh
+source ~/llama-cpp-venv/bin/activate
+```
+
+With PowerShell:
+{.windows-bg-padded}
+
+```powershell
+. $env:USERPROFILE/llama-cpp-venv/Scripts/activate.ps1
+```
+
+With cmd.exe:
+{.windows-bg-padded}
+
+```cmd
+call %USERPROFILE%/llama-cpp-venv/Scripts/activate.bat
+```
+
+After that, let's make sure that our virtualenv has all the base packages up-to-date.
+
+```sh
+python -m pip install --upgrade pip wheel setuptools
+```
+
+Next thing we need to do is installing prerequisites for the script.
+This will be a two-step process.
+First, we'll install `llama.cpp` dependencies, and then we'll install `gguf` library from `llama.cpp` repository.
+Let's look into `requirements/` directory of our `llama.cpp` repository.
+We should see something like this:
+
+```sh
+❯ l llama.cpp/requirements
+Mode  Size Date Modified Name
+-a---  428 11 Nov 13:57  requirements-all.txt
+-a---   34 11 Nov 13:57  requirements-compare-llama-bench.txt
+-a---  111 11 Nov 13:57  requirements-convert_hf_to_gguf.txt
+-a---  111 11 Nov 13:57  requirements-convert_hf_to_gguf_update.txt
+-a---   99 11 Nov 13:57  requirements-convert_legacy_llama.txt
+-a---   43 11 Nov 13:57  requirements-convert_llama_ggml_to_gguf.txt
+-a---   96 11 Nov 13:57  requirements-convert_lora_to_gguf.txt
+-a---   48 11 Nov 13:57  requirements-pydantic.txt
+-a---   13 11 Nov 13:57  requirements-test-tokenizer-random.txt
+```
+
+As we can see, there's a file especially for our script!
+To install dependencies from it, run
+
+```sh
+python -m pip install -r llama.cpp/requirements/requirements-convert_hf_to_gguf.txt
+```
