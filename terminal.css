@@ -366,3 +366,7 @@ hr {
   background: var(--accent);
   height: 2px;
 }
+
+.container {
+    max-width: 1200px;
+}
