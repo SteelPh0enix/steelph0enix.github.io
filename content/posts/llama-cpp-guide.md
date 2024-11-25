@@ -110,6 +110,8 @@ I can't provide any support for Mac users, so they should follow Linux steps and
 Some context-specific formatting is used in this post:
 
 > Parts of this post where i'll write about Windows-specific stuff will have this background.
+> You'll notice they're much longer than Linux ones - Windows is a PITA.
+> Linux is preferred. I will still explain everything step-by-step for Windows, but in case of issues - try Linux.
 {.windows-bg}
 
 > And parts where i'll write about Linux-specific stuff will have this background.
@@ -117,15 +119,15 @@ Some context-specific formatting is used in this post:
 
 ## building the llama
 
-> If you are **very** lazy, you can download a release from Github and skip building steps.
-> Make sure to download correct version for your hardware/backend.
-> If you have troubles picking, i recommend following the build guide anyway - it's simple enough and should explain what you should be looking for.
-> Keep in mind that release won't contain Python scripts that we're going to use, so if you'll want to quantize models manually, you'll need to get them from repository.
-
 In [`docs/build.md`](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md), you'll find detailed build instructions for all the supported platforms.
 By default, `llama.cpp` builds with auto-detected CPU support.
 We'll talk about GPU support in a moment, first - let's try building it as-is, because it's a good baseline to start with, and it doesn't require any external dependencies.
 To do that, we only need a C++ toolchain, [CMake](https://cmake.org/) and [Ninja](https://ninja-build.org/).
+
+> If you are **very** lazy, you can download a release from Github and skip building steps.
+> Make sure to download correct version for your hardware/backend.
+> If you have troubles picking, i recommend following the build guide anyway - it's simple enough and should explain what you should be looking for.
+> Keep in mind that release won't contain Python scripts that we're going to use, so if you'll want to quantize models manually, you'll need to get them from repository.
 
 > On Windows, i recommend using [MSYS](https://www.msys2.org/) to setup the environment for building and using `llama.cpp`.
 > [Microsoft Visual C++](https://visualstudio.microsoft.com/downloads/) is supported too, but trust me on that - you'll want to use MSYS instead (it's still a bit of pain in the ass, Linux setup is much simpler).
@@ -203,7 +205,7 @@ There's a lot of CMake variables being defined, which we could ignore and let ll
   {.windows-bg-padded}
   - On Linux, default directory is `/usr/local`.
     You can ignore this variable if that's fine with you, but you'll need superuser permissions to install the binaries there.
-    If you don't have them, change it to point somewhere in your user directory and add it to `PATH`.
+    If you don't have them, change it to point somewhere in your user directory and add it's `bin/` subdirectory to `PATH`.
   {.linux-bg-padded}
 - `LLAMA_BUILD_TESTS` is set to `OFF` because we don't need tests, it'll make the build a bit quicker.
 - `LLAMA_BUILD_EXAMPLES` is `ON` because we're gonna be using them.
@@ -374,28 +376,32 @@ This script requires some Python libraries, one of which also comes with `llama.
 For all our Python needs, we're gonna need a virtual environment.
 I recommend making it outside of `llama.cpp` repo, for example - in your home directory.
 
-To create virtual environment on Linux, run this command:
+First, we need to make one.
+
+On Linux, run this command (tweak the path if you'd like):
 {.linux-bg-padded}
 
 ```sh
 python -m venv ~/llama-cpp-venv
 ```
 
-If you're using PowerShell:
+If you're using PowerShell, this is the equivalent:
 {.windows-bg-padded}
 
 ```powershell
 python -m venv $env:USERPROFILE/llama-cpp-venv
 ```
 
-If you're using cmd.exe:
+If you're using cmd.exe, this is the equivalent:
 {.windows-bg-padded}
 
 ```batch
 python -m venv %USERPROFILE%/llama-cpp-venv
 ```
 
-Then, activate it, on Linux:
+Then, we need to activate it.
+
+On Linux:
 {.linux-bg-padded}
 
 ```sh
@@ -406,7 +412,7 @@ With PowerShell:
 {.windows-bg-padded}
 
 ```powershell
-. $env:USERPROFILE/llama-cpp-venv/Scripts/activate.ps1
+. $env:USERPROFILE/llama-cpp-venv/Scripts/Activate.ps1
 ```
 
 With cmd.exe:
@@ -416,13 +422,13 @@ With cmd.exe:
 call %USERPROFILE%/llama-cpp-venv/Scripts/activate.bat
 ```
 
-After that, let's make sure that our virtualenv has all the base packages up-to-date.
+After that, let's make sure that our virtualenv has all the core packages up-to-date.
 
 ```sh
 python -m pip install --upgrade pip wheel setuptools
 ```
 
-Next thing we need to do is installing prerequisites for the script.
+Next, we need to install prerequisites for the llama.cpp scripts.
 This will be a two-step process.
 First, we'll install `llama.cpp` dependencies, and then we'll install `gguf` library from `llama.cpp` repository.
 Let's look into `requirements/` directory of our `llama.cpp` repository.
@@ -442,9 +448,16 @@ Mode  Size Date Modified Name
 -a---   13 11 Nov 13:57  requirements-test-tokenizer-random.txt
 ```
 
-As we can see, there's a file especially for our script!
-To install dependencies from it, run
+As we can see, there's a file with deps for our script!
+To install dependencies from it, run this command:
 
 ```sh
 python -m pip install -r llama.cpp/requirements/requirements-convert_hf_to_gguf.txt
 ```
+
+If `pip` failed during build, make sure you have working C/C++ toolchain in your `PATH`.
+
+> If you're using MSYS, don't. Go back to Windows, install Python via winget and repeat the setup.
+> As far as i've tested it, Python deps don't detect the platform correctly on MSYS and try to use wrong build stuff.
+> I've warned you at the beginning about it.
+{.windows-bg}
