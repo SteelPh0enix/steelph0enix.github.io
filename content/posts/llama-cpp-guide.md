@@ -177,8 +177,7 @@ Let's start by grabbing a copy of [`llama.cpp` source code](https://github.com/g
 > Disclaimer: this guide assumes all commands are ran from user's home directory (`/home/[yourusername]` on Linux, `C:/Users/[yourusername]` on Windows).
 > You can use any directory you'd like, just keep in mind that if "starting directory" is not explicitly mentioned, start from home dir/your chosen one.
 
-> **If you're using MSYS**, remember that MSYS home directory is different from Windows home directory. Make sure to run `cd ~` to move into it after starting MSYS.
-> You can also use `$HOME` instead of `~` on Linux/MSYS if you prefer.
+> **If you're using MSYS**, remember that MSYS home directory is different from Windows home directory. Make sure to use `cd` (without arguments) to move into it after starting MSYS.
 {.windows-bg}
 
 ```sh
@@ -197,7 +196,7 @@ cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/
 There's a lot of CMake variables being defined, which we could ignore and let llama.cpp use it's defaults, but we won't:
 
 - `CMAKE_BUILD_TYPE` is set to release for obvious reasons - we want maximum performance.
-- [`CMAKE_INSTALL_PREFIX`](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html) is where the `llama.cpp` binaries and python scripts will go.
+- [`CMAKE_INSTALL_PREFIX`](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html) is where the `llama.cpp` binaries and python scripts will go. Replace the value of this variable, or remove it's definition to keep default value.
   - On Windows, default directory is `c:/Program Files/llama.cpp`.
     As above, you'll need admin privileges to install it, and you'll have to add the `bin/` subdirectory to your `PATH` to make llama.cpp binaries accessible system-wide.
     I prefer installing llama.cpp in `$env:LOCALAPPDATA/llama.cpp` (`C:/Users/[yourusername]/AppData/Local/llama.cpp`), as it doesn't require admin privileges.
@@ -206,7 +205,7 @@ There's a lot of CMake variables being defined, which we could ignore and let ll
     You can ignore this variable if that's fine with you, but you'll need superuser permissions to install the binaries there.
     If you don't have them, change it to point somewhere in your user directory and add it to `PATH`.
   {.linux-bg-padded}
-- `LLAMA_BUILD_TESTS` is set to `OFF` because we don't need tests, it'll make the build a bit shorter.
+- `LLAMA_BUILD_TESTS` is set to `OFF` because we don't need tests, it'll make the build a bit quicker.
 - `LLAMA_BUILD_EXAMPLES` is `ON` because we're gonna be using them.
 - `LLAMA_BUILD_SERVER` - see above. Note: Disabling `LLAMA_BUILD_EXAMPLES` unconditionally disables building the server, both must be `ON`.
 
@@ -278,7 +277,7 @@ We can't do anything meaningful yet, because we lack a single critical component
 The main place to look for models is [HuggingFace](https://huggingface.co/).
 You can also find datasets and other AI-related stuff there, great site.
 
-We're going to use [`SmolLM2`](https://huggingface.co/collections/HuggingFaceTB/smollm2-6723884218bcda64b34d7db9) here, a model series created by HuggingFace and published very recently (1st November 2024).
+We're going to use [`SmolLM2`](https://huggingface.co/collections/HuggingFaceTB/smollm2-6723884218bcda64b34d7db9) here, a model series created by HuggingFace and published fairly recently (1st November 2024).
 The reason i've chosen this model is the size - as the name implies, it's *small*.
 Largest model from this series has 1.7 billion parameters, which means that it requires approx. 4GB of system memory to run in *raw, unquantized* form (excluding context)!
 There are also 360M and 135M variants, which are even smaller and should be easily runnable on RaspberryPi or a smartphone.
@@ -328,7 +327,7 @@ git clone https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct
 HuggingFace also supports Git over SSH. You can look up the `git clone` command for every repo here:
 ![huggingface - where to find git clone button](/img/llama-cpp/clone-hf-button.png)
 
-After cloning the repo, download the `model.safetensors` file from HuggingFace manually.
+After cloning the repo, **download the `model.safetensors` file from HuggingFace manually.**
 The reason why we used `GIT_LFS_SKIP_SMUDGE` is because there's many other large model files hidden in repo, and we don't need them.
 Also, downloading very large files manually is faster, because Git LFS sucks in that regard.
 
@@ -375,7 +374,7 @@ This script requires some Python libraries, one of which also comes with `llama.
 For all our Python needs, we're gonna need a virtual environment.
 I recommend making it outside of `llama.cpp` repo, for example - in your home directory.
 
-To create virtual environment on Linux/MSYS, run this command:
+To create virtual environment on Linux, run this command:
 {.linux-bg-padded}
 
 ```sh
@@ -396,7 +395,7 @@ If you're using cmd.exe:
 python -m venv %USERPROFILE%/llama-cpp-venv
 ```
 
-Then, activate it, on Linux/MSYS:
+Then, activate it, on Linux:
 {.linux-bg-padded}
 
 ```sh
