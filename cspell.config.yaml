@@ -24,4 +24,5 @@ ignorePaths:
   - 'static/presentations/**'
   - 'static/img/**'
   - '.github/**'
+  - 'static/.well-known'
   - 'LICENSE'
