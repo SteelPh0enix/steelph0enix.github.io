@@ -473,7 +473,7 @@ That's because `llama-quantize` offers much more quantization options, and this 
 To create GGUF file from our downloaded HuggingFace repository with SmolLM2 (Replace `SmolLM2-1.7B-Instruct` with your path, if it's different) run this command:
 
 ```sh
-python llama.cpp/convert_hf_to_gguf.py SmolLM2-1.7B-Instruct
+python llama.cpp/convert_hf_to_gguf.py SmolLM2-1.7B-Instruct --outfile ./SmolLM2.gguf
 ```
 
 If everything went correctly, you should see similar output:
@@ -513,7 +513,12 @@ You are a helpful AI assistant named SmolLM, trained by Hugging Face<|im_end|>
 ' }}{% endif %}
 INFO:hf-to-gguf:Set model quantization version
 INFO:gguf.gguf_writer:Writing the following files:
-INFO:gguf.gguf_writer:/home/steelph0enix/LLMs/repos/SmolLM2-1.7B-Instruct/SmolLM2-1.7B-Instruct-F16.gguf: n_tensors = 218, total_size = 3.4G
-Writing: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 3.42G/3.42G [00:17<00:00, 195Mbyte/s]
-INFO:hf-to-gguf:Model successfully exported to /home/steelph0enix/LLMs/repos/SmolLM2-1.7B-Instruct/SmolLM2-1.7B-Instruct-F16.gguf
+INFO:gguf.gguf_writer:SmolLM2.gguf: n_tensors = 218, total_size = 3.4G
+Writing: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 3.42G/3.42G [00:15<00:00, 215Mbyte/s]
+INFO:hf-to-gguf:Model successfully exported to SmolLM2.gguf
 ```
+
+### quantizing the model
+
+Now we can finally quantize our model!
+To do that, we'll use `llama-quantize` executable that we previously compiled along `llama.cpp`.
