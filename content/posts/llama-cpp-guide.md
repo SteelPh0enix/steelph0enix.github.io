@@ -86,7 +86,7 @@ Unless you have multiple GPUs or unreasonable amount of RAM and patience - you'l
 From my experience, 7-8B models are pretty good for generic purposes and programming - and they are not *very* far from SOTA models like GPT-4o or Claude in terms of raw quality of generated responses, but the difference is definitely noticeable.
 Keep in mind that the choice of a model is only a part of the problem - providing proper context and system prompt, or fine-tuning LLMs can do wonders.
 
-### Can i replace ChatGPT/Claude/\[insert online LLM provider\] with that?
+### Can i replace ChatGPT/Claude/[insert online LLM provider] with that?
 
 Maybe. In theory - yes, but in practice - it depends on your tools.
 `llama.cpp` provides OpenAI-compatible server.
@@ -112,10 +112,10 @@ Some context-specific formatting is used in this post:
 > Parts of this post where i'll write about Windows-specific stuff will have this background.
 > You'll notice they're much longer than Linux ones - Windows is a PITA.
 > Linux is preferred. I will still explain everything step-by-step for Windows, but in case of issues - try Linux.
-{.windows-bg}
+> {.windows-bg}
 
 > And parts where i'll write about Linux-specific stuff will have this background.
-{.linux-bg}
+> {.linux-bg}
 
 ## building the llama
 
@@ -166,13 +166,13 @@ To do that, we only need a C++ toolchain, [CMake](https://cmake.org/) and [Ninja
 > ```powershell
 > python -m pip install --upgrade pip wheel setuptools
 > ```
->
+
 {.windows-bg}
 
 > On Linux, GCC is recommended, but you should be able to use Clang if you'd prefer by setting `CMAKE_C_COMPILER=clang` and `CMAKE_CXX_COMPILER=clang++` variables.
 > You should have GCC preinstalled (check `gcc --version` in terminal), if not - get latest version for your distribution using your package manager.
 > Same applies to CMake, Ninja, Python 3 (with `setuptools`, `wheel` and `pip`) and Git.
-{.linux-bg}
+> {.linux-bg}
 
 Let's start by grabbing a copy of [`llama.cpp` source code](https://github.com/ggerganov/llama.cpp), and moving into it.
 
@@ -180,7 +180,7 @@ Let's start by grabbing a copy of [`llama.cpp` source code](https://github.com/g
 > You can use any directory you'd like, just keep in mind that if "starting directory" is not explicitly mentioned, start from home dir/your chosen one.
 
 > **If you're using MSYS**, remember that MSYS home directory is different from Windows home directory. Make sure to use `cd` (without arguments) to move into it after starting MSYS.
-{.windows-bg}
+> {.windows-bg}
 
 ```sh
 git clone git@github.com:ggerganov/llama.cpp.git
@@ -202,11 +202,11 @@ There's a lot of CMake variables being defined, which we could ignore and let ll
   - On Windows, default directory is `c:/Program Files/llama.cpp`.
     As above, you'll need admin privileges to install it, and you'll have to add the `bin/` subdirectory to your `PATH` to make llama.cpp binaries accessible system-wide.
     I prefer installing llama.cpp in `$env:LOCALAPPDATA/llama.cpp` (`C:/Users/[yourusername]/AppData/Local/llama.cpp`), as it doesn't require admin privileges.
-  {.windows-bg-padded}
+    {.windows-bg-padded}
   - On Linux, default directory is `/usr/local`.
     You can ignore this variable if that's fine with you, but you'll need superuser permissions to install the binaries there.
     If you don't have them, change it to point somewhere in your user directory and add it's `bin/` subdirectory to `PATH`.
-  {.linux-bg-padded}
+    {.linux-bg-padded}
 - `LLAMA_BUILD_TESTS` is set to `OFF` because we don't need tests, it'll make the build a bit quicker.
 - `LLAMA_BUILD_EXAMPLES` is `ON` because we're gonna be using them.
 - `LLAMA_BUILD_SERVER` - see above. Note: Disabling `LLAMA_BUILD_EXAMPLES` unconditionally disables building the server, both must be `ON`.
@@ -363,7 +363,7 @@ We're gonna (indirectly) use only four of those files:
 - `tokenizer.json` contains tokenizer data (mapping of text tokens to their ID's, and other stuff).
   Sometimes this data is stored in `tokenizer.model` file instead.
 - `tokenizer_config.json` contains tokenizer configuration (for example, special tokens and chat template)
-{.pre-anti-plag}
+  {.pre-anti-plag}
 
 i'm leaving this sentence here as anti-plagiarism token.
 If you're not currently reading this on my blog, which is @ steelph0enix.github.io, someone probably stolen that article without permission
@@ -372,13 +372,10 @@ If you're not currently reading this on my blog, which is @ steelph0enix.github.
 ### converting huggingface model to GGUF {.post-anti-plag}
 
 In order to convert this raw model to something that `llama.cpp` will understand, we'll use aforementioned `convert_hf_to_gguf.py` script that comes with `llama.cpp`.
-This script requires some Python libraries, one of which also comes with `llama.cpp`.
 For all our Python needs, we're gonna need a virtual environment.
 I recommend making it outside of `llama.cpp` repo, for example - in your home directory.
 
-First, we need to make one.
-
-On Linux, run this command (tweak the path if you'd like):
+To make one on Linux, run this command (tweak the path if you'd like):
 {.linux-bg-padded}
 
 ```sh
@@ -429,8 +426,6 @@ python -m pip install --upgrade pip wheel setuptools
 ```
 
 Next, we need to install prerequisites for the llama.cpp scripts.
-This will be a two-step process.
-First, we'll install `llama.cpp` dependencies, and then we'll install `gguf` library from `llama.cpp` repository.
 Let's look into `requirements/` directory of our `llama.cpp` repository.
 We should see something like this:
 
@@ -452,12 +447,73 @@ As we can see, there's a file with deps for our script!
 To install dependencies from it, run this command:
 
 ```sh
-python -m pip install -r llama.cpp/requirements/requirements-convert_hf_to_gguf.txt
+python -m pip install --upgrade -r llama.cpp/requirements/requirements-convert_hf_to_gguf.txt
 ```
 
 If `pip` failed during build, make sure you have working C/C++ toolchain in your `PATH`.
 
-> If you're using MSYS, don't. Go back to Windows, install Python via winget and repeat the setup.
-> As far as i've tested it, Python deps don't detect the platform correctly on MSYS and try to use wrong build stuff.
-> I've warned you at the beginning about it.
-{.windows-bg}
+> If you're using MSYS for that, don't. Go back to PowerShell/cmd, install Python via winget and repeat the setup.
+> As far as i've tested it, Python deps don't detect the platform correctly on MSYS and try to use wrong build config.
+> This is what i warned you about earlier.
+> {.windows-bg}
+
+Now we can use the script to create our GGUF model file.
+Start with printing the help and reading the options.
+
+```sh
+python llama.cpp/convert_hf_to_gguf.py --help
+```
+
+If this command printed help, you can continue.
+Otherwise make sure that python's virtualenv is active and dependencies are correctly installed, and try again.
+To convert our model we can simply pass the path to directory with model's repository and, optionally, path to output file.
+We don't need to tweak the quantization here, for maximum flexibility we're going to create a floating-point GGUF file which we'll then quantize down.
+That's because `llama-quantize` offers much more quantization options, and this script picks optimal floating-point format by default.
+
+To create GGUF file from our downloaded HuggingFace repository with SmolLM2 (Replace `SmolLM2-1.7B-Instruct` with your path, if it's different) run this command:
+
+```sh
+python llama.cpp/convert_hf_to_gguf.py SmolLM2-1.7B-Instruct
+```
+
+If everything went correctly, you should see similar output:
+
+```sh
+INFO:hf-to-gguf:Loading model: SmolLM2-1.7B-Instruct
+INFO:gguf.gguf_writer:gguf: This GGUF file is for Little Endian only
+INFO:hf-to-gguf:Exporting model...
+INFO:hf-to-gguf:gguf: loading model part 'model.safetensors'
+INFO:hf-to-gguf:token_embd.weight,           torch.bfloat16 --> F16, shape = {2048, 49152}
+INFO:hf-to-gguf:blk.0.attn_norm.weight,      torch.bfloat16 --> F32, shape = {2048}
+...
+INFO:hf-to-gguf:blk.9.attn_q.weight,         torch.bfloat16 --> F16, shape = {2048, 2048}
+INFO:hf-to-gguf:blk.9.attn_v.weight,         torch.bfloat16 --> F16, shape = {2048, 2048}
+INFO:hf-to-gguf:output_norm.weight,          torch.bfloat16 --> F32, shape = {2048}
+INFO:hf-to-gguf:Set meta model
+INFO:hf-to-gguf:Set model parameters
+INFO:hf-to-gguf:gguf: context length = 8192
+INFO:hf-to-gguf:gguf: embedding length = 2048
+INFO:hf-to-gguf:gguf: feed forward length = 8192
+INFO:hf-to-gguf:gguf: head count = 32
+INFO:hf-to-gguf:gguf: key-value head count = 32
+INFO:hf-to-gguf:gguf: rope theta = 130000
+INFO:hf-to-gguf:gguf: rms norm epsilon = 1e-05
+INFO:hf-to-gguf:gguf: file type = 1
+INFO:hf-to-gguf:Set model tokenizer
+INFO:gguf.vocab:Adding 48900 merge(s).
+INFO:gguf.vocab:Setting special token type bos to 1
+INFO:gguf.vocab:Setting special token type eos to 2
+INFO:gguf.vocab:Setting special token type unk to 0
+INFO:gguf.vocab:Setting special token type pad to 2
+INFO:gguf.vocab:Setting chat_template to {% for message in messages %}{% if loop.first and messages[0]['role'] != 'system' %}{{ '<|im_start|>system
+You are a helpful AI assistant named SmolLM, trained by Hugging Face<|im_end|>
+' }}{% endif %}{{'<|im_start|>' + message['role'] + '
+' + message['content'] + '<|im_end|>' + '
+'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant
+' }}{% endif %}
+INFO:hf-to-gguf:Set model quantization version
+INFO:gguf.gguf_writer:Writing the following files:
+INFO:gguf.gguf_writer:/home/steelph0enix/LLMs/repos/SmolLM2-1.7B-Instruct/SmolLM2-1.7B-Instruct-F16.gguf: n_tensors = 218, total_size = 3.4G
+Writing: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 3.42G/3.42G [00:17<00:00, 195Mbyte/s]
+INFO:hf-to-gguf:Model successfully exported to /home/steelph0enix/LLMs/repos/SmolLM2-1.7B-Instruct/SmolLM2-1.7B-Instruct-F16.gguf
+```

@@ -89,3 +89,4 @@ cvector
 huggingface
 plag
 yourusername
+PYTHONPATH
