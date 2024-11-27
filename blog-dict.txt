@@ -91,3 +91,17 @@ plag
 yourusername
 PYTHONPATH
 embd
+quantization
+quantizations
+requantize
+ternarization
+finetune
+finetuned
+smollm
+endoftext
+Radeon
+SSSE
+LLAMAFILE
+logit
+webui
+ubatch

@@ -521,4 +521,353 @@ INFO:hf-to-gguf:Model successfully exported to SmolLM2.gguf
 ### quantizing the model
 
 Now we can finally quantize our model!
-To do that, we'll use `llama-quantize` executable that we previously compiled along `llama.cpp`.
+To do that, we'll use `llama-quantize` executable that we previously compiled with other `llama.cpp` executables.
+First, let's check what quantizations we have available.
+As of now, `llama-quantize --help` shows following types:
+
+```sh
+> llama-quantize --help
+
+usage: llama-quantize [--help] [--allow-requantize] [--leave-output-tensor] [--pure] [--imatrix] [--include-weights] [--exclude-weights] [--output-tensor-type] [--token-embedding-type] [--override-kv] model-f32.gguf [model-quant.gguf] type [nthreads]
+
+...
+
+Allowed quantization types:
+   2  or  Q4_0    :  4.34G, +0.4685 ppl @ Llama-3-8B
+   3  or  Q4_1    :  4.78G, +0.4511 ppl @ Llama-3-8B
+   8  or  Q5_0    :  5.21G, +0.1316 ppl @ Llama-3-8B
+   9  or  Q5_1    :  5.65G, +0.1062 ppl @ Llama-3-8B
+  19  or  IQ2_XXS :  2.06 bpw quantization
+  20  or  IQ2_XS  :  2.31 bpw quantization
+  28  or  IQ2_S   :  2.5  bpw quantization
+  29  or  IQ2_M   :  2.7  bpw quantization
+  24  or  IQ1_S   :  1.56 bpw quantization
+  31  or  IQ1_M   :  1.75 bpw quantization
+  36  or  TQ1_0   :  1.69 bpw ternarization
+  37  or  TQ2_0   :  2.06 bpw ternarization
+  10  or  Q2_K    :  2.96G, +3.5199 ppl @ Llama-3-8B
+  21  or  Q2_K_S  :  2.96G, +3.1836 ppl @ Llama-3-8B
+  23  or  IQ3_XXS :  3.06 bpw quantization
+  26  or  IQ3_S   :  3.44 bpw quantization
+  27  or  IQ3_M   :  3.66 bpw quantization mix
+  12  or  Q3_K    : alias for Q3_K_M
+  22  or  IQ3_XS  :  3.3 bpw quantization
+  11  or  Q3_K_S  :  3.41G, +1.6321 ppl @ Llama-3-8B
+  12  or  Q3_K_M  :  3.74G, +0.6569 ppl @ Llama-3-8B
+  13  or  Q3_K_L  :  4.03G, +0.5562 ppl @ Llama-3-8B
+  25  or  IQ4_NL  :  4.50 bpw non-linear quantization
+  30  or  IQ4_XS  :  4.25 bpw non-linear quantization
+  15  or  Q4_K    : alias for Q4_K_M
+  14  or  Q4_K_S  :  4.37G, +0.2689 ppl @ Llama-3-8B
+  15  or  Q4_K_M  :  4.58G, +0.1754 ppl @ Llama-3-8B
+  17  or  Q5_K    : alias for Q5_K_M
+  16  or  Q5_K_S  :  5.21G, +0.1049 ppl @ Llama-3-8B
+  17  or  Q5_K_M  :  5.33G, +0.0569 ppl @ Llama-3-8B
+  18  or  Q6_K    :  6.14G, +0.0217 ppl @ Llama-3-8B
+   7  or  Q8_0    :  7.96G, +0.0026 ppl @ Llama-3-8B
+  33  or  Q4_0_4_4 :  4.34G, +0.4685 ppl @ Llama-3-8B
+  34  or  Q4_0_4_8 :  4.34G, +0.4685 ppl @ Llama-3-8B
+  35  or  Q4_0_8_8 :  4.34G, +0.4685 ppl @ Llama-3-8B
+   1  or  F16     : 14.00G, +0.0020 ppl @ Mistral-7B
+  32  or  BF16    : 14.00G, -0.0050 ppl @ Mistral-7B
+   0  or  F32     : 26.00G              @ 7B
+          COPY    : only copy tensors, no quantizing
+```
+
+Let's decode this table.
+From the left, we have IDs and names of quantization types - you can use either when calling `llama-quantize`.
+After the `:`, there's a short description that in most cases shows either the example model's size and perplexity, or the amount of bits per tensor weight (bpw) for that specific quantization.
+Perplexity is a metric that describes how certain the model is about it's predictions.
+We can think about it like that: lower perplexity -> model is more certain about it's predictions -> model is more accurate.
+This is a daily reminder that LLMs are nothing more than overcomplicated autocompletion algorithms.
+The "bits per weight" metric tells us the average size of quantized tensor's weight.
+You may think it's strange that those are floating-point values, but we'll see the reason for that soon.
+
+Now, the main question that needs to be answered is "which quantization do we pick?".
+And the answer is "it depends".
+My rule of thumb for picking quantization type is "the largest i can fit in my VRAM, unless it's too slow for my taste" and i recommend this approach if you don't know where to start!
+Obviously, if you don't have/want to use GPU, replace "VRAM" with "RAM" and "largest i can fit" with "largest i can fit without forcing the OS to move everything to swap".
+That creates another question - "what is the largest quant i can fit in my (V)RAM"?
+And this depends on the original model's size and encoding, and - obviously - the amount of (V)RAM you have.
+Since we're using SmolLM2, our model is relatively small.
+GGUF file of 1.7B-Instruct variant in BF16 format weights 3.4GB.
+Most models you'll encounter will be encoded in either BF16 or FP16 format, rarely we can find FP32-encoded LLMs.
+That means most of models have 16 bits per weight by default.
+We can easily approximate the size of quantized model by multiplying the original size with approximate ratio of bits per weight.
+For example, let's assume we want to know how large will SmolLM2 1.7B-Instruct be after Q8_0 quantization.
+Let's assume Q8_0 quant uses 8 bits per word, which means the ratio is simply 1/2, so our model should weight ~1.7GB.
+Let's check that!
+
+The first argument is source model, second - target file.
+Third is the quantization type, and last is the amount of cores for parallel processing.
+Replace `N` with amount of cores in your system and run this command:
+
+```sh
+llama-quantize SmolLM2.gguf SmolLM2.q8.gguf Q8_0 N
+```
+
+You should see similar output:
+
+```sh
+main: build = 4200 (46c69e0e)
+main: built with gcc (GCC) 14.2.1 20240910 for x86_64-pc-linux-gnu
+main: quantizing 'SmolLM2.gguf' to 'SmolLM2.q8.gguf' as Q8_0 using 24 threads
+llama_model_loader: loaded meta data with 37 key-value pairs and 218 tensors from SmolLM2.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = llama
+llama_model_loader: - kv   1:                               general.type str              = model
+llama_model_loader: - kv   2:                               general.name str              = SmolLM2 1.7B Instruct
+llama_model_loader: - kv   3:                           general.finetune str              = Instruct
+llama_model_loader: - kv   4:                           general.basename str              = SmolLM2
+llama_model_loader: - kv   5:                         general.size_label str              = 1.7B
+llama_model_loader: - kv   6:                            general.license str              = apache-2.0
+llama_model_loader: - kv   7:                   general.base_model.count u32              = 1
+llama_model_loader: - kv   8:                  general.base_model.0.name str              = SmolLM2 1.7B
+llama_model_loader: - kv   9:          general.base_model.0.organization str              = HuggingFaceTB
+llama_model_loader: - kv  10:              general.base_model.0.repo_url str              = https://huggingface.co/HuggingFaceTB/...
+llama_model_loader: - kv  11:                               general.tags arr[str,4]       = ["safetensors", "onnx", "transformers...
+llama_model_loader: - kv  12:                          general.languages arr[str,1]       = ["en"]
+llama_model_loader: - kv  13:                          llama.block_count u32              = 24
+llama_model_loader: - kv  14:                       llama.context_length u32              = 8192
+llama_model_loader: - kv  15:                     llama.embedding_length u32              = 2048
+llama_model_loader: - kv  16:                  llama.feed_forward_length u32              = 8192
+llama_model_loader: - kv  17:                 llama.attention.head_count u32              = 32
+llama_model_loader: - kv  18:              llama.attention.head_count_kv u32              = 32
+llama_model_loader: - kv  19:                       llama.rope.freq_base f32              = 130000.000000
+llama_model_loader: - kv  20:     llama.attention.layer_norm_rms_epsilon f32              = 0.000010
+llama_model_loader: - kv  21:                          general.file_type u32              = 32
+llama_model_loader: - kv  22:                           llama.vocab_size u32              = 49152
+llama_model_loader: - kv  23:                 llama.rope.dimension_count u32              = 64
+llama_model_loader: - kv  24:                       tokenizer.ggml.model str              = gpt2
+llama_model_loader: - kv  25:                         tokenizer.ggml.pre str              = smollm
+llama_model_loader: - kv  26:                      tokenizer.ggml.tokens arr[str,49152]   = ["<|endoftext|>", "<|im_start|>", "<|...
+llama_model_loader: - kv  27:                  tokenizer.ggml.token_type arr[i32,49152]   = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, ...
+llama_model_loader: - kv  28:                      tokenizer.ggml.merges arr[str,48900]   = ["Ġ t", "Ġ a", "i n", "h e", "Ġ Ġ...
+llama_model_loader: - kv  29:                tokenizer.ggml.bos_token_id u32              = 1
+llama_model_loader: - kv  30:                tokenizer.ggml.eos_token_id u32              = 2
+llama_model_loader: - kv  31:            tokenizer.ggml.unknown_token_id u32              = 0
+llama_model_loader: - kv  32:            tokenizer.ggml.padding_token_id u32              = 2
+llama_model_loader: - kv  33:                    tokenizer.chat_template str              = {% for message in messages %}{% if lo...
+llama_model_loader: - kv  34:            tokenizer.ggml.add_space_prefix bool             = false
+llama_model_loader: - kv  35:               tokenizer.ggml.add_bos_token bool             = false
+llama_model_loader: - kv  36:               general.quantization_version u32              = 2
+llama_model_loader: - type  f32:   49 tensors
+llama_model_loader: - type bf16:  169 tensors
+ggml_vulkan: Found 1 Vulkan devices:
+ggml_vulkan: 0 = AMD Radeon RX 7900 XT (AMD open-source driver) | uma: 0 | fp16: 1 | warp size: 64
+[   1/ 218]                   output_norm.weight - [ 2048,     1,     1,     1], type =    f32, size =    0.008 MB
+[   2/ 218]                    token_embd.weight - [ 2048, 49152,     1,     1], type =   bf16, converting to q8_0 .. size =   192.00 MiB ->   102.00 MiB
+[   3/ 218]                  blk.0.attn_k.weight - [ 2048,  2048,     1,     1], type =   bf16, converting to q8_0 .. size =     8.00 MiB ->     4.25 MiB
+[   4/ 218]               blk.0.attn_norm.weight - [ 2048,     1,     1,     1], type =    f32, size =    0.008 MB
+[   5/ 218]             blk.0.attn_output.weight - [ 2048,  2048,     1,     1], type =   bf16, converting to q8_0 .. size =     8.00 MiB ->     4.25 MiB
+[   6/ 218]                  blk.0.attn_q.weight - [ 2048,  2048,     1,     1], type =   bf16, converting to q8_0 .. size =     8.00 MiB ->     4.25 MiB
+[   7/ 218]                  blk.0.attn_v.weight - [ 2048,  2048,     1,     1], type =   bf16, converting to q8_0 .. size =     8.00 MiB ->     4.25 MiB
+...
+[ 212/ 218]            blk.23.attn_output.weight - [ 2048,  2048,     1,     1], type =   bf16, converting to q8_0 .. size =     8.00 MiB ->     4.25 MiB
+[ 213/ 218]                 blk.23.attn_q.weight - [ 2048,  2048,     1,     1], type =   bf16, converting to q8_0 .. size =     8.00 MiB ->     4.25 MiB
+[ 214/ 218]                 blk.23.attn_v.weight - [ 2048,  2048,     1,     1], type =   bf16, converting to q8_0 .. size =     8.00 MiB ->     4.25 MiB
+[ 215/ 218]               blk.23.ffn_down.weight - [ 8192,  2048,     1,     1], type =   bf16, converting to q8_0 .. size =    32.00 MiB ->    17.00 MiB
+[ 216/ 218]               blk.23.ffn_gate.weight - [ 2048,  8192,     1,     1], type =   bf16, converting to q8_0 .. size =    32.00 MiB ->    17.00 MiB
+[ 217/ 218]               blk.23.ffn_norm.weight - [ 2048,     1,     1,     1], type =    f32, size =    0.008 MB
+[ 218/ 218]                 blk.23.ffn_up.weight - [ 2048,  8192,     1,     1], type =   bf16, converting to q8_0 .. size =    32.00 MiB ->    17.00 MiB
+llama_model_quantize_internal: model size  =  3264.38 MB
+llama_model_quantize_internal: quant size  =  1734.38 MB
+
+main: quantize time =  2289.97 ms
+main:    total time =  2289.97 ms
+```
+
+And yeah, we were more-or-less correct, it's 1.7GB!
+**BUT** this is only the model's size, we also have to consider the memory requirements for the context.
+Fortunately, context doesn't require massive amounts of memory - i'm not really sure how much exactly it eats up, but it's safe to assume that we should have at least 1GB memory for it.
+So, taking all that in account, we can approximate that to load this model to memory with the context, we need at least 3GB of free (V)RAM.
+This is not so bad, and most modern consumer GPUs have at least this amount (even the old GTX 1060 3GB should be able to run this model in Q8_0 quant).
+However, if that's still too much, we can easily go lower!
+Reducing the amount of bits per weight via quantization not only reduces the model's size, but also increases the speed of data generation.
+Unfortunately, it also makes the model more stupid.
+The change is gradual, you may not notice it when going from Q8_0 to Q6_K, but going below Q4 quant can be noticeable.
+I strongly recommend experimenting on your own with different models and quantization types, because your experience may be different from mine!
+
+> Oh, by the way - remember that right now our `llama.cpp` build will use CPU for calculations, so the model will reside in RAM.
+> Make sure you have at least 3GB of free RAM before trying to use the model, if you don't - quantize it with smaller quant, or get a smaller version.
+
+Anyway, we got our quantized model now, we can **finally** use it!
+
+## running llama.cpp server
+
+If going through the first part of this post felt like pain and suffering, don't worry - i felt the same writing it.
+That's why it took a month to write.
+But, at long last we can do something fun.
+
+Let's start, as usual, with printing the help to make sure our binary is working fine:
+
+```sh
+llama-server --help
+```
+
+You should see a lot of options.
+Some of them will be explained here in a bit, some of them you'll have to research yourself.
+For now, the only options that are interesting to us are:
+
+```sh
+-m,    --model FNAME                    model path (default: `models/$filename` with filename from `--hf-file`
+                                        or `--model-url` if set, otherwise models/7B/ggml-model-f16.gguf)
+                                        (env: LLAMA_ARG_MODEL)
+--host HOST                             ip address to listen (default: 127.0.0.1)
+                                        (env: LLAMA_ARG_HOST)
+--port PORT                             port to listen (default: 8080)
+                                        (env: LLAMA_ARG_PORT)
+```
+
+Run `llama-server` with model's path set to quantized SmolLM2 GGUF file.
+If you don't have anything running on `127.0.0.1:8080`, you can leave the host and port on defaults.
+Notice that you can also use environmental variables instead of arguments, so you can setup your env and just call `llama-server`.
+
+```sh
+llama-server -m SmolLM2.q8.gguf
+```
+
+You should see similar output after running this command:
+
+```sh
+build: 4182 (ab96610b) with cc (GCC) 14.2.1 20240910 for x86_64-pc-linux-gnu
+system info: n_threads = 12, n_threads_batch = 12, total_threads = 24
+
+system_info: n_threads = 12 (n_threads_batch = 12) / 24 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | LLAMAFILE = 1 | AARCH64_REPACK = 1 |
+
+main: HTTP server is listening, hostname: 127.0.0.1, port: 8080, http threads: 23
+main: loading model
+srv    load_model: loading model 'SmolLM2.q8.gguf'
+llama_model_loader: loaded meta data with 37 key-value pairs and 218 tensors from SmolLM2.q8.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = llama
+llama_model_loader: - kv   1:                               general.type str              = model
+llama_model_loader: - kv   2:                               general.name str              = SmolLM2 1.7B Instruct
+llama_model_loader: - kv   3:                           general.finetune str              = Instruct
+llama_model_loader: - kv   4:                           general.basename str              = SmolLM2
+llama_model_loader: - kv   5:                         general.size_label str              = 1.7B
+llama_model_loader: - kv   6:                            general.license str              = apache-2.0
+llama_model_loader: - kv   7:                   general.base_model.count u32              = 1
+llama_model_loader: - kv   8:                  general.base_model.0.name str              = SmolLM2 1.7B
+llama_model_loader: - kv   9:          general.base_model.0.organization str              = HuggingFaceTB
+llama_model_loader: - kv  10:              general.base_model.0.repo_url str              = https://huggingface.co/HuggingFaceTB/...
+llama_model_loader: - kv  11:                               general.tags arr[str,4]       = ["safetensors", "onnx", "transformers...
+llama_model_loader: - kv  12:                          general.languages arr[str,1]       = ["en"]
+llama_model_loader: - kv  13:                          llama.block_count u32              = 24
+llama_model_loader: - kv  14:                       llama.context_length u32              = 8192
+llama_model_loader: - kv  15:                     llama.embedding_length u32              = 2048
+llama_model_loader: - kv  16:                  llama.feed_forward_length u32              = 8192
+llama_model_loader: - kv  17:                 llama.attention.head_count u32              = 32
+llama_model_loader: - kv  18:              llama.attention.head_count_kv u32              = 32
+llama_model_loader: - kv  19:                       llama.rope.freq_base f32              = 130000.000000
+llama_model_loader: - kv  20:     llama.attention.layer_norm_rms_epsilon f32              = 0.000010
+llama_model_loader: - kv  21:                          general.file_type u32              = 7
+llama_model_loader: - kv  22:                           llama.vocab_size u32              = 49152
+llama_model_loader: - kv  23:                 llama.rope.dimension_count u32              = 64
+llama_model_loader: - kv  24:                       tokenizer.ggml.model str              = gpt2
+llama_model_loader: - kv  25:                         tokenizer.ggml.pre str              = smollm
+llama_model_loader: - kv  26:                      tokenizer.ggml.tokens arr[str,49152]   = ["<|endoftext|>", "<|im_start|>", "<|...
+llama_model_loader: - kv  27:                  tokenizer.ggml.token_type arr[i32,49152]   = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, ...
+llama_model_loader: - kv  28:                      tokenizer.ggml.merges arr[str,48900]   = ["Ġ t", "Ġ a", "i n", "h e", "Ġ Ġ...
+llama_model_loader: - kv  29:                tokenizer.ggml.bos_token_id u32              = 1
+llama_model_loader: - kv  30:                tokenizer.ggml.eos_token_id u32              = 2
+llama_model_loader: - kv  31:            tokenizer.ggml.unknown_token_id u32              = 0
+llama_model_loader: - kv  32:            tokenizer.ggml.padding_token_id u32              = 2
+llama_model_loader: - kv  33:                    tokenizer.chat_template str              = {% for message in messages %}{% if lo...
+llama_model_loader: - kv  34:            tokenizer.ggml.add_space_prefix bool             = false
+llama_model_loader: - kv  35:               tokenizer.ggml.add_bos_token bool             = false
+llama_model_loader: - kv  36:               general.quantization_version u32              = 2
+llama_model_loader: - type  f32:   49 tensors
+llama_model_loader: - type q8_0:  169 tensors
+llm_load_vocab: special tokens cache size = 17
+llm_load_vocab: token to piece cache size = 0.3170 MB
+llm_load_print_meta: format           = GGUF V3 (latest)
+llm_load_print_meta: arch             = llama
+llm_load_print_meta: vocab type       = BPE
+llm_load_print_meta: n_vocab          = 49152
+llm_load_print_meta: n_merges         = 48900
+llm_load_print_meta: vocab_only       = 0
+llm_load_print_meta: n_ctx_train      = 8192
+llm_load_print_meta: n_embd           = 2048
+llm_load_print_meta: n_layer          = 24
+llm_load_print_meta: n_head           = 32
+llm_load_print_meta: n_head_kv        = 32
+llm_load_print_meta: n_rot            = 64
+llm_load_print_meta: n_swa            = 0
+llm_load_print_meta: n_embd_head_k    = 64
+llm_load_print_meta: n_embd_head_v    = 64
+llm_load_print_meta: n_gqa            = 1
+llm_load_print_meta: n_embd_k_gqa     = 2048
+llm_load_print_meta: n_embd_v_gqa     = 2048
+llm_load_print_meta: f_norm_eps       = 0.0e+00
+llm_load_print_meta: f_norm_rms_eps   = 1.0e-05
+llm_load_print_meta: f_clamp_kqv      = 0.0e+00
+llm_load_print_meta: f_max_alibi_bias = 0.0e+00
+llm_load_print_meta: f_logit_scale    = 0.0e+00
+llm_load_print_meta: n_ff             = 8192
+llm_load_print_meta: n_expert         = 0
+llm_load_print_meta: n_expert_used    = 0
+llm_load_print_meta: causal attn      = 1
+llm_load_print_meta: pooling type     = 0
+llm_load_print_meta: rope type        = 0
+llm_load_print_meta: rope scaling     = linear
+llm_load_print_meta: freq_base_train  = 130000.0
+llm_load_print_meta: freq_scale_train = 1
+llm_load_print_meta: n_ctx_orig_yarn  = 8192
+llm_load_print_meta: rope_finetuned   = unknown
+llm_load_print_meta: ssm_d_conv       = 0
+llm_load_print_meta: ssm_d_inner      = 0
+llm_load_print_meta: ssm_d_state      = 0
+llm_load_print_meta: ssm_dt_rank      = 0
+llm_load_print_meta: ssm_dt_b_c_rms   = 0
+llm_load_print_meta: model type       = ?B
+llm_load_print_meta: model ftype      = Q8_0
+llm_load_print_meta: model params     = 1.71 B
+llm_load_print_meta: model size       = 1.69 GiB (8.50 BPW)
+llm_load_print_meta: general.name     = SmolLM2 1.7B Instruct
+llm_load_print_meta: BOS token        = 1 '<|im_start|>'
+llm_load_print_meta: EOS token        = 2 '<|im_end|>'
+llm_load_print_meta: EOT token        = 0 '<|endoftext|>'
+llm_load_print_meta: UNK token        = 0 '<|endoftext|>'
+llm_load_print_meta: PAD token        = 2 '<|im_end|>'
+llm_load_print_meta: LF token         = 143 'Ä'
+llm_load_print_meta: EOG token        = 0 '<|endoftext|>'
+llm_load_print_meta: EOG token        = 2 '<|im_end|>'
+llm_load_print_meta: max token length = 162
+llm_load_tensors:   CPU_Mapped model buffer size =  1734.38 MiB
+................................................................................................
+llama_new_context_with_model: n_seq_max     = 1
+llama_new_context_with_model: n_ctx         = 4096
+llama_new_context_with_model: n_ctx_per_seq = 4096
+llama_new_context_with_model: n_batch       = 2048
+llama_new_context_with_model: n_ubatch      = 512
+llama_new_context_with_model: flash_attn    = 0
+llama_new_context_with_model: freq_base     = 130000.0
+llama_new_context_with_model: freq_scale    = 1
+llama_new_context_with_model: n_ctx_per_seq (4096) < n_ctx_train (8192) -- the full capacity of the model will not be utilized
+llama_kv_cache_init:        CPU KV buffer size =   768.00 MiB
+llama_new_context_with_model: KV self size  =  768.00 MiB, K (f16):  384.00 MiB, V (f16):  384.00 MiB
+llama_new_context_with_model:        CPU  output buffer size =     0.19 MiB
+llama_new_context_with_model:        CPU compute buffer size =   280.01 MiB
+llama_new_context_with_model: graph nodes  = 774
+llama_new_context_with_model: graph splits = 1
+common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+srv          init: initializing slots, n_slots = 1
+slot         init: id  0 | task -1 | new slot n_ctx_slot = 4096
+main: model loaded
+main: chat template, built_in: 1, chat_example: '<|im_start|>system
+You are a helpful assistant<|im_end|>
+<|im_start|>user
+Hello<|im_end|>
+<|im_start|>assistant
+Hi there<|im_end|>
+<|im_start|>user
+How are you?<|im_end|>
+<|im_start|>assistant
+'
+main: server is listening on http://127.0.0.1:8080 - starting the main loop
+srv  update_slots: all slots are idle
+```
+
+And now we can access the web UI on `http://127.0.0.1:8080` or whatever host/port combo you've set.
+![llama.cpp webui](/img/llama-cpp/llama-cpp-webui.png)
