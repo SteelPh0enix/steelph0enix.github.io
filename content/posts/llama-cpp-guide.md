@@ -10,6 +10,8 @@ showFullContent = false
 draft = true
 +++
 
+*No LLMs were harmed during creation of this post.*
+
 ## so, i started playing with LLMs...
 
 ...and it's pretty fun.
@@ -228,7 +230,7 @@ cmake --install build --config Release
 
 Now, after going to `CMAKE_INSTALL_PREFIX/bin` directory, we should see a list of executables and Python scripts:
 
-```sh
+```text
 /c/Users/phoen/llama-build/bin
 ❯ l
 Mode  Size Date Modified Name
@@ -335,7 +337,7 @@ Also, downloading very large files manually is faster, because Git LFS sucks in 
 
 After downloading everything, our local copy of the SmolLM repo should look like this:
 
-```sh
+```text
 PS D:\LLMs\repos\SmolLM2-1.7B-Instruct> l
 Mode  Size Date Modified Name
 -a---  806  2 Nov 15:16  all_results.json
@@ -429,7 +431,7 @@ Next, we need to install prerequisites for the llama.cpp scripts.
 Let's look into `requirements/` directory of our `llama.cpp` repository.
 We should see something like this:
 
-```sh
+```text
 ❯ l llama.cpp/requirements
 Mode  Size Date Modified Name
 -a---  428 11 Nov 13:57  requirements-all.txt
@@ -478,7 +480,7 @@ python llama.cpp/convert_hf_to_gguf.py SmolLM2-1.7B-Instruct --outfile ./SmolLM2
 
 If everything went correctly, you should see similar output:
 
-```sh
+```text
 INFO:hf-to-gguf:Loading model: SmolLM2-1.7B-Instruct
 INFO:gguf.gguf_writer:gguf: This GGUF file is for Little Endian only
 INFO:hf-to-gguf:Exporting model...
@@ -523,10 +525,14 @@ INFO:hf-to-gguf:Model successfully exported to SmolLM2.gguf
 Now we can finally quantize our model!
 To do that, we'll use `llama-quantize` executable that we previously compiled with other `llama.cpp` executables.
 First, let's check what quantizations we have available.
-As of now, `llama-quantize --help` shows following types:
 
 ```sh
-> llama-quantize --help
+llama-quantize --help
+```
+
+As of now, `llama-quantize --help` shows following types:
+
+```text
 
 usage: llama-quantize [--help] [--allow-requantize] [--leave-output-tensor] [--pure] [--imatrix] [--include-weights] [--exclude-weights] [--output-tensor-type] [--token-embedding-type] [--override-kv] model-f32.gguf [model-quant.gguf] type [nthreads]
 
@@ -608,7 +614,7 @@ llama-quantize SmolLM2.gguf SmolLM2.q8.gguf Q8_0 N
 
 You should see similar output:
 
-```sh
+```text
 main: build = 4200 (46c69e0e)
 main: built with gcc (GCC) 14.2.1 20240910 for x86_64-pc-linux-gnu
 main: quantizing 'SmolLM2.gguf' to 'SmolLM2.q8.gguf' as Q8_0 using 24 threads
@@ -709,7 +715,7 @@ You should see a lot of options.
 Some of them will be explained here in a bit, some of them you'll have to research yourself.
 For now, the only options that are interesting to us are:
 
-```sh
+```text
 -m,    --model FNAME                    model path (default: `models/$filename` with filename from `--hf-file`
                                         or `--model-url` if set, otherwise models/7B/ggml-model-f16.gguf)
                                         (env: LLAMA_ARG_MODEL)
@@ -729,7 +735,7 @@ llama-server -m SmolLM2.q8.gguf
 
 You should see similar output after running this command:
 
-```sh
+```text
 build: 4182 (ab96610b) with cc (GCC) 14.2.1 20240910 for x86_64-pc-linux-gnu
 system info: n_threads = 12, n_threads_batch = 12, total_threads = 24
 
@@ -870,4 +876,130 @@ srv  update_slots: all slots are idle
 ```
 
 And now we can access the web UI on `http://127.0.0.1:8080` or whatever host/port combo you've set.
+
 ![llama.cpp webui](/img/llama-cpp/llama-cpp-webui.png)
+
+From this point, you can freely chat with the LLM using the web UI, or you can use the OpenAI-compatible API that `llama-server` provides.
+I won't dig into the API itself here, i've written [a Python library](https://github.com/SteelPh0enix/unreasonable-llama) for it if you're interested in using it (i'm trying to keep it up-to-date with `llama.cpp` master, but it might not be all the time).
+I recommend looking into the [`llama-server` source code and README](https://github.com/ggerganov/llama.cpp/tree/master/examples/server) for more details about endpoints.
+What i will dig into is the configuration of the server and available LLM parameters.
+
+But for now, let's play with web UI.
+On the left, we have list of conversations.
+Those are stored in browser's localStorage (as the disclaimer on the bottom-left graciously explains), which means they are persistent even if you restart the browser.
+Current conversation is passed to the LLM as context, and the context size is limited by server settings (we will learn how to tweak it in a while).
+I recommend making new conversations often and keeping their context focused on the subject for optimal performance.
+
+On the top-right, we have (from left to right) "remove conversation", "download conversation" (in JSON format), "configuration" and "Theme" buttons.
+In the configuration window, we can tweak generation settings for our LLM. **Those settings are currently global, not per-conversation.**
+
+![llama.cpp webui config](/img/llama-cpp/llama-cpp-webui-config.png)
+
+### LLM parameters explained
+
+This will be a relatively long and very informational part full of boring explanations.
+But - it's a good knowledge to have when playing with LLMs.
+I'll explain every single configuration option listed in web UI (except apiKey, because we don't care about it here), but first we need to talk about samplers, and how LLMs work under the hood.
+
+#### how does LLM generate text?
+
+1. Prompt
+
+   Everything starts with a prompt.
+   Prompt can be a simple raw string that we want the LLM to complete for us, or it can be an elaborate construction that allows the LLM to chat or use external tools.
+   Whatever we put in it, it's usually in human-readable format with special "tags" (usually similar to XML tags) used for separating the parts of the prompt.
+
+   We've already seen an example of a prompt used for chat completion, provided by `llama-server`:
+
+   ```text
+   <|im_start|>system
+   You are a helpful assistant<|im_end|>
+   <|im_start|>user
+   Hello<|im_end|>
+   <|im_start|>assistant
+   Hi there<|im_end|>
+   <|im_start|>user
+   How are you?<|im_end|>
+   <|im_start|>assistant
+   ```
+
+   (if you're wondering *what are those funny \<| and |> characters* - those are ligatures from Fira Code font made out of `|`, `>` and `<` characters)
+
+1. Tokenization
+
+   However, the LLM does not understand the human language like we do.
+   We use words and punctuation marks to form sentences - LLMs use tokens that can be understood as an equivalent to those.
+   First step in text generation is breaking the language barrier by performing prompt tokenization.
+   Tokenization is a process of translating input text (in human-readable format) into an array of tokens that can be processed by an LLM.
+   Tokens are simple numeric values, and with a vocabulary they can be easily mapped to their string representations (at least in case of BPE models, don't know about others).
+   In fact, that vocabulary is available in SmolLM2 repository, in `tokenizer.json` file!
+   That file also contains some metadata for *special* tokens that have *special* meaning for the LLM.
+   Some of those tokens represent *meta* things, like start and end of a message.
+   Other can allow the LLM to chat with the user by providing tags for separating parts of conversation (system prompt, user messages, LLM responses).
+   I've also seen tool calling capabilities in LLM templates, which in theory should allow the LLM to use external tools, but i haven't tested them yet (check out Qwen2.5 and CodeQwen2.5 for example models with those functions).
+
+   We can use `llama-server` API to tokenize some text and see how it looks after being translated. Hope you've got `curl`.
+
+   ```sh
+   curl -X POST -H "Content-Type: application/json" -d '{"content": "hello world! this is an example message!"}' http://127.0.0.1:8080/tokenize
+   ```
+
+   For SmolLM2, the response should be following:
+
+   ```json
+   {"tokens":[28120,905,17,451,314,1183,3714,17]}
+   ```
+
+   Which we can very roughly translate to:
+
+   - 28120 - hello
+   - 905 - world
+   - 17 - !
+   - 451 - this
+   - 314 - is
+   - 354 - an
+   - 1183 - example
+   - 3714 - message
+   - 17 - !
+
+   We can pass this JSON back to `/detokenize` endpoint to get our original text back:
+
+   ```sh
+   curl -X POST -H "Content-Type: application/json" -d '{"tokens": [28120,905,17,451,314,354,1183,3714,17]}' http://127.0.0.1:8080/detokenize
+   ```
+
+   ```json
+   {"content":"hello world! this is an example message!"}
+   ```
+
+1. Dark Magick (feeding the beast)
+
+   I honestly don't know what exactly happens in this step, but i'll try my best.
+   The input is the tokenized prompt.
+   This prompt is fed to the LLM, and the digestion process takes most of processing time due to the insane amount of matrix operations that must be performed to satisfy the digital beast.
+   After the prompt is digested, the LLM starts talking to us.
+   LLM talks by generating pairs of tokens and probabilities of them appearing next in the completed text.
+   If we'd just use those as-is, the output would be complete gibberish and would drive people insane, as it's usually the case with demons - digital or not.
+   Those tokens must be filtered out in order to form an output understandable to human beings (or whatever other beings you want to talk with), and that's what token sampling is all about.
+
+1. Token sampling
+
+   This is probably the most interesting step for us, because we can alter every single parameter of it.
+   As usual, i advise caution when working with raw output from demons - digital or not, it may result in unexpected stuff happening when handled incorrectly.
+   For every output token, there's a batch of token-probability pairs generated by LLM that's filtered out by a chain of samplers.
+   Those samplers can access the tokens, their probabilities and something called "logit bias" (that i'm sure is important, but i don't know what exactly that is, other that i know it can be used to filter out tokens from generated responses).
+   There's plenty of different sampling algorithms that can be tweaked for different purposes, and list of those available in llama.cpp with their descriptions is available below.
+
+1. Detokenization
+
+   Generated tokens must be converted back to human-readable form, so a detokenization must take place.
+   This is the last step.
+   Hooray, we tamed the digital beast and forced it to talk.
+   I have previously feared the consequences this could bring upon the humanity, but here we are, that's the way she goes.
+
+#### list of LLM parameters and samplers available in llama.cpp
+
+- **System Message** - Usually, conversations with LLMs start with a "system" message that tells the LLM how to behave. This is a very powerful tool that can drastically change the behavior of the model. My recommendation is to put as much useful informations and precise behavior descriptions for your application as possible, to maximize the quality of LLM output.
+- **Temperature** - per `llama.cpp` docs "Controls the randomness of the generated text by affecting the probability distribution of the output tokens. Higher = more random, lower = more focused". Keep it in 0.2-2.0 range for a start, and don't go below 0.
+- **Top-K** - Top-K sampling is a fancy name for "keep only K most probable next tokens" algorithm. Higher values can result in more diverse text, because there's more tokens to choose from when generating responses.
+- **Top-P** - Top-P sampling, per `llama.cpp` docs "Limits the tokens to those that together have a cumulative probability of at least `p`". In human language, it means that Top-P sampler takes a list of tokens and their probabilities as input (note that the sum of their probabilities is by definition equal to 1), and returns tokens with highest probability from that list until the sum of their probabilities is greater or equal to `p`. Or, in other words, `p` value changes the % of tokens returned by the Top-P sampler. For example, when `p` is equal to 0.7, the sampler will return 70% of input tokens with highest probabilities. There's a [pretty good article](https://rumn.medium.com/setting-top-k-top-p-and-temperature-in-llms-3da3a8f74832) about temperature, Top-K and Top-P sampling that i've found and can recommend if you wanna know more.

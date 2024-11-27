@@ -105,3 +105,6 @@ LLAMAFILE
 logit
 webui
 ubatch
+Qwen
+Magick
+Fira
