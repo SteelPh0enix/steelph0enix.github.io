@@ -1084,15 +1084,17 @@ Additional literature:
 
 - [Your settings are (probably) hurting your model](https://www.reddit.com/r/LocalLLaMA/comments/17vonjo/your_settings_are_probably_hurting_your_model_why/)
 
-In *Other sampler settings* we can find following options:
+In *Other sampler settings* we can find sampling queue configuration.
+As i've mentioned earlier, the samplers are applied in a chain.
+Here, we can configure the order of their application, and select which are used.
+The setting uses short names for samplers, the mapping is following:
 
-- **Samplers queue** - As i've mentioned earlier, the samplers are applied in a chain.
-  Here, we can configure the order of their application, and select which are used.
-  The setting uses short names for samplers, the mapping is following:
-  - `d` - DRY
-  - `k` - Top-K
-  - `y` - Typical-P
-  - `p` - Top-P
-  - `m` - Min-P
-  - `x` - Exclude Top Choices (XTC)
-  - `t` - Temperature
+- `d` - DRY
+- `k` - Top-K
+- `y` - Typical-P
+- `p` - Top-P
+- `m` - Min-P
+- `x` - Exclude Top Choices (XTC)
+- `t` - Temperature
+
+Some samplers and settings i've listed above may be missing from web UI configuration (like Mirostat), but they all can be configured via environmental variables, CLI arguments for `llama.cpp` binaries, or llama.cpp server API.
