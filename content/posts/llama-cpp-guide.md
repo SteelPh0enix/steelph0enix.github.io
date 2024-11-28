@@ -1038,12 +1038,47 @@ But - it's a good knowledge to have when playing with LLMs.
   I can, however, steal this image from the linked PR to show you more-or-less what XTC does: ![xtc](/img/llama-cpp/xtc.png)
   The parameters for XTC sampler are:
   - **XTC threshold** - probability cutoff threshold for top tokens, in (0, 1) range.
-  - **XTC probability** - probability of XTC sampling being applied in \[0, 1\] range, where 0 = XTC disabled, 1 = XTC always enabled.
+  - **XTC probability** - probability of XTC sampling being applied in [0, 1] range, where 0 = XTC disabled, 1 = XTC always enabled.
 - [**Locally typical sampling (typical-P)**](https://arxiv.org/pdf/2202.00666) - per `llama.cpp` docs "Sorts and limits tokens based on the difference between log-probability and entropy".
   I... honestly don't know how exactly it works.
   I tried reading the linked paper, but i lack the mental capacity to understand it enough to describe it back.
   [Some people on Reddit](https://www.reddit.com/r/LocalLLaMA/comments/153bnly/what_does_typical_p_actually_do/) also have the same issue, so i recommend going there and reading the comments.
+  I haven't used that sampling much, so i can't really say anything about it from experience either, so - moving on.
+- [**DRY**](https://github.com/oobabooga/text-generation-webui/pull/5677) - This sampler is used to prevent unwanted token repetition.
+  Simplifying, it tries to detect repeating token sequences in generated text and reduces the probabilities of tokens that will create repetitions.
+  As usual, i recommend reading the linked PR for detailed explanation, and as usual i've stolen a figure from it that shows what DRY does: ![dry](/img/llama-cpp/dry.png)
+  I'll also quote a short explanation of this sampler:
+  *The penalty for a token is calculated as `multiplier * base ^ (n - allowed_length)`, where `n` is the length of the sequence before that token that matches the end of the input, and `multiplier`, `base`, and `allowed_length` are configurable parameters.*
+  *If the length of the matching sequence is less than `allowed_length`, no penalty is applied.*
+  The parameters for DRY sampler are:
+  - **DRY multiplier** - see explanation above
+  - **DRY base** - see explanation above
+  - **DRY allowed length** - see explanation above. Quoting `llama.cpp` docs: *Tokens that extend repetition beyond this receive exponentially increasing penalty*.
+  - **DRY penalty last N** - how many tokens should be scanned for repetition. -1 = whole context, 0 = disabled.
+  - **DRY sequence breakers** - characters that are used as separators for parts of sentences considered for DRY. Defaults for `llama.cpp` are `('\n', ':', '"', '*')`.
+- [**Mirostat**](https://openreview.net/pdf?id=W1G1JZEIy5_) - is a funky sampling algorithm that **overrides Top-K, Top-P and Typical-P samplers**.
+  It's an alternative sampler that produces text with controlled *perplexity* (entropy), which means that we can control how certain the model should be in it's predictions.
+  This comes without side-effects of generating repeated text (as it happens in low perplexity scenarios) or incoherent output (as it happens in high perplexity scenarios).
+  The configuration parameters for Mirostat are:
+  - **Mirostat version** - 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0.
+  - **Mirostat learning rate (η, eta)** - specifies how fast the model converges to desired perplexity.
+  - **Mirostat target entropy (τ, tau)** - the desired perplexity.
+    Depending on the model, it should not be too high, otherwise you may degrade it's performance.
 - **Max tokens** - i think that's pretty self-explanatory. -1 makes the LLM generate until it decides it's end of the sentence (by returning end-of-sentence token), or the context is full.
+- **Repetition penalty** - Repetition penalty algorithm (not to be mistaken with DRY) simply reduces the chance that tokens that are already in the generated text will be used again.
+  Usually the repetition penalty algorithm is restricted to `N` last tokens of the context.
+  In case of `llama.cpp` (i'll simplify a bit), it works like that: first, it creates a frequency map occurrences for last `N` tokens.
+  Then, the current logit bias for each token is divided by `repeat_penalty` value.
+  By default it's usually set to 1.0, so to enable repetition penalty it should be set to >1.
+  Finally, frequency and presence penalties are applied based on the frequency map.
+  The penalty for each token is equal to `(token_count * frequency_penalty) + (presence_penalty if token_count > 0)`.
+  The penalty is represented as logit bias, which can be in [-100, 100] range.
+  Negative values reduce the probability of token appearing in output, while positive increase it.
+  The configuration parameters for repetition penalty are:
+  - **Repeat last N** - Amount of tokens from the end of the context to consider for repetition penalty.
+  - **Repeat penalty** - `repeat_penalty` argument described above, if equal to `1.0` then the repetition penalty is disabled.
+  - **Presence penalty** - `presence_penalty` argument from the equation above.
+  - **Frequency penalty** - `frequency_penalty` argument from the equation above.
 
 Additional literature:
 
