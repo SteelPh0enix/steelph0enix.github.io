@@ -882,12 +882,14 @@ And now we can access the web UI on `http://127.0.0.1:8080` or whatever host/por
 From this point, you can freely chat with the LLM using the web UI, or you can use the OpenAI-compatible API that `llama-server` provides.
 I won't dig into the API itself here, i've written [a Python library](https://github.com/SteelPh0enix/unreasonable-llama) for it if you're interested in using it (i'm trying to keep it up-to-date with `llama.cpp` master, but it might not be all the time).
 I recommend looking into the [`llama-server` source code and README](https://github.com/ggerganov/llama.cpp/tree/master/examples/server) for more details about endpoints.
-What i will dig into is the configuration of the server and available LLM parameters.
+What i will dig into is the configuration of the LLM and the server.
+After that, we'll learn how to build `llama.cpp` with GPU support.
 
 But for now, let's play with web UI.
 On the left, we have list of conversations.
 Those are stored in browser's localStorage (as the disclaimer on the bottom-left graciously explains), which means they are persistent even if you restart the browser.
-Current conversation is passed to the LLM as context, and the context size is limited by server settings (we will learn how to tweak it in a while).
+Keep in mind that changing the host/port of the server will "clear" those.
+Current conversation is passed to the LLM as context, and the context size is limited by server settings (we will learn how to tweak it in a second).
 I recommend making new conversations often and keeping their context focused on the subject for optimal performance.
 
 On the top-right, we have (from left to right) "remove conversation", "download conversation" (in JSON format), "configuration" and "Theme" buttons.
@@ -895,11 +897,10 @@ In the configuration window, we can tweak generation settings for our LLM. **Tho
 
 ![llama.cpp webui config](/img/llama-cpp/llama-cpp-webui-config.png)
 
-### LLM parameters explained
+### LLM configuration options explained
 
 This will be a relatively long and very informational part full of boring explanations.
 But - it's a good knowledge to have when playing with LLMs.
-I'll explain every single configuration option listed in web UI (except apiKey, because we don't care about it here), but first we need to talk about samplers, and how LLMs work under the hood.
 
 #### how does LLM generate text?
 
@@ -923,11 +924,11 @@ I'll explain every single configuration option listed in web UI (except apiKey, 
    <|im_start|>assistant
    ```
 
-   (if you're wondering *what are those funny \<| and |> characters* - those are ligatures from Fira Code font made out of `|`, `>` and `<` characters)
+   (if you're wondering *what are those funny \<| and |> symbols* - those are ligatures from Fira Code font made out of `|`, `>` and `<` characters)
 
 1. Tokenization
 
-   However, the LLM does not understand the human language like we do.
+   The LLM does not understand the human language like we do.
    We use words and punctuation marks to form sentences - LLMs use tokens that can be understood as an equivalent to those.
    First step in text generation is breaking the language barrier by performing prompt tokenization.
    Tokenization is a process of translating input text (in human-readable format) into an array of tokens that can be processed by an LLM.
@@ -974,9 +975,9 @@ I'll explain every single configuration option listed in web UI (except apiKey, 
 
 1. Dark Magick (feeding the beast)
 
-   I honestly don't know what exactly happens in this step, but i'll try my best.
+   I honestly don't know what exactly happens in this step, but i'll try my best to explain it in simple and very approximate terms.
    The input is the tokenized prompt.
-   This prompt is fed to the LLM, and the digestion process takes most of processing time due to the insane amount of matrix operations that must be performed to satisfy the digital beast.
+   This prompt is fed to the LLM, and the digestion process takes a lot of processing time due to the insane amount of matrix operations that must be performed to satisfy the digital beast.
    After the prompt is digested, the LLM starts talking to us.
    LLM talks by generating pairs of tokens and probabilities of them appearing next in the completed text.
    If we'd just use those as-is, the output would be complete gibberish and would drive people insane, as it's usually the case with demons - digital or not.
@@ -984,22 +985,79 @@ I'll explain every single configuration option listed in web UI (except apiKey, 
 
 1. Token sampling
 
-   This is probably the most interesting step for us, because we can alter every single parameter of it.
+   This is probably the most interesting step for us, because we can control it's every single parameter.
    As usual, i advise caution when working with raw output from demons - digital or not, it may result in unexpected stuff happening when handled incorrectly.
-   For every output token, there's a batch of token-probability pairs generated by LLM that's filtered out by a chain of samplers.
-   Those samplers can access the tokens, their probabilities and something called "logit bias" (that i'm sure is important, but i don't know what exactly that is, other that i know it can be used to filter out tokens from generated responses).
-   There's plenty of different sampling algorithms that can be tweaked for different purposes, and list of those available in llama.cpp with their descriptions is available below.
+   To generate a token, LLM outputs a batch of token-probability pairs that's filtered out to a single one by a chain of samplers.
+   There's plenty of different sampling algorithms that can be tweaked for different purposes, and list of those available in llama.cpp with their descriptions is presented below.
 
 1. Detokenization
 
    Generated tokens must be converted back to human-readable form, so a detokenization must take place.
    This is the last step.
    Hooray, we tamed the digital beast and forced it to talk.
-   I have previously feared the consequences this could bring upon the humanity, but here we are, that's the way she goes.
+   I have previously feared the consequences this could bring upon the humanity, but here we are, 373 1457 260 970 1041 3935.
 
-#### list of LLM parameters and samplers available in llama.cpp
+#### list of LLM configuration options and samplers available in llama.cpp
 
-- **System Message** - Usually, conversations with LLMs start with a "system" message that tells the LLM how to behave. This is a very powerful tool that can drastically change the behavior of the model. My recommendation is to put as much useful informations and precise behavior descriptions for your application as possible, to maximize the quality of LLM output.
-- **Temperature** - per `llama.cpp` docs "Controls the randomness of the generated text by affecting the probability distribution of the output tokens. Higher = more random, lower = more focused". Keep it in 0.2-2.0 range for a start, and don't go below 0.
-- **Top-K** - Top-K sampling is a fancy name for "keep only K most probable next tokens" algorithm. Higher values can result in more diverse text, because there's more tokens to choose from when generating responses.
-- **Top-P** - Top-P sampling, per `llama.cpp` docs "Limits the tokens to those that together have a cumulative probability of at least `p`". In human language, it means that Top-P sampler takes a list of tokens and their probabilities as input (note that the sum of their probabilities is by definition equal to 1), and returns tokens with highest probability from that list until the sum of their probabilities is greater or equal to `p`. Or, in other words, `p` value changes the % of tokens returned by the Top-P sampler. For example, when `p` is equal to 0.7, the sampler will return 70% of input tokens with highest probabilities. There's a [pretty good article](https://rumn.medium.com/setting-top-k-top-p-and-temperature-in-llms-3da3a8f74832) about temperature, Top-K and Top-P sampling that i've found and can recommend if you wanna know more.
+- **System Message** - Usually, conversations with LLMs start with a "system" message that tells the LLM how to behave.
+  This is probably the easiest-to-use tool that can drastically change the behavior of a model.
+  My recommendation is to put as much useful informations and precise behavior descriptions for your application as possible, to maximize the quality of LLM output.
+  You may think that giving the digital demon maximum amount of knowledge may lead to bad things happening, but our reality haven't collapsed yet so i think we're good for now.
+- **Temperature** - per `llama.cpp` docs "Controls the randomness of the generated text by affecting the probability distribution of the output tokens. Higher = more random, lower = more focused".
+  I don't have anything to add here, it controls the "creativity" of an LLM.
+  High values result in more random and "creative" output, but overcooking the beast may result in hallucinations, and - in certain scenarios - screams that will destroy your sanity.
+  Keep it in 0.2-2.0 range for a start, and keep it positive and non-zero.
+- [**Dynamic temperature**](https://rentry.org/dynamic_temperature) - Dynamic temperature sampling is an addition to temperature sampler.
+  The linked article describes it in detail, and it's pretty short so i strongly recommend reading it - i can't really do a better job explaining it.
+  There's also the [reddit post](https://www.reddit.com/r/Oobabooga/comments/191klr8/some_information_about_dynamic_temperature_added/) with more explanations from the algorithm's author.
+  However, in case the article goes down - the short explanation of this algorithm is: it tweaks the temperature of generated tokens based on their entropy.
+  Entropy here can be understood as inverse of LLMs confidence in generated tokens.
+  Lower entropy means that the LLM is more confident in it's predictions, and therefore the temperature of tokens with low entropy should also be low.
+  High entropy works the other way around.
+  Effectively, this sampling can encourage creativity while preventing hallucinations at higher temperatures.
+  I strongly recommend testing it out, as it's usually disabled by default.
+  It may require some additional tweaks to other samplers when enabled, to produce optimal results.
+  The parameters of dynamic temperature sampler are:
+  - **Dynatemp range** - the range of dynamic temperature to be added/subtracted
+  - **Dynatemp exponent** - changing the exponent changes the dynamic temperature in following way (figure shamelessly stolen from [previously linked reentry article](https://rentry.org/dynamic_temperature)): ![dynatemp exponent effects](/img/llama-cpp/dynatemp-exponent.png)
+- **Top-K** - Top-K sampling is a fancy name for "keep only `K` most probable tokens" algorithm.
+  Higher values can result in more diverse text, because there's more tokens to choose from when generating responses.
+- **Top-P** - Top-P sampling, also called *nucleus sampling*, per `llama.cpp` docs "Limits the tokens to those that together have a cumulative probability of at least `p`".
+  In human language, it means that the Top-P sampler takes a list of tokens and their probabilities as an input (note that the sum of their cumulative probabilities is by definition equal to 1), and returns tokens with highest probabilities from that list until the sum of their cumulative probabilities is greater or equal to `p`.
+  Or, in other words, `p` value changes the % of tokens returned by the Top-P sampler.
+  For example, when `p` is equal to 0.7, the sampler will return 70% of input tokens with highest probabilities.
+  There's a [pretty good article](https://rumn.medium.com/setting-top-k-top-p-and-temperature-in-llms-3da3a8f74832) about temperature, Top-K and Top-P sampling that i've found and can recommend if you wanna know more.
+- **Min-P** - Min-P sampling, per `llama.cpp` docs "Limits tokens based on the minimum probability for a token to be considered, relative to the probability of the most likely token".
+  There's a [paper](https://arxiv.org/pdf/2407.01082) explaining this algorithm (it contains loads of citations for other LLM-related stuff too, good read).
+  Figure 1 from this paper nicely shows what each of the sampling algorithms does to probability distribution of tokens:
+  ![min-p-probabilities](/img/llama-cpp/min-p-probs.png)
+- [**Exclude Top Choices (XTC)**](https://www.reddit.com/r/LocalLLaMA/comments/1ev8n2s/exclude_top_choices_xtc_a_sampler_that_boosts/) - This is a funky one, because it works a bit differently from most other samplers.
+  Quoting the author, *Instead of pruning the least likely tokens, under certain circumstances, it removes the most likely tokens from consideration*.
+  Detailed description can be found in [the PR with implementation](https://github.com/oobabooga/text-generation-webui/pull/6335).
+  I recommend reading it, because i really can't come up with anything better in few sentences, it's a really good explanation.
+  I can, however, steal this image from the linked PR to show you more-or-less what XTC does: ![xtc](/img/llama-cpp/xtc.png)
+  The parameters for XTC sampler are:
+  - **XTC threshold** - probability cutoff threshold for top tokens, in (0, 1) range.
+  - **XTC probability** - probability of XTC sampling being applied in \[0, 1\] range, where 0 = XTC disabled, 1 = XTC always enabled.
+- [**Locally typical sampling (typical-P)**](https://arxiv.org/pdf/2202.00666) - per `llama.cpp` docs "Sorts and limits tokens based on the difference between log-probability and entropy".
+  I... honestly don't know how exactly it works.
+  I tried reading the linked paper, but i lack the mental capacity to understand it enough to describe it back.
+  [Some people on Reddit](https://www.reddit.com/r/LocalLLaMA/comments/153bnly/what_does_typical_p_actually_do/) also have the same issue, so i recommend going there and reading the comments.
+- **Max tokens** - i think that's pretty self-explanatory. -1 makes the LLM generate until it decides it's end of the sentence (by returning end-of-sentence token), or the context is full.
+
+Additional literature:
+
+- [Your settings are (probably) hurting your model](https://www.reddit.com/r/LocalLLaMA/comments/17vonjo/your_settings_are_probably_hurting_your_model_why/)
+
+In *Other sampler settings* we can find following options:
+
+- **Samplers queue** - As i've mentioned earlier, the samplers are applied in a chain.
+  Here, we can configure the order of their application, and select which are used.
+  The setting uses short names for samplers, the mapping is following:
+  - `d` - DRY
+  - `k` - Top-K
+  - `y` - Typical-P
+  - `p` - Top-P
+  - `m` - Min-P
+  - `x` - Exclude Top Choices (XTC)
+  - `t` - Temperature
