@@ -942,7 +942,7 @@ Let's start with `common params` section:
   If you have multiple GPUs, you may also want to look at `--split-mode` and `--main-gpu` arguments.
 - `--model` (`LLAMA_ARG_MODEL`) - path to the GGUF model file.
 
-Most of the options available in `sampling params` section are described in detail [below](#list-of-llm-configuration-options-and-samplers-available-in-llamacpp).
+Most of the options from `sampling params` section are described in detail [below](#list-of-llm-configuration-options-and-samplers-available-in-llamacpp).
 Server-specific arguments are:
 
 - `--no-context-shift` (`LLAMA_ARG_NO_CONTEXT_SHIFT`) - by default, when context is filled up, it will be shifted ("oldest" tokens are discarded in favour of freshly generated ones).
@@ -959,18 +959,78 @@ Server-specific arguments are:
 ## other llama.cpp tools
 
 Webserver is not the only thing `llama.cpp` provides.
-We have plenty of built-in tools for different purposes, and i'll tell you about some of them.
+There's few other useful tools hidden in built binaries.
 
 ### `llama-bench`
 
-`llama-bench` allows us to benchmark the generation speed of our `llama.cpp` build for a selected model.
-To run a benchmark, we can simply run the executable with path to selected model.
+`llama-bench` allows us to benchmark the prompt processing and text generation speed of our `llama.cpp` build for a selected model.
+To run an example benchmark, we can simply run the executable with path to selected model.
 
 ```sh
 llama-bench --model selected_model.gguf
 ```
 
-`llama-bench` will try to optimally set `llama.cpp` configuration, depending on your hardware and llama.cpp build.
+`llama-bench` will try to use optimal `llama.cpp` configuration for your hardware.
+Default settings will try to use full GPU offloading (99 layers) and mmap.
+I recommend enabling flash attention manually (with `--flash-attn` flag, unfortunately `llama-bench` does not read the environmental variables)
+Tweaking prompt length (`--n-prompt`) and batch sizes (`--batch-size`/`--ubatch-size`) may affect the result of prompt processing benchmark.
+Tweaking number of tokens to generate (`--n-gen`) may affect the result of text generation benchmark.
+You can also set the number of repetitions with `--repetitions` argument.
+
+Results for SmolLM2 1.7B Instruct quantized to Q8 w/ flash attention on my setup (CPU only, Ryzen 5900X, DDR4 RAM @3200MHz):
+
+```text
+> llama-bench --flash-attn 1 --model ./SmolLM2.q8.gguf
+
+| model                          |       size |     params | backend    | threads | fa |          test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | ------: | -: | ------------: | -------------------: |
+| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | CPU        |      12 |  1 |         pp512 |        162.54 ± 1.70 |
+| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | CPU        |      12 |  1 |         tg128 |         22.50 ± 0.05 |
+
+build: dc223440 (4215)
+```
+
+The table is mostly self-explanatory, except two last columns.
+`test` contains the benchmark identifier, made from two parts.
+First two letters define the bench type (`pp` for prompt processing, `tg` for text generation).
+The number defines the prompt size (for prompt processing benchmark) or amount of generated tokens (for text generation benchmark).
+`t/s` column is the result in tokens processed/generated per second.
+
+There's also a *mystery* `-pg` argument, which can be used to perform mixed prompt processing+text generation test.
+For example:
+
+```text
+> llama-bench --flash-attn 1 --model ./SmolLM2.q8.gguf -pg 1024,256
+
+| model                          |       size |     params | backend    | threads | fa |          test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | ------: | -: | ------------: | -------------------: |
+| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | CPU        |      12 |  1 |         pp512 |       253.14 ± 53.58 |
+| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | CPU        |      12 |  1 |         tg128 |         22.56 ± 0.05 |
+| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | CPU        |      12 |  1 |  pp1024+tg256 |         62.23 ± 0.53 |
+
+build: dc223440 (4215)
+```
+
+This is probably the most realistic benchmark, because as long as you have continuous batching enabled you'll use the model like that.
+Don't mind the ridiculous result of prompt processing test, the standard deviation is crazy there.
+
+### `llama-cli`
+
+This is a simple CLI interface for the LLM.
+It allows you to generate a completion for specified prompt, or chat with LLM.
+
+It shares most arguments with `llama-server`, except some specific ones:
+
+- `--prompt` - can also be used with `llama-server`, but here it's bit more useful.
+  Sets the starting prompt for the LLM.
+- `--color` - enables colored output, it's disabled by default.
+- `--no-context-shift` - does the same thing as in `llama-server`.
+- `--reverse-prompt` - when LLM generates a reverse prompt, it stops generation and returns the control over conversation to the user, allowing him to respond.
+  Basically, this is list of stopping words/sentences.
+- `--conversation` - enables conversation mode by enabling interactive mode and not printing special tokens (like those appearing in chat template)
+  This is probably how you want to use this program.
+- `--interactive` - enables interactive mode, allowing you to chat with the LLM. In this mode, the generation starts right away and you should set the `--prompt` to get any reasonable output.
+  Alternatively, we can use `--interactive-first` to start chatting with control over chat right away.
 
 ## LLM configuration options explained
 
