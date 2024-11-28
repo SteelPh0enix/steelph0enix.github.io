@@ -1017,12 +1017,13 @@ Don't mind the ridiculous result of prompt processing test, the standard deviati
 ### `llama-cli`
 
 This is a simple CLI interface for the LLM.
-It allows you to generate a completion for specified prompt, or chat with LLM.
+It allows you to generate a completion for specified prompt, or chat with the LLM.
 
 It shares most arguments with `llama-server`, except some specific ones:
 
 - `--prompt` - can also be used with `llama-server`, but here it's bit more useful.
-  Sets the starting prompt for the LLM.
+  Sets the starting/system prompt for the LLM.
+  Prompt can also be loaded from file by specifying it's path using `--file` or `--binary-file` argument.
 - `--color` - enables colored output, it's disabled by default.
 - `--no-context-shift` - does the same thing as in `llama-server`.
 - `--reverse-prompt` - when LLM generates a reverse prompt, it stops generation and returns the control over conversation to the user, allowing him to respond.
@@ -1031,6 +1032,145 @@ It shares most arguments with `llama-server`, except some specific ones:
   This is probably how you want to use this program.
 - `--interactive` - enables interactive mode, allowing you to chat with the LLM. In this mode, the generation starts right away and you should set the `--prompt` to get any reasonable output.
   Alternatively, we can use `--interactive-first` to start chatting with control over chat right away.
+
+Here are specific usage examples:
+
+#### text completion
+
+```text
+> llama-cli --flash-attn --model ./SmolLM2.q8.gguf --prompt "The highest mountain on earth"
+
+build: 4215 (dc223440) with cc (GCC) 14.2.1 20240910 for x86_64-pc-linux-gnu
+main: llama backend init
+main: load the model and apply lora adapter, if any
+llama_model_loader: loaded meta data with 37 key-value pairs and 218 tensors from ./SmolLM2.q8.gguf (version GGUF V3 (latest))
+...
+llm_load_tensors:   CPU_Mapped model buffer size =  1734,38 MiB
+................................................................................................
+llama_new_context_with_model: n_seq_max     = 1
+llama_new_context_with_model: n_ctx         = 4096
+llama_new_context_with_model: n_ctx_per_seq = 4096
+llama_new_context_with_model: n_batch       = 2048
+llama_new_context_with_model: n_ubatch      = 512
+llama_new_context_with_model: flash_attn    = 1
+llama_new_context_with_model: freq_base     = 130000,0
+llama_new_context_with_model: freq_scale    = 1
+llama_new_context_with_model: n_ctx_per_seq (4096) < n_ctx_train (8192) -- the full capacity of the model will not be utilized
+llama_kv_cache_init:        CPU KV buffer size =   768,00 MiB
+llama_new_context_with_model: KV self size  =  768,00 MiB, K (f16):  384,00 MiB, V (f16):  384,00 MiB
+llama_new_context_with_model:        CPU  output buffer size =     0,19 MiB
+llama_new_context_with_model:        CPU compute buffer size =   104,00 MiB
+llama_new_context_with_model: graph nodes  = 679
+llama_new_context_with_model: graph splits = 1
+common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+main: llama threadpool init, n_threads = 12
+
+system_info: n_threads = 12 (n_threads_batch = 12) / 24 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | LLAMAFILE = 1 | AARCH64_REPACK = 1 |
+
+sampler seed: 2734556630
+sampler params:
+        repeat_last_n = 64, repeat_penalty = 1,000, frequency_penalty = 0,000, presence_penalty = 0,000
+        dry_multiplier = 0,000, dry_base = 1,750, dry_allowed_length = 2, dry_penalty_last_n = -1
+        top_k = 40, top_p = 0,950, min_p = 0,050, xtc_probability = 0,000, xtc_threshold = 0,100, typical_p = 1,000, temp = 0,800
+        mirostat = 0, mirostat_lr = 0,100, mirostat_ent = 5,000
+sampler chain: logits -> logit-bias -> penalties -> dry -> top-k -> typical -> top-p -> min-p -> xtc -> temp-ext -> dist
+generate: n_ctx = 4096, n_batch = 2048, n_predict = -1, n_keep = 0
+
+The highest mountain on earth is Mount Everest, which stands at an astonishing 8,848.86 meters (29,031.7 feet) above sea level. Located in the Mahalangur Sharhungtrigangla Range in the Himalayas, it's a marvel of nature that draws adventurers and thrill-seekers from around the globe.
+
+Standing at the base camp, the mountain appears as a majestic giant, its rugged slopes and snow-capped peaks a testament to its formidable presence. The climb to the summit is a grueling challenge that requires immense physical and mental fortitude, as climbers must navigate steep inclines, unpredictable weather, and crevasses.
+
+The ascent begins at Base Camp, a bustling hub of activity, where climbers gather to share stories, exchange tips, and prepare for the climb ahead. From Base Camp, climbers make their way to the South Col, a precarious route that offers breathtaking views of the surrounding landscape. The final push to the summit involves a grueling ascent up the steep and treacherous Lhotse Face, followed by a scramble up the near-vertical wall of the Western Cwm.
+
+Upon reaching the summit, climbers are rewarded with an unforgettable sight: the majestic Himalayan range unfolding before them, with the sun casting a golden glow on the snow. The sense of accomplishment and awe is indescribable, and the experience is etched in the memories of those who have conquered this mighty mountain.
+
+The climb to Everest is not just about reaching the summit; it's an adventure that requires patience, perseverance, and a deep respect for the mountain. Climbers must be prepared to face extreme weather conditions, altitude sickness, and the ever-present risk of accidents or crevasses. Despite these challenges, the allure of Everest remains a powerful draw, inspiring countless individuals to push their limits and push beyond them. [end of text]
+
+
+llama_perf_sampler_print:    sampling time =      12,58 ms /   385 runs   (    0,03 ms per token, 30604,13 tokens per second)
+llama_perf_context_print:        load time =     318,81 ms
+llama_perf_context_print: prompt eval time =      59,26 ms /     5 tokens (   11,85 ms per token,    84,38 tokens per second)
+llama_perf_context_print:        eval time =   17797,98 ms /   379 runs   (   46,96 ms per token,    21,29 tokens per second)
+llama_perf_context_print:       total time =   17891,23 ms /   384 tokens
+```
+
+#### chat mode
+
+```text
+> llama-cli --flash-attn --model ./SmolLM2.q8.gguf --prompt "You are a helpful assistant" --conversation
+
+build: 4215 (dc223440) with cc (GCC) 14.2.1 20240910 for x86_64-pc-linux-gnu
+main: llama backend init
+main: load the model and apply lora adapter, if any
+llama_model_loader: loaded meta data with 37 key-value pairs and 218 tensors from ./SmolLM2.q8.gguf (version GGUF V3 (latest))
+...
+llm_load_tensors:   CPU_Mapped model buffer size =  1734,38 MiB
+................................................................................................
+llama_new_context_with_model: n_seq_max     = 1
+llama_new_context_with_model: n_ctx         = 4096
+llama_new_context_with_model: n_ctx_per_seq = 4096
+llama_new_context_with_model: n_batch       = 2048
+llama_new_context_with_model: n_ubatch      = 512
+llama_new_context_with_model: flash_attn    = 1
+llama_new_context_with_model: freq_base     = 130000,0
+llama_new_context_with_model: freq_scale    = 1
+llama_new_context_with_model: n_ctx_per_seq (4096) < n_ctx_train (8192) -- the full capacity of the model will not be utilized
+llama_kv_cache_init:        CPU KV buffer size =   768,00 MiB
+llama_new_context_with_model: KV self size  =  768,00 MiB, K (f16):  384,00 MiB, V (f16):  384,00 MiB
+llama_new_context_with_model:        CPU  output buffer size =     0,19 MiB
+llama_new_context_with_model:        CPU compute buffer size =   104,00 MiB
+llama_new_context_with_model: graph nodes  = 679
+llama_new_context_with_model: graph splits = 1
+common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+main: llama threadpool init, n_threads = 12
+main: chat template example:
+<|im_start|>system
+You are a helpful assistant<|im_end|>
+<|im_start|>user
+Hello<|im_end|>
+<|im_start|>assistant
+Hi there<|im_end|>
+<|im_start|>user
+How are you?<|im_end|>
+<|im_start|>assistant
+
+
+system_info: n_threads = 12 (n_threads_batch = 12) / 24 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | LLAMAFILE = 1 | AARCH64_REPACK = 1 |
+
+main: interactive mode on.
+sampler seed: 968968654
+sampler params:
+        repeat_last_n = 64, repeat_penalty = 1,000, frequency_penalty = 0,000, presence_penalty = 0,000
+        dry_multiplier = 0,000, dry_base = 1,750, dry_allowed_length = 2, dry_penalty_last_n = -1
+        top_k = 40, top_p = 0,950, min_p = 0,050, xtc_probability = 0,000, xtc_threshold = 0,100, typical_p = 1,000, temp = 0,800
+        mirostat = 0, mirostat_lr = 0,100, mirostat_ent = 5,000
+sampler chain: logits -> logit-bias -> penalties -> dry -> top-k -> typical -> top-p -> min-p -> xtc -> temp-ext -> dist
+generate: n_ctx = 4096, n_batch = 2048, n_predict = -1, n_keep = 0
+
+== Running in interactive mode. ==
+ - Press Ctrl+C to interject at any time.
+ - Press Return to return control to the AI.
+ - To return control without starting a new line, end your input with '/'.
+ - If you want to submit another line, end your input with '\'.
+
+system
+You are a helpful assistant
+
+> hi
+Hello! How can I help you today?
+
+>
+llama_perf_sampler_print:    sampling time =       0,27 ms /    22 runs   (    0,01 ms per token, 80291,97 tokens per second)
+llama_perf_context_print:        load time =     317,46 ms
+llama_perf_context_print: prompt eval time =    2043,02 ms /    22 tokens (   92,86 ms per token,    10,77 tokens per second)
+llama_perf_context_print:        eval time =     407,66 ms /     9 runs   (   45,30 ms per token,    22,08 tokens per second)
+llama_perf_context_print:       total time =    5302,60 ms /    31 tokens
+Interrupted by user
+```
+
+## building llama.cpp with GPU support
+
+TODO
 
 ## LLM configuration options explained
 
@@ -1108,7 +1248,7 @@ But - it's a good knowledge to have when playing with LLMs.
    {"content":"hello world! this is an example message!"}
    ```
 
-1. Dark Magick (feeding the beast)
+1. Dank Magick (feeding the beast)
 
    I honestly don't know what exactly happens in this step, but i'll try my best to explain it in simple and very approximate terms.
    The input is the tokenized prompt.

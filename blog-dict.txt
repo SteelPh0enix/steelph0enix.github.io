@@ -111,3 +111,6 @@ Fira
 dynatemp
 Mirostat
 NUMA
+logits
+Mahalangur
+Sharhungtrigangla
