@@ -5,7 +5,7 @@ author = "SteelPh0enix"
 authorTwitter = "steel_ph0enix"
 tags = ["llama.cpp", "llm", "ai", "guide"]
 keywords = ["llama.cpp", "llama", "cpp", "llm", "ai", "building", "running", "guide", "inference", "local", "scratch", "hardware"]
-description = "Psst, kid, want some cheap LLMs?"
+description = "Psst, kid, want some cheap and small LLMs?"
 showFullContent = false
 draft = true
 +++
@@ -123,7 +123,7 @@ Some context-specific formatting is used in this post:
 
 In [`docs/build.md`](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md), you'll find detailed build instructions for all the supported platforms.
 By default, `llama.cpp` builds with auto-detected CPU support.
-We'll talk about GPU support in a moment, first - let's try building it as-is, because it's a good baseline to start with, and it doesn't require any external dependencies.
+We'll talk about enabling GPU support later, first - let's try building it as-is, because it's a good baseline to start with, and it doesn't require any external dependencies.
 To do that, we only need a C++ toolchain, [CMake](https://cmake.org/) and [Ninja](https://ninja-build.org/).
 
 > If you are **very** lazy, you can download a release from Github and skip building steps.
@@ -879,30 +879,105 @@ And now we can access the web UI on `http://127.0.0.1:8080` or whatever host/por
 
 ![llama.cpp webui](/img/llama-cpp/llama-cpp-webui.png)
 
-From this point, you can freely chat with the LLM using the web UI, or you can use the OpenAI-compatible API that `llama-server` provides.
+From this point, we can freely chat with the LLM using the web UI, or you can use the OpenAI-compatible API that `llama-server` provides.
 I won't dig into the API itself here, i've written [a Python library](https://github.com/SteelPh0enix/unreasonable-llama) for it if you're interested in using it (i'm trying to keep it up-to-date with `llama.cpp` master, but it might not be all the time).
 I recommend looking into the [`llama-server` source code and README](https://github.com/ggerganov/llama.cpp/tree/master/examples/server) for more details about endpoints.
-What i will dig into is the configuration of the LLM and the server.
-After that, we'll learn how to build `llama.cpp` with GPU support.
 
-But for now, let's play with web UI.
+Let's see what we can do with web UI.
 On the left, we have list of conversations.
 Those are stored in browser's localStorage (as the disclaimer on the bottom-left graciously explains), which means they are persistent even if you restart the browser.
 Keep in mind that changing the host/port of the server will "clear" those.
 Current conversation is passed to the LLM as context, and the context size is limited by server settings (we will learn how to tweak it in a second).
-I recommend making new conversations often and keeping their context focused on the subject for optimal performance.
+I recommend making new conversations often, and keeping their context focused on the subject for optimal performance.
 
 On the top-right, we have (from left to right) "remove conversation", "download conversation" (in JSON format), "configuration" and "Theme" buttons.
-In the configuration window, we can tweak generation settings for our LLM. **Those settings are currently global, not per-conversation.**
+In the configuration window, we can tweak generation settings for our LLM.
+**Those are currently global, not per-conversation.**
+All of those settings are briefly described [below](#llm-configuration-options-explained).
 
 ![llama.cpp webui config](/img/llama-cpp/llama-cpp-webui-config.png)
 
-### LLM configuration options explained
+### llama.cpp server settings
+
+Web UI provides only a small subset of configuration options we have available, and only those related to LLM samplers.
+For the full set, we need to call `llama-server --help`.
+With those options we can drastically improve (or worsen) the behavior of our model and performance of text generation, so it's worth knowing them.
+I won't explain *all* of the options listed there, because it would be mostly redundant, but i'll probably explain *most* of them in one way of another here.
+I'll try to explain all *interesting* options though.
+
+One thing that's also worth mentioning is that most of those parameters are read from the environment.
+This is also the case for most other `llama.cpp` executables, and the parameter names (and environment variables) are the same for them.
+Names of those variables are provided in `llama-server --help` output, i'll add them to each described option here.
+
+Let's start with `common params` section:
+
+- `--threads`/`--threads-batch` (`LLAMA_ARG_THREADS`) - amount of CPU threads used by LLM.
+  Default value is -1, which tells `llama.cpp` to detect the amount of cores in the system.
+  This behavior is probably good enough for most of people, so unless you have *exotic* hardware setup and you know what you're doing - leave it on default.
+  If you *do* have an exotic setup, you may also want to look at other NUMA and offloading-related flags.
+- `--ctx-size` (`LLAMA_ARG_CTX_SIZE`) - size of the prompt context.
+  In other words, the amount of tokens that the LLM can remember at once.
+  Increasing the context size also increases the memory requirements for the LLM.
+  Every model has a context size limit, when this argument is set to `0`, `llama.cpp` tries to use it.
+- `--predict` (`LLAMA_ARG_N_PREDICT`) - number of tokens to predict.
+  When LLM generates text, it stops either after generating end-of-message token (when it decides that the generated sentence is over), or after hitting this limit.
+  Default is `-1`, which makes the LLM generate text ad infinitum.
+  If we want to limit it to context size, we can set it to `-2`.
+- `--batch-size`/`--ubatch-size` (`LLAMA_ARG_BATCH`/`LLAMA_ARG_UBATCH`) - amount of tokens fed to the LLM in single processing step.
+  Optimal value of those arguments depends on your hardware, model, and context size - i encourage experimentation, but defaults are probably good enough for start.
+- `--flash-attn` (`LLAMA_ARG_FLASH_ATTN`) - [Flash attention](https://www.hopsworks.ai/dictionary/flash-attention) is an optimization that's supported by most recent models.
+  Read the linked article for details, in short - enabling it should improve the generation performance for some models.
+  `llama.cpp` will simply throw a warning when a model that doesn't support flash attention is loaded, so i keep it on at all times without any issues.
+- `--mlock` (`LLAMA_ARG_MLOCK`) - this option is called exactly like [Linux function](https://man7.org/linux/man-pages/man2/mlock.2.html) that it uses underneath.
+  On Windows, it uses [VirtualLock](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtuallock).
+  If you have enough virtual memory (RAM or VRAM) to load the whole model into, you can use this parameter to prevent OS from swapping it to the hard drive.
+  Enabling it can increase the performance of text generation, but may slow everything else down in return if you hit the virtual memory limit of your machine.
+- `--no-mmap` (`LLAMA_ARG_NO_MMAP`) - by default, `llama.cpp` will map the model to memory (using [`mmap`](https://man7.org/linux/man-pages/man2/mmap.2.html) on Linux and [`CreateFileMappingA`](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createfilemappinga) on Windows).
+  Using this switch will disable this behavior.
+- `--gpu-layers` (`LLAMA_ARG_N_GPU_LAYERS`) - if GPU offloading is available, this parameter will set the maximum amount of LLM layers to offload to GPU.
+  Number and size of layers is dependent on the used model.
+  Usually, if we want to load the whole model to GPU, we can set this parameter to some unreasonably large number like 999.
+  For partial offloading, you must experiment yourself.
+  `llama.cpp` must be built with GPU support, otherwise this option will have no effect.
+  If you have multiple GPUs, you may also want to look at `--split-mode` and `--main-gpu` arguments.
+- `--model` (`LLAMA_ARG_MODEL`) - path to the GGUF model file.
+
+Most of the options available in `sampling params` section are described in detail [below](#list-of-llm-configuration-options-and-samplers-available-in-llamacpp).
+Server-specific arguments are:
+
+- `--no-context-shift` (`LLAMA_ARG_NO_CONTEXT_SHIFT`) - by default, when context is filled up, it will be shifted ("oldest" tokens are discarded in favour of freshly generated ones).
+  This parameter disables that behavior, and it will make the generation stop instead.
+- `--cont-batching` (`LLAMA_ARG_CONT_BATCHING`) - continuous batching allows processing prompts in parallel with text generation.
+  This usually improves performance and is enabled by default.
+  You can disable it with `--no-cont-batching` (`LLAMA_ARG_NO_CONT_BATCHING`) parameter.
+- `--alias` (`LLAMA_ARG_ALIAS`) - Alias for the model name, used by the REST API.
+  Set to model name by default.
+- `--host` (`LLAMA_ARG_HOST`) and `--port` (`LLAMA_ARG_PORT`) - host and port for `llama.cpp` server.
+- `--slots` (`LLAMA_ARG_ENDPOINT_SLOTS`) - enables `/slots` endpoint of `llama.cpp` server.
+- `--props` (`LLAMA_ARG_ENDPOINT_PROPS`) - enables `/props` endpoint of `llama.cpp` server.
+
+## other llama.cpp tools
+
+Webserver is not the only thing `llama.cpp` provides.
+We have plenty of built-in tools for different purposes, and i'll tell you about some of them.
+
+### `llama-bench`
+
+`llama-bench` allows us to benchmark the generation speed of our `llama.cpp` build for a selected model.
+To run a benchmark, we can simply run the executable with path to selected model.
+
+```sh
+llama-bench --model selected_model.gguf
+```
+
+`llama-bench` will try to optimally set `llama.cpp` configuration, depending on your hardware and llama.cpp build.
+
+## LLM configuration options explained
 
 This will be a relatively long and very informational part full of boring explanations.
 But - it's a good knowledge to have when playing with LLMs.
 
-#### how does LLM generate text?
+### how does LLM generate text?
 
 1. Prompt
 
@@ -997,7 +1072,7 @@ But - it's a good knowledge to have when playing with LLMs.
    Hooray, we tamed the digital beast and forced it to talk.
    I have previously feared the consequences this could bring upon the humanity, but here we are, 373 1457 260 970 1041 3935.
 
-#### list of LLM configuration options and samplers available in llama.cpp
+### list of LLM configuration options and samplers available in llama.cpp
 
 - **System Message** - Usually, conversations with LLMs start with a "system" message that tells the LLM how to behave.
   This is probably the easiest-to-use tool that can drastically change the behavior of a model.
