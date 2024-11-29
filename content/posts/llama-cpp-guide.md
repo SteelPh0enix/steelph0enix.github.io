@@ -1004,9 +1004,9 @@ For example:
 
 | model                          |       size |     params | backend    | threads | fa |          test |                  t/s |
 | ------------------------------ | ---------: | ---------: | ---------- | ------: | -: | ------------: | -------------------: |
-| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | CPU        |      12 |  1 |         pp512 |       253.14 ± 53.58 |
-| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | CPU        |      12 |  1 |         tg128 |         22.56 ± 0.05 |
-| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | CPU        |      12 |  1 |  pp1024+tg256 |         62.23 ± 0.53 |
+| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | CPU        |      12 |  1 |         pp512 |        165.50 ± 1.95 |
+| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | CPU        |      12 |  1 |         tg128 |         22.44 ± 0.01 |
+| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | CPU        |      12 |  1 |  pp1024+tg256 |         63.51 ± 4.24 |
 
 build: dc223440 (4215)
 ```
@@ -1025,7 +1025,7 @@ It shares most arguments with `llama-server`, except some specific ones:
   Sets the starting/system prompt for the LLM.
   Prompt can also be loaded from file by specifying it's path using `--file` or `--binary-file` argument.
 - `--color` - enables colored output, it's disabled by default.
-- `--no-context-shift` - does the same thing as in `llama-server`.
+- `--no-context-shift` (`LLAMA_ARG_NO_CONTEXT_SHIFT`) - does the same thing as in `llama-server`.
 - `--reverse-prompt` - when LLM generates a reverse prompt, it stops generation and returns the control over conversation to the user, allowing him to respond.
   Basically, this is list of stopping words/sentences.
 - `--conversation` - enables conversation mode by enabling interactive mode and not printing special tokens (like those appearing in chat template)
@@ -1168,9 +1168,128 @@ llama_perf_context_print:       total time =    5302,60 ms /    31 tokens
 Interrupted by user
 ```
 
-## building llama.cpp with GPU support
+## building the llama, but better
 
-TODO
+All right, now that we know how to use `llama.cpp` and tweak runtime parameters, let's learn how to tweak build configuration.
+We already set some generic settings in [chapter about building the `llama.cpp`](#building-the-llama) but we haven't touched any backend-related ones yet.
+
+Let's start with clearing up the `llama.cpp` repository (and, optionally, making sure that we have the latest commit):
+
+```sh
+cd llama.cpp
+git clean -xdf
+git pull
+git submodule update --recursive
+```
+
+Now, we need to generate the build files for a custom backend.
+As of writing this, the list of backends supported by `llama.cpp` is following:
+
+- `Metal` - acceleration for Apple Silicon
+- `Accelerate` - BLAS (Basic Linear Algebra Subprograms) acceleration for Mac PCs, enabled by default.
+- `OpenBLAS` - BLAS acceleration for CPUs
+- `BLIS` - relatively recently released high-performance BLAS framework
+- `SYCL` - acceleration for Intel GPUs (Data Center Max series, Flex series, Arc series, Built-in GPUs and iGPUs)
+- `Intel oneMKL` - acceleration for Intel CPUs
+- `CUDA` - acceleration for Nvidia GPUs
+- `MUSA` - acceleration for Moore Threads GPUs
+- `hipBLAS` - BLAS acceleration for AMD GPUs
+- `Vulkan` - generic acceleration for GPUs
+- `CANN` - acceleration for Ascend NPU
+- `Android` - yes, there's also Android support.
+
+As we can see, there's something for everyone.
+My backend selection recommendation is following:
+
+- Users without GPUs should try `Intel oneMKL` in case of Intel CPUs, or `BLIS`/`OpenBLAS`.
+- Users with Nvidia GPUs should use `CUDA` or `Vulkan`
+- Users with AMD GPUs should use `Vulkan` or `ROCm` (order important here, ROCm was bugged last time i've used it)
+- Users with Intel GPUs should use `SYCL` or `Vulkan`
+
+As we can see, Vulkan is the most generic option for GPU acceleration and i believe it's the simplest to build for, so i'll explain in detail how to do that.
+The build process for every backend is very similar - install the necessary dependencies, generate the `llama.cpp` build files with proper flag to enable the specific backend, and build it.
+
+Oh, and don't worry about Python and it's dependencies.
+The performance of model conversion scripts is not limited by `pytorch`, so there's no point in installing CUDA/ROCm versions.
+
+Before generating the build file, we need to install [Vulkan SDK](https://www.lunarg.com/vulkan-sdk/).
+
+On Windows, it's easiest to do via MSYS.
+That's why i've recommended using it at the beginning.
+I have tried installing it directly on Windows, but encountered issues that i haven't seen when using MSYS - so, obviously, MSYS is a better option.
+Run this command in MSYS (make sure to use UCRT runtime) to install the required dependencies:
+{.windows-bg-padded}
+
+```sh
+pacman -S git \
+    mingw-w64-ucrt-x86_64-gcc \
+    mingw-w64-ucrt-x86_64-cmake \
+    mingw-w64-ucrt-x86_64-vulkan-devel \
+    mingw-w64-ucrt-x86_64-shaderc
+```
+
+If you *really* don't want to use MSYS, i recommend [following the docs](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md#vulkan)
+{.windows-bg-padded}
+
+On Linux, i recommend installing Vulkan SDK using the package manager.
+If it's not in package manager of your distro, i assume you know what you're doing and how to install it manually.
+{.linux-bg-padded}
+
+Afterwards, we can generate the build files (replace `/your/install/dir` with custom installation directory, if you want):
+
+```sh
+cmake -S . -B build -G Ninja -DGGML_VULKAN=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/your/install/dir -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=ON -DLLAMA_BUILD_SERVER=ON
+```
+
+and build/install the binaries (replace `X` with amount of cores in your system):
+
+```sh
+cmake --build build --config Release -j X
+cmake --install build --config Release
+```
+
+Don't mind the warnings you'll see, i get them too.
+Now our `llama.cpp` binaries should be able to use our GPU.
+We can test it by running `llama-server` or `llama-cli` with `--list-devices` argument:
+
+```text
+> llama-cli --list-devices
+
+ggml_vulkan: Found 1 Vulkan devices:
+ggml_vulkan: 0 = AMD Radeon RX 7900 XT (AMD open-source driver) | uma: 0 | fp16: 1 | warp size: 64
+Available devices:
+  Vulkan0: AMD Radeon RX 7900 XT (20464 MiB, 20464 MiB free)
+```
+
+Running that command previously would print an empty list:
+
+```text
+> llama-cli --list-devices
+
+Available devices:
+```
+
+Remember the `llama-bench` results i've got previously on CPU build?
+This is them now:
+
+```text
+> llama-bench --flash-attn 1 --model ./SmolLM2.q8.gguf -pg 1024,256
+
+ggml_vulkan: Found 1 Vulkan devices:
+ggml_vulkan: 0 = AMD Radeon RX 7900 XT (AMD open-source driver) | uma: 0 | fp16: 1 | warp size: 64
+| model                          |       size |     params | backend    | ngl | fa |          test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | -: | ------------: | -------------------: |
+ggml_vulkan: Compiling shaders..............................Done!
+| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | Vulkan     |  99 |  1 |         pp512 |        880.55 ± 5.30 |
+| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | Vulkan     |  99 |  1 |         tg128 |         89.78 ± 1.66 |
+| llama ?B Q8_0                  |   1.69 GiB |     1.71 B | Vulkan     |  99 |  1 |  pp1024+tg256 |        115.25 ± 0.83 |
+```
+
+Now, that's some *good shit* right here.
+Prompt processing speed has increased from ~165 to ~880 tokens per second (5.3x faster).
+Text generation - from ~22 to ~90 tokens per second (4x faster).
+Mixed text processing went up from ~63 to ~115 tokens per second (1.8x faster).
+All of this due to the fact that i've switched to *correct* backend.
 
 ## LLM configuration options explained
 
@@ -1373,3 +1492,19 @@ The setting uses short names for samplers, the mapping is following:
 - `t` - Temperature
 
 Some samplers and settings i've listed above may be missing from web UI configuration (like Mirostat), but they all can be configured via environmental variables, CLI arguments for `llama.cpp` binaries, or llama.cpp server API.
+
+## final thoughts
+
+That is a **long** post, damn.
+I have started writing this post at the end of October.
+It's almost December now.
+During that time, multiple new models have been released - including SmolLM2, fun fact - i have originally planned to use Llama 3.2 3B.
+The speed at which the LLM community moves and releases new stuff is absolutely incredible, but thankfully `llama.cpp` is *relatively* stable now.
+I hope the knowledge i've gathered in this post will be useful and inspiring to the readers, and will allow them to play with LLMs freely in their homes.
+That's it, i'm tired.
+I'm releasing that shit into the wild.
+
+Suggestions for next posts are welcome, for now i intend to make some scripts for automated benchmarks w/ `llama-bench` and gather some data.
+I'll try to keep this post up-to-date and *maybe* add some stuff if it's requested.
+Questions are welcome too, preferably in the comments section.
+Have a nice one.

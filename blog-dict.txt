@@ -114,3 +114,8 @@ NUMA
 logits
 Mahalangur
 Sharhungtrigangla
+MUSA
+CANN
+shaderc
+DGGML
+Mbyte
