@@ -794,8 +794,7 @@ For example:&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| llama ?B Q8_0 | 1.69 GiB | 1.71 B | CPU | 12 | 1 | pp1024+tg256 | 63.51 ± 4.24 |
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>build: dc223440 (4215)
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>This is probably the most realistic benchmark, because as long as you have continuous batching enabled you&amp;rsquo;ll use the model like that.
-Don&amp;rsquo;t mind the ridiculous result of prompt processing test, the standard deviation is crazy there.&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>This is probably the most realistic benchmark, because as long as you have continuous batching enabled you&amp;rsquo;ll use the model like that.&lt;/p>
 &lt;h3 id="llama-cli">&lt;code>llama-cli&lt;/code>&lt;/h3>
 &lt;p>This is a simple CLI interface for the LLM.
 It allows you to generate a completion for specified prompt, or chat with the LLM.&lt;/p>
