@@ -1011,7 +1011,6 @@ build: dc223440 (4215)
 ```
 
 This is probably the most realistic benchmark, because as long as you have continuous batching enabled you'll use the model like that.
-Don't mind the ridiculous result of prompt processing test, the standard deviation is crazy there.
 
 ### `llama-cli`
 
