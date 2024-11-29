@@ -167,8 +167,7 @@ To do that, we only need a C++ toolchain, [CMake](https://cmake.org/) and [Ninja
 > ```powershell
 > python -m pip install --upgrade pip wheel setuptools
 > ```
-
-{.windows-bg}
+> {.windows-bg}
 
 > On Linux, GCC is recommended, but you should be able to use Clang if you'd prefer by setting `CMAKE_C_COMPILER=clang` and `CMAKE_CXX_COMPILER=clang++` variables.
 > You should have GCC preinstalled (check `gcc --version` in terminal), if not - get latest version for your distribution using your package manager.
