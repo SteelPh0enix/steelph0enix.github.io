@@ -105,32 +105,28 @@ Make sure to download correct version for your hardware/backend.
 If you have troubles picking, i recommend following the build guide anyway - it&amp;rsquo;s simple enough and should explain what you should be looking for.
 Keep in mind that release won&amp;rsquo;t contain Python scripts that we&amp;rsquo;re going to use, so if you&amp;rsquo;ll want to quantize models manually, you&amp;rsquo;ll need to get them from repository.&lt;/p>
 &lt;/blockquote>
-&lt;blockquote>
-&lt;p>On Windows, i recommend using &lt;a href="https://www.msys2.org/">MSYS&lt;/a> to setup the environment for building and using &lt;code>llama.cpp&lt;/code>.
+&lt;p class="windows-bg">On Windows, i recommend using &lt;a href="https://www.msys2.org/">MSYS&lt;/a> to setup the environment for building and using &lt;code>llama.cpp&lt;/code>.
 &lt;a href="https://visualstudio.microsoft.com/downloads/">Microsoft Visual C++&lt;/a> is supported too, but trust me on that - you&amp;rsquo;ll want to use MSYS instead (it&amp;rsquo;s still a bit of pain in the ass, Linux setup is much simpler).
 Follow the guide on the main page to install MinGW for x64 UCRT environment, which you probably should be using.
 CMake, Ninja and Git can be installed in UCRT MSYS environment like that:&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>pacman -S git mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>However, if you&amp;rsquo;re using any other toolchain (MSVC, or non-MSYS one), you should install CMake, Git and Ninja via &lt;code>winget&lt;/code>:&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg">However, if you&amp;rsquo;re using any other toolchain (MSVC, or non-MSYS one), you should install CMake, Git and Ninja via &lt;code>winget&lt;/code>:&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>winget install cmake git.git ninja-build.ninja
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>You&amp;rsquo;ll also need Python, which you can get via winget.
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg">You&amp;rsquo;ll also need Python, which you can get via winget.
 Get the latest available version, at the time of writing this post it&amp;rsquo;s 3.13.&lt;/p>
-&lt;p>&lt;strong>DO NOT USE PYTHON FROM MSYS, IT WILL NOT WORK PROPERLY DUE TO ISSUES WITH BUILDING &lt;code>llama.cpp&lt;/code> DEPENDENCY PACKAGES!&lt;/strong>
+&lt;p class="windows-bg">&lt;strong>DO NOT USE PYTHON FROM MSYS, IT WILL NOT WORK PROPERLY DUE TO ISSUES WITH BUILDING &lt;code>llama.cpp&lt;/code> DEPENDENCY PACKAGES!&lt;/strong>
 &lt;strong>We&amp;rsquo;re going to be using MSYS only for &lt;em>building&lt;/em> &lt;code>llama.cpp&lt;/code>, nothing more.&lt;/strong>&lt;/p>
-&lt;p>&lt;strong>If you&amp;rsquo;re using MSYS, remember to add it&amp;rsquo;s &lt;code>/bin&lt;/code> (&lt;code>C:\msys64\ucrt64\bin&lt;/code> by default) directory to PATH, so Python can use MinGW for building packages.&lt;/strong>
+&lt;p class="windows-bg">&lt;strong>If you&amp;rsquo;re using MSYS, remember to add it&amp;rsquo;s &lt;code>/bin&lt;/code> (&lt;code>C:\msys64\ucrt64\bin&lt;/code> by default) directory to PATH, so Python can use MinGW for building packages.&lt;/strong>
 &lt;strong>Check if GCC is available by opening PowerShell/Command line and trying to run &lt;code>gcc --version&lt;/code>.&lt;/strong>
 Also; check if it&amp;rsquo;s &lt;em>correct&lt;/em> GCC by running &lt;code>where.exe gcc.exe&lt;/code> and seeing where the first entry points to.
 Reorder your PATH if you&amp;rsquo;ll notice that you&amp;rsquo;re using wrong GCC.&lt;/p>
-&lt;p>&lt;strong>If you&amp;rsquo;re using MSVC - ignore this disclaimer, it should be &amp;ldquo;detectable&amp;rdquo; by default.&lt;/strong>&lt;/p>
+&lt;p class="windows-bg">&lt;strong>If you&amp;rsquo;re using MSVC - ignore this disclaimer, it should be &amp;ldquo;detectable&amp;rdquo; by default.&lt;/strong>&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>winget install python.python.3.13
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>I recommend installing/upgrading &lt;code>pip&lt;/code>, &lt;code>setuptools&lt;/code> and &lt;code>wheel&lt;/code> packages before continuing.&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg">I recommend installing/upgrading &lt;code>pip&lt;/code>, &lt;code>setuptools&lt;/code> and &lt;code>wheel&lt;/code> packages before continuing.&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>python -m pip install --upgrade pip wheel setuptools
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/blockquote>
-&lt;blockquote>
-&lt;p class="linux-bg">On Linux, GCC is recommended, but you should be able to use Clang if you&amp;rsquo;d prefer by setting &lt;code>CMAKE_C_COMPILER=clang&lt;/code> and &lt;code>CMAKE_CXX_COMPILER=clang++&lt;/code> variables.
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="linux-bg">On Linux, GCC is recommended, but you should be able to use Clang if you&amp;rsquo;d prefer by setting &lt;code>CMAKE_C_COMPILER=clang&lt;/code> and &lt;code>CMAKE_CXX_COMPILER=clang++&lt;/code> variables.
 You should have GCC preinstalled (check &lt;code>gcc --version&lt;/code> in terminal), if not - get latest version for your distribution using your package manager.
 Same applies to CMake, Ninja, Python 3 (with &lt;code>setuptools&lt;/code>, &lt;code>wheel&lt;/code> and &lt;code>pip&lt;/code>) and Git.&lt;/p>
-&lt;/blockquote>
 &lt;p>Let&amp;rsquo;s start by grabbing a copy of &lt;a href="https://github.com/ggerganov/llama.cpp">&lt;code>llama.cpp&lt;/code> source code&lt;/a>, and moving into it.&lt;/p>
 &lt;blockquote>
 &lt;p>Disclaimer: this guide assumes all commands are ran from user&amp;rsquo;s home directory (&lt;code>/home/[yourusername]&lt;/code> on Linux, &lt;code>C:/Users/[yourusername]&lt;/code> on Windows).
@@ -139,7 +135,8 @@ You can use any directory you&amp;rsquo;d like, just keep in mind that if &amp;l
 &lt;blockquote>
 &lt;p class="windows-bg">&lt;strong>If you&amp;rsquo;re using MSYS&lt;/strong>, remember that MSYS home directory is different from Windows home directory. Make sure to use &lt;code>cd&lt;/code> (without arguments) to move into it after starting MSYS.&lt;/p>
 &lt;/blockquote>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>git clone git@github.com:ggerganov/llama.cpp.git
+&lt;p>&lt;em>(If you have previously configured SSH auth w/ GitHub, use &lt;code>git@github.com:ggerganov/llama.cpp.git&lt;/code> instead of the URL below)&lt;/em>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>git clone https://github.com/ggerganov/llama.cpp.git
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd llama.cpp
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git submodule update --init --recursive
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Now we&amp;rsquo;ll use CMake to generate build files, build the project, and install it.
@@ -1240,4 +1237,8 @@ The UI is not exactly &lt;em>great&lt;/em> but it&amp;rsquo;s &lt;em>good enough
 &lt;li>Meta Llama 3.1/3.2 - i recommend trying out Llama 3.1 8B Instruct, as it&amp;rsquo;s the default go-to model for most LLM applications. There&amp;rsquo;s also many finetunes and &lt;em>abliterated&lt;/em> versions that don&amp;rsquo;t have any built-in restrictions available publicly.&lt;/li>
 &lt;li>Microsoft Phi 3.5 - a series of models from Microsoft. Most of them are small, but there&amp;rsquo;s also big MoE (Mixture of Experts) version available.&lt;/li>
 &lt;li>Qwen/CodeQwen 2.5 - series of models from Alibaba, currently one of the best open-source models available. At the moment of writing this, CodeQwen 14B is my daily driver model.&lt;/li>
-&lt;/ul></content></item></channel></rss>
+&lt;/ul>
+&lt;h3 id="post-mortem">post-mortem&lt;/h3>
+&lt;p>I&amp;rsquo;ve shared this post on Reddit and after getting the feedback, i managed to fix multiple issues with this post. Thanks!
+I&amp;rsquo;m currently at the process of &lt;em>refactors&lt;/em>, so many small things may change, and many other small things may be added in following days.
+I&amp;rsquo;ll update this section when i&amp;rsquo;m finished.&lt;/p></content></item></channel></rss>
