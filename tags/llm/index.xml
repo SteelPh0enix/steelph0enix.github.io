@@ -1234,11 +1234,11 @@ Have a nice one.&lt;/p>
 &lt;h3 id="bonus-where-to-find-models-and-some-recommendations">bonus: where to find models, and some recommendations&lt;/h3>
 &lt;p>My favorite site for finding models and comparing them is &lt;a href="https://llm.extractum.io">LLM Explorer&lt;/a>.
 It&amp;rsquo;s basically a search engine for models.
-The UI is not exactly &lt;em>great&lt;/em>, but it&amp;rsquo;s &lt;em>good enough&lt;/em>, and it has the most comprehensive list of LLMs, and a lot of search options.&lt;/p>
+The UI is not exactly &lt;em>great&lt;/em>, but it&amp;rsquo;s &lt;em>good enough&lt;/em>, it has the most comprehensive list of LLMs and a lot of search options.&lt;/p>
 &lt;p>As for my recommendations, some relatively recent models i&amp;rsquo;ve tried that made a positive impression upon me are:&lt;/p>
 &lt;ul>
 &lt;li>Google Gemma 2 9B SimPO - a fine-tune of Google Gemma model. Gemma models are pretty interesting, and their responses are noticeably different from other models.&lt;/li>
 &lt;li>Meta Llama 3.1/3.2 - i recommend trying out Llama 3.1 8B Instruct, as it&amp;rsquo;s the default go-to model for most LLM applications. There&amp;rsquo;s also many finetunes and &lt;em>abliterated&lt;/em> versions that don&amp;rsquo;t have any built-in restrictions available publicly.&lt;/li>
 &lt;li>Microsoft Phi 3.5 - a series of models from Microsoft. Most of them are small, but there&amp;rsquo;s also big MoE (Mixture of Experts) version available.&lt;/li>
-&lt;li>Qwen/QwenCoder 2.5 - series of models from Alibaba, currently one of the best open-source models available. At the moment of writing this, QwenCoder 14B it&amp;rsquo;s my daily driver model.&lt;/li>
+&lt;li>Qwen/QwenCoder 2.5 - series of models from Alibaba, currently one of the best open-source models available. At the moment of writing this, QwenCoder 14B is my daily driver model.&lt;/li>
 &lt;/ul></content></item></channel></rss>
