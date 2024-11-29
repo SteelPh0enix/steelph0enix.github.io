@@ -7,7 +7,6 @@ tags = ["llama.cpp", "llm", "ai", "guide"]
 keywords = ["llama.cpp", "llama", "cpp", "llm", "ai", "building", "running", "guide", "inference", "local", "scratch", "hardware"]
 description = "Psst, kid, want some cheap and small LLMs?"
 showFullContent = false
-draft = true
 +++
 
 *No LLMs were harmed during creation of this post.*
