@@ -1,0 +1,1233 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ai on</title><link>https://steelph0enix.github.io/tags/ai/</link><description>Recent content in Ai on</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>SteelPh0enix's Blog © 2021-2024 by SteelPh0enix is licensed under CC BY-SA 4.0</copyright><lastBuildDate>Mon, 28 Oct 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://steelph0enix.github.io/tags/ai/index.xml" rel="self" type="application/rss+xml"/><item><title>llama.cpp guide - Running LLMs locally, on any hardware, from scratch</title><link>https://steelph0enix.github.io/posts/llama-cpp-guide/</link><pubDate>Mon, 28 Oct 2024 00:00:00 +0000</pubDate><guid>https://steelph0enix.github.io/posts/llama-cpp-guide/</guid><description>&lt;p>&lt;em>No LLMs were harmed during creation of this post.&lt;/em>&lt;/p>
+&lt;h2 id="so-i-started-playing-with-llms">so, i started playing with LLMs&amp;hellip;&lt;/h2>
+&lt;p>&amp;hellip;and it&amp;rsquo;s pretty fun.
+I was very skeptical about the AI/LLM &amp;ldquo;boom&amp;rdquo; back when it started.
+I thought, like many other people, that they are just mostly making stuff up, and generating uncanny-valley-tier nonsense.
+Boy, was i wrong.
+I&amp;rsquo;ve used ChatGPT once or twice, to test the waters - it made a pretty good first impression, despite hallucinating a bit.
+That was back when GPT3.5 was the top model. We came a pretty long way since then.&lt;/p></description><content>&lt;p>&lt;em>No LLMs were harmed during creation of this post.&lt;/em>&lt;/p>
+&lt;h2 id="so-i-started-playing-with-llms">so, i started playing with LLMs&amp;hellip;&lt;/h2>
+&lt;p>&amp;hellip;and it&amp;rsquo;s pretty fun.
+I was very skeptical about the AI/LLM &amp;ldquo;boom&amp;rdquo; back when it started.
+I thought, like many other people, that they are just mostly making stuff up, and generating uncanny-valley-tier nonsense.
+Boy, was i wrong.
+I&amp;rsquo;ve used ChatGPT once or twice, to test the waters - it made a pretty good first impression, despite hallucinating a bit.
+That was back when GPT3.5 was the top model. We came a pretty long way since then.&lt;/p>
+&lt;p>However, despite ChatGPT not disappointing me, i was still skeptical.
+Everything i&amp;rsquo;ve wrote, and every piece of response was fully available to OpenAI, or whatever other provider i&amp;rsquo;d want to use.
+This is not a big deal, but it tickles me in a wrong way, and also means i can&amp;rsquo;t use LLMs for any work-related non-open-source stuff.
+Also, ChatGPT is free only to a some degree - if i&amp;rsquo;d want to go full-in on AI, i&amp;rsquo;d probably have to start paying.
+Which, obviously, i&amp;rsquo;d rather avoid.&lt;/p>
+&lt;p>At some point i started looking at open-source models.
+I had no idea how to use them, but the moment i saw the sizes of &amp;ldquo;small&amp;rdquo; models, like Llama 2 7B, i&amp;rsquo;ve realized that my RTX 2070 Super with mere 8GB of VRAM would probably have issues running them (i was wrong on that too!), and running them on CPU would probably yield very bad performance.
+And then, i&amp;rsquo;ve bought a new GPU - RX 7900 XT, with 20GB of VRAM, which is definitely more than enough to run small-to-medium LLMs.
+Yay!&lt;/p>
+&lt;p>Now my issue was finding some software that could run an LLM on that GPU.
+CUDA was the most popular back-end - but that&amp;rsquo;s for NVidia GPUs, not AMD.
+After doing a bit of research, i&amp;rsquo;ve found out about ROCm and found &lt;a href="https://lmstudio.ai/">LM Studio&lt;/a>.
+And this was exactly what i was looking for - at least for the time being.
+Great UI, easy access to many models, and the quantization - that was the thing that absolutely sold me into self-hosting LLMs.
+Existence of quantization made me realize that you don&amp;rsquo;t need powerful hardware for running LLMs!
+You can even run &lt;a href="https://www.reddit.com/r/raspberry_pi/comments/1ati2ki/how_to_run_a_large_language_model_llm_on_a/">LLMs on RaspberryPi&amp;rsquo;s&lt;/a> at this point (with &lt;code>llama.cpp&lt;/code> too!)
+Of course, the performance will be &lt;em>abysmal&lt;/em> if you don&amp;rsquo;t run the LLM with a proper backend on a decent hardware, but the bar is currently not very high.&lt;/p>
+&lt;p>If you came here with intention of finding some piece of software that will allow you to &lt;strong>easily run popular models on most modern hardware for non-commercial purposes&lt;/strong> - grab &lt;a href="https://lmstudio.ai/">LM Studio&lt;/a>, read the &lt;a href="https://steelph0enix.github.io/posts/llama-cpp-guide/#but-first---some-disclaimers-for-expectation-management">next section&lt;/a> of this post, and go play with it.
+It fits this description very well, just make sure to use appropriate back-end for your GPU/CPU for optimal performance.&lt;/p>
+&lt;p>However, if you:&lt;/p>
+&lt;ul>
+&lt;li>Want to learn more about &lt;code>llama.cpp&lt;/code> (which LM Studio uses as a back-end), and LLMs in general&lt;/li>
+&lt;li>Want to use LLMs for commercial purposes (&lt;a href="https://lmstudio.ai/terms">LM Studio&amp;rsquo;s terms&lt;/a> forbid that)&lt;/li>
+&lt;li>Want to run LLMs on exotic hardware (LM Studio provides only the most popular backends)&lt;/li>
+&lt;li>Don&amp;rsquo;t like closed-source software (which LM Studio, unfortunately, is) and/or don&amp;rsquo;t trust anything you don&amp;rsquo;t build yourself&lt;/li>
+&lt;li>Want to have access to latest features and models as soon as possible&lt;/li>
+&lt;/ul>
+&lt;p>you should find the rest of this post pretty useful!&lt;/p>
+&lt;h2 id="but-first---some-disclaimers-for-expectation-management">but first - some disclaimers for expectation management&lt;/h2>
+&lt;p>Before i proceed, i want to make some stuff clear.
+This &amp;ldquo;FAQ&amp;rdquo; answers some questions i&amp;rsquo;d like to know answers to before getting into self-hosted LLMs.&lt;/p>
+&lt;h3 id="do-i-need-rtx-2070-superrx-7900-xt-ot-similar-midhigh-end-gpu-to-do-what-you-did-here">Do I need RTX 2070 Super/RX 7900 XT ot similar mid/high-end GPU to do what you did here?&lt;/h3>
+&lt;p>No, you don&amp;rsquo;t.
+I&amp;rsquo;ll elaborate later, but you can run LLMs with no GPU at all.
+As long as you have reasonably modern hardware (by that i mean &lt;em>at least&lt;/em> a decent CPU with AVX support) - you&amp;rsquo;re &lt;em>compatible&lt;/em>.
+&lt;strong>But remember - your performance may vary.&lt;/strong>&lt;/p>
+&lt;h3 id="what-performance-can-i-expect">What performance can I expect?&lt;/h3>
+&lt;p>This is a very hard question to answer directly.
+The speed of text generation depends on multiple factors, but primarily&lt;/p>
+&lt;ul>
+&lt;li>matrix operations performance on your hardware&lt;/li>
+&lt;li>memory bandwidth&lt;/li>
+&lt;li>model size&lt;/li>
+&lt;/ul>
+&lt;p>I&amp;rsquo;ll explain this with more details later, but you can generally get reasonable performance from the LLM by picking model small enough for your hardware.
+If you intend to use GPU, and it has enough memory for a model with it&amp;rsquo;s context - expect real-time text generation.
+In case you want to use both GPU and CPU, or only CPU - you should expect much lower performance, but real-time text generation is possible with small models.&lt;/p>
+&lt;h3 id="what-quality-of-responses-can-i-expect">What quality of responses can I expect?&lt;/h3>
+&lt;p>That heavily depends on your usage and chosen model.
+I can&amp;rsquo;t answer that question directly, you&amp;rsquo;ll have to play around and find out yourself.
+A rule of thumb is &amp;ldquo;larger the model, better the response&amp;rdquo; - consider the fact that size of SOTA (state-of-the-art) models, like GPT-4 or Claude, is usually measured in hundreds of billions of parameters.
+Unless you have multiple GPUs or unreasonable amount of RAM and patience - you&amp;rsquo;ll most likely be restricted to models with less than 20 billion parameters.
+From my experience, 7-8B models are pretty good for generic purposes and programming - and they are not &lt;em>very&lt;/em> far from SOTA models like GPT-4o or Claude in terms of raw quality of generated responses, but the difference is definitely noticeable.
+Keep in mind that the choice of a model is only a part of the problem - providing proper context and system prompt, or fine-tuning LLMs can do wonders.&lt;/p>
+&lt;h3 id="can-i-replace-chatgptclaudeinsert-online-llm-provider-with-that">Can i replace ChatGPT/Claude/[insert online LLM provider] with that?&lt;/h3>
+&lt;p>Maybe. In theory - yes, but in practice - it depends on your tools.
+&lt;code>llama.cpp&lt;/code> provides OpenAI-compatible server.
+As long as your tools communicate with LLMs via OpenAI API, and you are able to set custom endpoint, you will be able to use self-hosted LLM with them.&lt;/p>
+&lt;h2 id="prerequisites">prerequisites&lt;/h2>
+&lt;ul>
+&lt;li>Reasonably modern CPU.
+If you&amp;rsquo;re rocking any Ryzen, or Intel&amp;rsquo;s 8th gen or newer, you&amp;rsquo;re good to go, but all of this should work on older hardware too.&lt;/li>
+&lt;li>Optimally, a GPU.
+More VRAM, the better.
+If you have at least 8GB of VRAM, you should be able to run 7-8B models, i&amp;rsquo;d say that it&amp;rsquo;s reasonable minimum.
+Vendor doesn&amp;rsquo;t matter, llama.cpp supports NVidia, AMD and Apple GPUs (not sure about Intel, but i think i saw a backend for that - if not, Vulkan should work).&lt;/li>
+&lt;li>If you&amp;rsquo;re not using GPU or it doesn&amp;rsquo;t have enough VRAM, you need RAM for the model.
+As above, at least 8GB of free RAM is recommended, but more is better.
+Keep in mind that when only GPU is used by llama.cpp, RAM usage is very low.&lt;/li>
+&lt;/ul>
+&lt;p>In the guide, i&amp;rsquo;ll assume you&amp;rsquo;re using either Windows or Linux.
+I can&amp;rsquo;t provide any support for Mac users, so they should follow Linux steps and consult the llama.cpp docs wherever possible.&lt;/p>
+&lt;p>Some context-specific formatting is used in this post:&lt;/p>
+&lt;blockquote>
+&lt;p class="windows-bg">Parts of this post where i&amp;rsquo;ll write about Windows-specific stuff will have this background.
+You&amp;rsquo;ll notice they&amp;rsquo;re much longer than Linux ones - Windows is a PITA.
+Linux is preferred. I will still explain everything step-by-step for Windows, but in case of issues - try Linux.&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p class="linux-bg">And parts where i&amp;rsquo;ll write about Linux-specific stuff will have this background.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="building-the-llama">building the llama&lt;/h2>
+&lt;p>In &lt;a href="https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md">&lt;code>docs/build.md&lt;/code>&lt;/a>, you&amp;rsquo;ll find detailed build instructions for all the supported platforms.
+By default, &lt;code>llama.cpp&lt;/code> builds with auto-detected CPU support.
+We&amp;rsquo;ll talk about enabling GPU support later, first - let&amp;rsquo;s try building it as-is, because it&amp;rsquo;s a good baseline to start with, and it doesn&amp;rsquo;t require any external dependencies.
+To do that, we only need a C++ toolchain, &lt;a href="https://cmake.org/">CMake&lt;/a> and &lt;a href="https://ninja-build.org/">Ninja&lt;/a>.&lt;/p>
+&lt;blockquote>
+&lt;p>If you are &lt;strong>very&lt;/strong> lazy, you can download a release from Github and skip building steps.
+Make sure to download correct version for your hardware/backend.
+If you have troubles picking, i recommend following the build guide anyway - it&amp;rsquo;s simple enough and should explain what you should be looking for.
+Keep in mind that release won&amp;rsquo;t contain Python scripts that we&amp;rsquo;re going to use, so if you&amp;rsquo;ll want to quantize models manually, you&amp;rsquo;ll need to get them from repository.&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>On Windows, i recommend using &lt;a href="https://www.msys2.org/">MSYS&lt;/a> to setup the environment for building and using &lt;code>llama.cpp&lt;/code>.
+&lt;a href="https://visualstudio.microsoft.com/downloads/">Microsoft Visual C++&lt;/a> is supported too, but trust me on that - you&amp;rsquo;ll want to use MSYS instead (it&amp;rsquo;s still a bit of pain in the ass, Linux setup is much simpler).
+Follow the guide on the main page to install MinGW for x64 UCRT environment, which you probably should be using.
+CMake, Ninja and Git can be installed in UCRT MSYS environment like that:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>pacman -S git mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>However, if you&amp;rsquo;re using any other toolchain (MSVC, or non-MSYS one), you should install CMake, Git and Ninja via &lt;code>winget&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>winget install cmake git.git ninja-build.ninja
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>You&amp;rsquo;ll also need Python, which you can get via winget.
+Get the latest available version, at the time of writing this post it&amp;rsquo;s 3.13.&lt;/p>
+&lt;p>&lt;strong>DO NOT USE PYTHON FROM MSYS, IT WILL NOT WORK PROPERLY DUE TO ISSUES WITH BUILDING &lt;code>llama.cpp&lt;/code> DEPENDENCY PACKAGES!&lt;/strong>
+&lt;strong>We&amp;rsquo;re going to be using MSYS only for &lt;em>building&lt;/em> &lt;code>llama.cpp&lt;/code>, nothing more.&lt;/strong>&lt;/p>
+&lt;p>&lt;strong>If you&amp;rsquo;re using MSYS, remember to add it&amp;rsquo;s &lt;code>/bin&lt;/code> (&lt;code>C:\msys64\ucrt64\bin&lt;/code> by default) directory to PATH, so Python can use MinGW for building packages.&lt;/strong>
+&lt;strong>Check if GCC is available by opening PowerShell/Command line and trying to run &lt;code>gcc --version&lt;/code>.&lt;/strong>
+Also; check if it&amp;rsquo;s &lt;em>correct&lt;/em> GCC by running &lt;code>where.exe gcc.exe&lt;/code> and seeing where the first entry points to.
+Reorder your PATH if you&amp;rsquo;ll notice that you&amp;rsquo;re using wrong GCC.&lt;/p>
+&lt;p>&lt;strong>If you&amp;rsquo;re using MSVC - ignore this disclaimer, it should be &amp;ldquo;detectable&amp;rdquo; by default.&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>winget install python.python.3.13
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>I recommend installing/upgrading &lt;code>pip&lt;/code>, &lt;code>setuptools&lt;/code> and &lt;code>wheel&lt;/code> packages before continuing.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>python -m pip install --upgrade pip wheel setuptools
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/blockquote>
+&lt;blockquote>
+&lt;p class="linux-bg">On Linux, GCC is recommended, but you should be able to use Clang if you&amp;rsquo;d prefer by setting &lt;code>CMAKE_C_COMPILER=clang&lt;/code> and &lt;code>CMAKE_CXX_COMPILER=clang++&lt;/code> variables.
+You should have GCC preinstalled (check &lt;code>gcc --version&lt;/code> in terminal), if not - get latest version for your distribution using your package manager.
+Same applies to CMake, Ninja, Python 3 (with &lt;code>setuptools&lt;/code>, &lt;code>wheel&lt;/code> and &lt;code>pip&lt;/code>) and Git.&lt;/p>
+&lt;/blockquote>
+&lt;p>Let&amp;rsquo;s start by grabbing a copy of &lt;a href="https://github.com/ggerganov/llama.cpp">&lt;code>llama.cpp&lt;/code> source code&lt;/a>, and moving into it.&lt;/p>
+&lt;blockquote>
+&lt;p>Disclaimer: this guide assumes all commands are ran from user&amp;rsquo;s home directory (&lt;code>/home/[yourusername]&lt;/code> on Linux, &lt;code>C:/Users/[yourusername]&lt;/code> on Windows).
+You can use any directory you&amp;rsquo;d like, just keep in mind that if &amp;ldquo;starting directory&amp;rdquo; is not explicitly mentioned, start from home dir/your chosen one.&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p class="windows-bg">&lt;strong>If you&amp;rsquo;re using MSYS&lt;/strong>, remember that MSYS home directory is different from Windows home directory. Make sure to use &lt;code>cd&lt;/code> (without arguments) to move into it after starting MSYS.&lt;/p>
+&lt;/blockquote>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>git clone git@github.com:ggerganov/llama.cpp.git
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd llama.cpp
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git submodule update --init --recursive
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Now we&amp;rsquo;ll use CMake to generate build files, build the project, and install it.
+Run the following command to generate build files in &lt;code>build/&lt;/code> subdirectory:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE&lt;span style="color:#f92672">=&lt;/span>Release -DCMAKE_INSTALL_PREFIX&lt;span style="color:#f92672">=&lt;/span>/your/install/dir -DLLAMA_BUILD_TESTS&lt;span style="color:#f92672">=&lt;/span>OFF -DLLAMA_BUILD_EXAMPLES&lt;span style="color:#f92672">=&lt;/span>ON -DLLAMA_BUILD_SERVER&lt;span style="color:#f92672">=&lt;/span>ON
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>There&amp;rsquo;s a lot of CMake variables being defined, which we could ignore and let llama.cpp use it&amp;rsquo;s defaults, but we won&amp;rsquo;t:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>CMAKE_BUILD_TYPE&lt;/code> is set to release for obvious reasons - we want maximum performance.&lt;/li>
+&lt;li>&lt;a href="https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html">&lt;code>CMAKE_INSTALL_PREFIX&lt;/code>&lt;/a> is where the &lt;code>llama.cpp&lt;/code> binaries and python scripts will go. Replace the value of this variable, or remove it&amp;rsquo;s definition to keep default value.
+&lt;ul>
+&lt;li>On Windows, default directory is &lt;code>c:/Program Files/llama.cpp&lt;/code>.
+As above, you&amp;rsquo;ll need admin privileges to install it, and you&amp;rsquo;ll have to add the &lt;code>bin/&lt;/code> subdirectory to your &lt;code>PATH&lt;/code> to make llama.cpp binaries accessible system-wide.
+I prefer installing llama.cpp in &lt;code>$env:LOCALAPPDATA/llama.cpp&lt;/code> (&lt;code>C:/Users/[yourusername]/AppData/Local/llama.cpp&lt;/code>), as it doesn&amp;rsquo;t require admin privileges.&lt;/li>
+&lt;li>On Linux, default directory is &lt;code>/usr/local&lt;/code>.
+You can ignore this variable if that&amp;rsquo;s fine with you, but you&amp;rsquo;ll need superuser permissions to install the binaries there.
+If you don&amp;rsquo;t have them, change it to point somewhere in your user directory and add it&amp;rsquo;s &lt;code>bin/&lt;/code> subdirectory to &lt;code>PATH&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;code>LLAMA_BUILD_TESTS&lt;/code> is set to &lt;code>OFF&lt;/code> because we don&amp;rsquo;t need tests, it&amp;rsquo;ll make the build a bit quicker.&lt;/li>
+&lt;li>&lt;code>LLAMA_BUILD_EXAMPLES&lt;/code> is &lt;code>ON&lt;/code> because we&amp;rsquo;re gonna be using them.&lt;/li>
+&lt;li>&lt;code>LLAMA_BUILD_SERVER&lt;/code> - see above. Note: Disabling &lt;code>LLAMA_BUILD_EXAMPLES&lt;/code> unconditionally disables building the server, both must be &lt;code>ON&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;p>Now, let&amp;rsquo;s build the project.
+Replace &lt;code>X&lt;/code> with amount of cores your CPU has for faster compilation.
+In theory, Ninja should automatically use all available cores, but i still prefer passing this argument manually.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>cmake --build build --config Release -j X
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Building should take only a few minutes.
+After that, we can install the binaries for easier usage.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>cmake --install build --config Release
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Now, after going to &lt;code>CMAKE_INSTALL_PREFIX/bin&lt;/code> directory, we should see a list of executables and Python scripts:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>/c/Users/phoen/llama-build/bin
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>❯ l
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Mode Size Date Modified Name
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 203k 7 Nov 16:14 convert_hf_to_gguf.py
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-batched-bench.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-batched.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.4M 7 Nov 16:18 llama-bench.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-cli.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.2M 7 Nov 16:18 llama-convert-llama2c-to-ggml.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-cvector-generator.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-embedding.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-eval-callback.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-export-lora.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.0M 7 Nov 16:18 llama-gbnf-validator.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 1.2M 7 Nov 16:18 llama-gguf-hash.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.0M 7 Nov 16:18 llama-gguf-split.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 1.1M 7 Nov 16:18 llama-gguf.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-gritlm.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-imatrix.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-infill.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 4.2M 7 Nov 16:18 llama-llava-cli.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-lookahead.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-lookup-create.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 1.2M 7 Nov 16:18 llama-lookup-merge.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-lookup-stats.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-lookup.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 4.1M 7 Nov 16:18 llama-minicpmv-cli.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-parallel.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-passkey.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 4.0M 7 Nov 16:18 llama-perplexity.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.0M 7 Nov 16:18 llama-quantize-stats.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.2M 7 Nov 16:18 llama-quantize.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-retrieval.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-save-load-state.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 5.0M 7 Nov 16:19 llama-server.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.0M 7 Nov 16:18 llama-simple-chat.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.0M 7 Nov 16:18 llama-simple.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9M 7 Nov 16:18 llama-speculative.exe
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.1M 7 Nov 16:18 llama-tokenize.exe
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Don&amp;rsquo;t feel overwhelmed by the amount, we&amp;rsquo;re only going to be using few of them.
+You should try running one of them to check if the executables have built correctly, for example - try &lt;code>llama-cli --help&lt;/code>.
+We can&amp;rsquo;t do anything meaningful yet, because we lack a single critical component - a model to run.&lt;/p>
+&lt;h2 id="getting-a-model">getting a model&lt;/h2>
+&lt;p>The main place to look for models is &lt;a href="https://huggingface.co/">HuggingFace&lt;/a>.
+You can also find datasets and other AI-related stuff there, great site.&lt;/p>
+&lt;p>We&amp;rsquo;re going to use &lt;a href="https://huggingface.co/collections/HuggingFaceTB/smollm2-6723884218bcda64b34d7db9">&lt;code>SmolLM2&lt;/code>&lt;/a> here, a model series created by HuggingFace and published fairly recently (1st November 2024).
+The reason i&amp;rsquo;ve chosen this model is the size - as the name implies, it&amp;rsquo;s &lt;em>small&lt;/em>.
+Largest model from this series has 1.7 billion parameters, which means that it requires approx. 4GB of system memory to run in &lt;em>raw, unquantized&lt;/em> form (excluding context)!
+There are also 360M and 135M variants, which are even smaller and should be easily runnable on RaspberryPi or a smartphone.&lt;/p>
+&lt;p>There&amp;rsquo;s but one issue - &lt;code>llama.cpp&lt;/code> cannot run &amp;ldquo;raw&amp;rdquo; models directly.
+What is usually provided by most LLM creators are original weights in &lt;code>.safetensors&lt;/code> or similar format.
+&lt;code>llama.cpp&lt;/code> expects models in &lt;code>.gguf&lt;/code> format.
+Fortunately, there is a very simple way of converting original model weights into &lt;code>.gguf&lt;/code> - &lt;code>llama.cpp&lt;/code> provides &lt;code>convert_hf_to_gguf.py&lt;/code> script exactly for this purpose!
+Sometimes the creator provides &lt;code>.gguf&lt;/code> files - for example, two variants of &lt;code>SmolLM2&lt;/code> are provided by HuggingFace in this format.
+This is not a very common practice, but you can also find models in &lt;code>.gguf&lt;/code> format uploaded there by community.
+However, i&amp;rsquo;ll ignore the existence of pre-quantized &lt;code>.gguf&lt;/code> files here, and focus on quantizing our models by ourselves here, as it&amp;rsquo;ll allow us to experiment and adjust the quantization parameters of our model without having to download it multiple times.&lt;/p>
+&lt;p>Grab the content of &lt;a href="https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct/tree/main">SmolLM2 1.7B Instruct&lt;/a> repository (you can use &lt;a href="https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/tree/main">360M Instruct&lt;/a> or &lt;a href="https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/tree/main">135M Instruct&lt;/a> version instead, if you have less than 4GB of free (V)RAM - or use any other model you&amp;rsquo;re already familiar with, if it supports &lt;code>transformers&lt;/code>), but omit the LFS files - we only need a single one, and we&amp;rsquo;ll download it manually.&lt;/p>
+&lt;blockquote>
+&lt;p>Why &lt;em>Instruct&lt;/em>, specifically?
+You might have noticed that there are two variants of all those models - &lt;em>Instruct&lt;/em> and &lt;em>the other one without a suffix&lt;/em>.
+&lt;em>Instruct&lt;/em> is trained for chat conversations, base model is only trained for text completion and is usually used as a base for further training.
+This rule applies to most LLMs, but not all, so make sure to read the model&amp;rsquo;s description before using it!&lt;/p>
+&lt;/blockquote>
+&lt;p class="linux-bg-padded">If you&amp;rsquo;re using Bash/ZSH or compatible shell:&lt;/p>
+&lt;p class="windows-bg-padded">&lt;em>MSYS uses Bash by default, so it applies to it too.&lt;/em>
+&lt;em>From now on, assume that Linux commands work on MSYS too, unless i explicitly say otherwise.&lt;/em>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>GIT_LFS_SKIP_SMUDGE&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1&lt;/span> git clone https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg-padded">If you&amp;rsquo;re using PowerShell:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>$env:GIT_LFS_SKIP_SMUDGE&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git clone https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg-padded">If you&amp;rsquo;re using cmd.exe (VS Development Prompt, for example):&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>set GIT_LFS_SKIP_SMUDGE&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git clone https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>HuggingFace also supports Git over SSH. You can look up the &lt;code>git clone&lt;/code> command for every repo here:
+&lt;img alt="huggingface - where to find git clone button" src="https://steelph0enix.github.io/img/llama-cpp/clone-hf-button.png">&lt;/p>
+&lt;p>After cloning the repo, &lt;strong>download the &lt;code>model.safetensors&lt;/code> file from HuggingFace manually.&lt;/strong>
+The reason why we used &lt;code>GIT_LFS_SKIP_SMUDGE&lt;/code> is because there&amp;rsquo;s many other large model files hidden in repo, and we don&amp;rsquo;t need them.
+Also, downloading very large files manually is faster, because Git LFS sucks in that regard.&lt;/p>
+&lt;p>After downloading everything, our local copy of the SmolLM repo should look like this:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>PS D:\LLMs\repos\SmolLM2-1.7B-Instruct&amp;gt; l
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Mode Size Date Modified Name
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 806 2 Nov 15:16 all_results.json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 888 2 Nov 15:16 config.json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 602 2 Nov 15:16 eval_results.json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 139 2 Nov 15:16 generation_config.json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 515k 2 Nov 15:16 merges.txt
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.4G 2 Nov 15:34 model.safetensors
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>d---- - 2 Nov 15:16 onnx
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 11k 2 Nov 15:16 README.md
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>d---- - 2 Nov 15:16 runs
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 689 2 Nov 15:16 special_tokens_map.json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 2.2M 2 Nov 15:16 tokenizer.json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 3.9k 2 Nov 15:16 tokenizer_config.json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 240 2 Nov 15:16 train_results.json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 89k 2 Nov 15:16 trainer_state.json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 129 2 Nov 15:16 training_args.bin
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 801k 2 Nov 15:16 vocab.json
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>We&amp;rsquo;re gonna (indirectly) use only four of those files:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>config.json&lt;/code> contains configuration/metadata of our model&lt;/li>
+&lt;li>&lt;code>model.safetensors&lt;/code> contains model weights&lt;/li>
+&lt;li>&lt;code>tokenizer.json&lt;/code> contains tokenizer data (mapping of text tokens to their ID&amp;rsquo;s, and other stuff).
+Sometimes this data is stored in &lt;code>tokenizer.model&lt;/code> file instead.&lt;/li>
+&lt;li>&lt;code>tokenizer_config.json&lt;/code> contains tokenizer configuration (for example, special tokens and chat template)&lt;/li>
+&lt;/ul>
+&lt;p class="anti-plag">i&amp;rsquo;m leaving this sentence here as anti-plagiarism token.
+If you&amp;rsquo;re not currently reading this on my blog, which is @ steelph0enix.github.io, someone probably stolen that article without permission&lt;/p>
+&lt;h3 class="post-anti-plag" id="converting-huggingface-model-to-gguf">converting huggingface model to GGUF&lt;/h3>
+&lt;p>In order to convert this raw model to something that &lt;code>llama.cpp&lt;/code> will understand, we&amp;rsquo;ll use aforementioned &lt;code>convert_hf_to_gguf.py&lt;/code> script that comes with &lt;code>llama.cpp&lt;/code>.
+For all our Python needs, we&amp;rsquo;re gonna need a virtual environment.
+I recommend making it outside of &lt;code>llama.cpp&lt;/code> repo, for example - in your home directory.&lt;/p>
+&lt;p class="linux-bg-padded">To make one on Linux, run this command (tweak the path if you&amp;rsquo;d like):&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>python -m venv ~/llama-cpp-venv
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg-padded">If you&amp;rsquo;re using PowerShell, this is the equivalent:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>python -m venv $env:USERPROFILE/llama-cpp-venv
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg-padded">If you&amp;rsquo;re using cmd.exe, this is the equivalent:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-batch" data-lang="batch">&lt;span style="display:flex;">&lt;span>python -m venv %USERPROFILE%/llama-cpp-venv
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Then, we need to activate it.&lt;/p>
+&lt;p class="linux-bg-padded">On Linux:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>source ~/llama-cpp-venv/bin/activate
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg-padded">With PowerShell:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>. $env:USERPROFILE/llama-cpp-venv/Scripts/Activate.ps1
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg-padded">With cmd.exe:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cmd" data-lang="cmd">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">call&lt;/span> %USERPROFILE%/llama-cpp-venv/Scripts/activate.bat
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>After that, let&amp;rsquo;s make sure that our virtualenv has all the core packages up-to-date.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>python -m pip install --upgrade pip wheel setuptools
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Next, we need to install prerequisites for the llama.cpp scripts.
+Let&amp;rsquo;s look into &lt;code>requirements/&lt;/code> directory of our &lt;code>llama.cpp&lt;/code> repository.
+We should see something like this:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>❯ l llama.cpp/requirements
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Mode Size Date Modified Name
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 428 11 Nov 13:57 requirements-all.txt
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 34 11 Nov 13:57 requirements-compare-llama-bench.txt
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 111 11 Nov 13:57 requirements-convert_hf_to_gguf.txt
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 111 11 Nov 13:57 requirements-convert_hf_to_gguf_update.txt
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 99 11 Nov 13:57 requirements-convert_legacy_llama.txt
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 43 11 Nov 13:57 requirements-convert_llama_ggml_to_gguf.txt
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 96 11 Nov 13:57 requirements-convert_lora_to_gguf.txt
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 48 11 Nov 13:57 requirements-pydantic.txt
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>-a--- 13 11 Nov 13:57 requirements-test-tokenizer-random.txt
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>As we can see, there&amp;rsquo;s a file with deps for our script!
+To install dependencies from it, run this command:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>python -m pip install --upgrade -r llama.cpp/requirements/requirements-convert_hf_to_gguf.txt
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>If &lt;code>pip&lt;/code> failed during build, make sure you have working C/C++ toolchain in your &lt;code>PATH&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p class="windows-bg">If you&amp;rsquo;re using MSYS for that, don&amp;rsquo;t. Go back to PowerShell/cmd, install Python via winget and repeat the setup.
+As far as i&amp;rsquo;ve tested it, Python deps don&amp;rsquo;t detect the platform correctly on MSYS and try to use wrong build config.
+This is what i warned you about earlier.&lt;/p>
+&lt;/blockquote>
+&lt;p>Now we can use the script to create our GGUF model file.
+Start with printing the help and reading the options.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>python llama.cpp/convert_hf_to_gguf.py --help
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>If this command printed help, you can continue.
+Otherwise make sure that python&amp;rsquo;s virtualenv is active and dependencies are correctly installed, and try again.
+To convert our model we can simply pass the path to directory with model&amp;rsquo;s repository and, optionally, path to output file.
+We don&amp;rsquo;t need to tweak the quantization here, for maximum flexibility we&amp;rsquo;re going to create a floating-point GGUF file which we&amp;rsquo;ll then quantize down.
+That&amp;rsquo;s because &lt;code>llama-quantize&lt;/code> offers much more quantization options, and this script picks optimal floating-point format by default.&lt;/p>
+&lt;p>To create GGUF file from our downloaded HuggingFace repository with SmolLM2 (Replace &lt;code>SmolLM2-1.7B-Instruct&lt;/code> with your path, if it&amp;rsquo;s different) run this command:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>python llama.cpp/convert_hf_to_gguf.py SmolLM2-1.7B-Instruct --outfile ./SmolLM2.gguf
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>If everything went correctly, you should see similar output:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:Loading model: SmolLM2-1.7B-Instruct
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:gguf.gguf_writer:gguf: This GGUF file is for Little Endian only
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:Exporting model...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:gguf: loading model part &amp;#39;model.safetensors&amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:token_embd.weight, torch.bfloat16 --&amp;gt; F16, shape = {2048, 49152}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:blk.0.attn_norm.weight, torch.bfloat16 --&amp;gt; F32, shape = {2048}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:blk.9.attn_q.weight, torch.bfloat16 --&amp;gt; F16, shape = {2048, 2048}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:blk.9.attn_v.weight, torch.bfloat16 --&amp;gt; F16, shape = {2048, 2048}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:output_norm.weight, torch.bfloat16 --&amp;gt; F32, shape = {2048}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:Set meta model
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:Set model parameters
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:gguf: context length = 8192
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:gguf: embedding length = 2048
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:gguf: feed forward length = 8192
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:gguf: head count = 32
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:gguf: key-value head count = 32
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:gguf: rope theta = 130000
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:gguf: rms norm epsilon = 1e-05
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:gguf: file type = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:Set model tokenizer
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:gguf.vocab:Adding 48900 merge(s).
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:gguf.vocab:Setting special token type bos to 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:gguf.vocab:Setting special token type eos to 2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:gguf.vocab:Setting special token type unk to 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:gguf.vocab:Setting special token type pad to 2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:gguf.vocab:Setting chat_template to {% for message in messages %}{% if loop.first and messages[0][&amp;#39;role&amp;#39;] != &amp;#39;system&amp;#39; %}{{ &amp;#39;&amp;lt;|im_start|&amp;gt;system
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>You are a helpful AI assistant named SmolLM, trained by Hugging Face&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;#39; }}{% endif %}{{&amp;#39;&amp;lt;|im_start|&amp;gt;&amp;#39; + message[&amp;#39;role&amp;#39;] + &amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;#39; + message[&amp;#39;content&amp;#39;] + &amp;#39;&amp;lt;|im_end|&amp;gt;&amp;#39; + &amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;#39;}}{% endfor %}{% if add_generation_prompt %}{{ &amp;#39;&amp;lt;|im_start|&amp;gt;assistant
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;#39; }}{% endif %}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:Set model quantization version
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:gguf.gguf_writer:Writing the following files:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:gguf.gguf_writer:SmolLM2.gguf: n_tensors = 218, total_size = 3.4G
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Writing: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 3.42G/3.42G [00:15&amp;lt;00:00, 215Mbyte/s]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INFO:hf-to-gguf:Model successfully exported to SmolLM2.gguf
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="quantizing-the-model">quantizing the model&lt;/h3>
+&lt;p>Now we can finally quantize our model!
+To do that, we&amp;rsquo;ll use &lt;code>llama-quantize&lt;/code> executable that we previously compiled with other &lt;code>llama.cpp&lt;/code> executables.
+First, let&amp;rsquo;s check what quantizations we have available.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>llama-quantize --help
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>As of now, &lt;code>llama-quantize --help&lt;/code> shows following types:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>usage: llama-quantize [--help] [--allow-requantize] [--leave-output-tensor] [--pure] [--imatrix] [--include-weights] [--exclude-weights] [--output-tensor-type] [--token-embedding-type] [--override-kv] model-f32.gguf [model-quant.gguf] type [nthreads]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Allowed quantization types:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 2 or Q4_0 : 4.34G, +0.4685 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 3 or Q4_1 : 4.78G, +0.4511 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 8 or Q5_0 : 5.21G, +0.1316 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 9 or Q5_1 : 5.65G, +0.1062 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 19 or IQ2_XXS : 2.06 bpw quantization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 20 or IQ2_XS : 2.31 bpw quantization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 28 or IQ2_S : 2.5 bpw quantization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 29 or IQ2_M : 2.7 bpw quantization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 24 or IQ1_S : 1.56 bpw quantization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 31 or IQ1_M : 1.75 bpw quantization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 36 or TQ1_0 : 1.69 bpw ternarization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 37 or TQ2_0 : 2.06 bpw ternarization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 10 or Q2_K : 2.96G, +3.5199 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 21 or Q2_K_S : 2.96G, +3.1836 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 23 or IQ3_XXS : 3.06 bpw quantization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 26 or IQ3_S : 3.44 bpw quantization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 27 or IQ3_M : 3.66 bpw quantization mix
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 12 or Q3_K : alias for Q3_K_M
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 22 or IQ3_XS : 3.3 bpw quantization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 11 or Q3_K_S : 3.41G, +1.6321 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 12 or Q3_K_M : 3.74G, +0.6569 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 13 or Q3_K_L : 4.03G, +0.5562 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 25 or IQ4_NL : 4.50 bpw non-linear quantization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 30 or IQ4_XS : 4.25 bpw non-linear quantization
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 15 or Q4_K : alias for Q4_K_M
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 14 or Q4_K_S : 4.37G, +0.2689 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 15 or Q4_K_M : 4.58G, +0.1754 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 17 or Q5_K : alias for Q5_K_M
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 16 or Q5_K_S : 5.21G, +0.1049 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 17 or Q5_K_M : 5.33G, +0.0569 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 18 or Q6_K : 6.14G, +0.0217 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 7 or Q8_0 : 7.96G, +0.0026 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 33 or Q4_0_4_4 : 4.34G, +0.4685 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 34 or Q4_0_4_8 : 4.34G, +0.4685 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 35 or Q4_0_8_8 : 4.34G, +0.4685 ppl @ Llama-3-8B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 1 or F16 : 14.00G, +0.0020 ppl @ Mistral-7B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 32 or BF16 : 14.00G, -0.0050 ppl @ Mistral-7B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 0 or F32 : 26.00G @ 7B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> COPY : only copy tensors, no quantizing
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Let&amp;rsquo;s decode this table.
+From the left, we have IDs and names of quantization types - you can use either when calling &lt;code>llama-quantize&lt;/code>.
+After the &lt;code>:&lt;/code>, there&amp;rsquo;s a short description that in most cases shows either the example model&amp;rsquo;s size and perplexity, or the amount of bits per tensor weight (bpw) for that specific quantization.
+Perplexity is a metric that describes how certain the model is about it&amp;rsquo;s predictions.
+We can think about it like that: lower perplexity -&amp;gt; model is more certain about it&amp;rsquo;s predictions -&amp;gt; model is more accurate.
+This is a daily reminder that LLMs are nothing more than overcomplicated autocompletion algorithms.
+The &amp;ldquo;bits per weight&amp;rdquo; metric tells us the average size of quantized tensor&amp;rsquo;s weight.
+You may think it&amp;rsquo;s strange that those are floating-point values, but we&amp;rsquo;ll see the reason for that soon.&lt;/p>
+&lt;p>Now, the main question that needs to be answered is &amp;ldquo;which quantization do we pick?&amp;rdquo;.
+And the answer is &amp;ldquo;it depends&amp;rdquo;.
+My rule of thumb for picking quantization type is &amp;ldquo;the largest i can fit in my VRAM, unless it&amp;rsquo;s too slow for my taste&amp;rdquo; and i recommend this approach if you don&amp;rsquo;t know where to start!
+Obviously, if you don&amp;rsquo;t have/want to use GPU, replace &amp;ldquo;VRAM&amp;rdquo; with &amp;ldquo;RAM&amp;rdquo; and &amp;ldquo;largest i can fit&amp;rdquo; with &amp;ldquo;largest i can fit without forcing the OS to move everything to swap&amp;rdquo;.
+That creates another question - &amp;ldquo;what is the largest quant i can fit in my (V)RAM&amp;rdquo;?
+And this depends on the original model&amp;rsquo;s size and encoding, and - obviously - the amount of (V)RAM you have.
+Since we&amp;rsquo;re using SmolLM2, our model is relatively small.
+GGUF file of 1.7B-Instruct variant in BF16 format weights 3.4GB.
+Most models you&amp;rsquo;ll encounter will be encoded in either BF16 or FP16 format, rarely we can find FP32-encoded LLMs.
+That means most of models have 16 bits per weight by default.
+We can easily approximate the size of quantized model by multiplying the original size with approximate ratio of bits per weight.
+For example, let&amp;rsquo;s assume we want to know how large will SmolLM2 1.7B-Instruct be after Q8_0 quantization.
+Let&amp;rsquo;s assume Q8_0 quant uses 8 bits per word, which means the ratio is simply 1/2, so our model should weight ~1.7GB.
+Let&amp;rsquo;s check that!&lt;/p>
+&lt;p>The first argument is source model, second - target file.
+Third is the quantization type, and last is the amount of cores for parallel processing.
+Replace &lt;code>N&lt;/code> with amount of cores in your system and run this command:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>llama-quantize SmolLM2.gguf SmolLM2.q8.gguf Q8_0 N
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>You should see similar output:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>main: build = 4200 (46c69e0e)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: built with gcc (GCC) 14.2.1 20240910 for x86_64-pc-linux-gnu
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: quantizing &amp;#39;SmolLM2.gguf&amp;#39; to &amp;#39;SmolLM2.q8.gguf&amp;#39; as Q8_0 using 24 threads
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: loaded meta data with 37 key-value pairs and 218 tensors from SmolLM2.gguf (version GGUF V3 (latest))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 0: general.architecture str = llama
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 1: general.type str = model
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 2: general.name str = SmolLM2 1.7B Instruct
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 3: general.finetune str = Instruct
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 4: general.basename str = SmolLM2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 5: general.size_label str = 1.7B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 6: general.license str = apache-2.0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 7: general.base_model.count u32 = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 8: general.base_model.0.name str = SmolLM2 1.7B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 9: general.base_model.0.organization str = HuggingFaceTB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 10: general.base_model.0.repo_url str = https://huggingface.co/HuggingFaceTB/...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 11: general.tags arr[str,4] = [&amp;#34;safetensors&amp;#34;, &amp;#34;onnx&amp;#34;, &amp;#34;transformers...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 12: general.languages arr[str,1] = [&amp;#34;en&amp;#34;]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 13: llama.block_count u32 = 24
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 14: llama.context_length u32 = 8192
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 15: llama.embedding_length u32 = 2048
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 16: llama.feed_forward_length u32 = 8192
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 17: llama.attention.head_count u32 = 32
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 18: llama.attention.head_count_kv u32 = 32
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 19: llama.rope.freq_base f32 = 130000.000000
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 20: llama.attention.layer_norm_rms_epsilon f32 = 0.000010
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 21: general.file_type u32 = 32
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 22: llama.vocab_size u32 = 49152
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 23: llama.rope.dimension_count u32 = 64
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 24: tokenizer.ggml.model str = gpt2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 25: tokenizer.ggml.pre str = smollm
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 26: tokenizer.ggml.tokens arr[str,49152] = [&amp;#34;&amp;lt;|endoftext|&amp;gt;&amp;#34;, &amp;#34;&amp;lt;|im_start|&amp;gt;&amp;#34;, &amp;#34;&amp;lt;|...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 27: tokenizer.ggml.token_type arr[i32,49152] = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 28: tokenizer.ggml.merges arr[str,48900] = [&amp;#34;Ġ t&amp;#34;, &amp;#34;Ġ a&amp;#34;, &amp;#34;i n&amp;#34;, &amp;#34;h e&amp;#34;, &amp;#34;Ġ Ġ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 29: tokenizer.ggml.bos_token_id u32 = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 30: tokenizer.ggml.eos_token_id u32 = 2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 31: tokenizer.ggml.unknown_token_id u32 = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 32: tokenizer.ggml.padding_token_id u32 = 2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 33: tokenizer.chat_template str = {% for message in messages %}{% if lo...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 34: tokenizer.ggml.add_space_prefix bool = false
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 35: tokenizer.ggml.add_bos_token bool = false
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 36: general.quantization_version u32 = 2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - type f32: 49 tensors
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - type bf16: 169 tensors
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ggml_vulkan: Found 1 Vulkan devices:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ggml_vulkan: 0 = AMD Radeon RX 7900 XT (AMD open-source driver) | uma: 0 | fp16: 1 | warp size: 64
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 1/ 218] output_norm.weight - [ 2048, 1, 1, 1], type = f32, size = 0.008 MB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 2/ 218] token_embd.weight - [ 2048, 49152, 1, 1], type = bf16, converting to q8_0 .. size = 192.00 MiB -&amp;gt; 102.00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 3/ 218] blk.0.attn_k.weight - [ 2048, 2048, 1, 1], type = bf16, converting to q8_0 .. size = 8.00 MiB -&amp;gt; 4.25 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 4/ 218] blk.0.attn_norm.weight - [ 2048, 1, 1, 1], type = f32, size = 0.008 MB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 5/ 218] blk.0.attn_output.weight - [ 2048, 2048, 1, 1], type = bf16, converting to q8_0 .. size = 8.00 MiB -&amp;gt; 4.25 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 6/ 218] blk.0.attn_q.weight - [ 2048, 2048, 1, 1], type = bf16, converting to q8_0 .. size = 8.00 MiB -&amp;gt; 4.25 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 7/ 218] blk.0.attn_v.weight - [ 2048, 2048, 1, 1], type = bf16, converting to q8_0 .. size = 8.00 MiB -&amp;gt; 4.25 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 212/ 218] blk.23.attn_output.weight - [ 2048, 2048, 1, 1], type = bf16, converting to q8_0 .. size = 8.00 MiB -&amp;gt; 4.25 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 213/ 218] blk.23.attn_q.weight - [ 2048, 2048, 1, 1], type = bf16, converting to q8_0 .. size = 8.00 MiB -&amp;gt; 4.25 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 214/ 218] blk.23.attn_v.weight - [ 2048, 2048, 1, 1], type = bf16, converting to q8_0 .. size = 8.00 MiB -&amp;gt; 4.25 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 215/ 218] blk.23.ffn_down.weight - [ 8192, 2048, 1, 1], type = bf16, converting to q8_0 .. size = 32.00 MiB -&amp;gt; 17.00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 216/ 218] blk.23.ffn_gate.weight - [ 2048, 8192, 1, 1], type = bf16, converting to q8_0 .. size = 32.00 MiB -&amp;gt; 17.00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 217/ 218] blk.23.ffn_norm.weight - [ 2048, 1, 1, 1], type = f32, size = 0.008 MB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>[ 218/ 218] blk.23.ffn_up.weight - [ 2048, 8192, 1, 1], type = bf16, converting to q8_0 .. size = 32.00 MiB -&amp;gt; 17.00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_quantize_internal: model size = 3264.38 MB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_quantize_internal: quant size = 1734.38 MB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: quantize time = 2289.97 ms
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: total time = 2289.97 ms
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And yeah, we were more-or-less correct, it&amp;rsquo;s 1.7GB!
+&lt;strong>BUT&lt;/strong> this is only the model&amp;rsquo;s size, we also have to consider the memory requirements for the context.
+Fortunately, context doesn&amp;rsquo;t require massive amounts of memory - i&amp;rsquo;m not really sure how much exactly it eats up, but it&amp;rsquo;s safe to assume that we should have at least 1GB memory for it.
+So, taking all that in account, we can approximate that to load this model to memory with the context, we need at least 3GB of free (V)RAM.
+This is not so bad, and most modern consumer GPUs have at least this amount (even the old GTX 1060 3GB should be able to run this model in Q8_0 quant).
+However, if that&amp;rsquo;s still too much, we can easily go lower!
+Reducing the amount of bits per weight via quantization not only reduces the model&amp;rsquo;s size, but also increases the speed of data generation.
+Unfortunately, it also makes the model more stupid.
+The change is gradual, you may not notice it when going from Q8_0 to Q6_K, but going below Q4 quant can be noticeable.
+I strongly recommend experimenting on your own with different models and quantization types, because your experience may be different from mine!&lt;/p>
+&lt;blockquote>
+&lt;p>Oh, by the way - remember that right now our &lt;code>llama.cpp&lt;/code> build will use CPU for calculations, so the model will reside in RAM.
+Make sure you have at least 3GB of free RAM before trying to use the model, if you don&amp;rsquo;t - quantize it with smaller quant, or get a smaller version.&lt;/p>
+&lt;/blockquote>
+&lt;p>Anyway, we got our quantized model now, we can &lt;strong>finally&lt;/strong> use it!&lt;/p>
+&lt;h2 id="running-llamacpp-server">running llama.cpp server&lt;/h2>
+&lt;p>If going through the first part of this post felt like pain and suffering, don&amp;rsquo;t worry - i felt the same writing it.
+That&amp;rsquo;s why it took a month to write.
+But, at long last we can do something fun.&lt;/p>
+&lt;p>Let&amp;rsquo;s start, as usual, with printing the help to make sure our binary is working fine:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>llama-server --help
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>You should see a lot of options.
+Some of them will be explained here in a bit, some of them you&amp;rsquo;ll have to research yourself.
+For now, the only options that are interesting to us are:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>-m, --model FNAME model path (default: `models/$filename` with filename from `--hf-file`
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> or `--model-url` if set, otherwise models/7B/ggml-model-f16.gguf)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (env: LLAMA_ARG_MODEL)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>--host HOST ip address to listen (default: 127.0.0.1)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (env: LLAMA_ARG_HOST)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>--port PORT port to listen (default: 8080)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (env: LLAMA_ARG_PORT)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Run &lt;code>llama-server&lt;/code> with model&amp;rsquo;s path set to quantized SmolLM2 GGUF file.
+If you don&amp;rsquo;t have anything running on &lt;code>127.0.0.1:8080&lt;/code>, you can leave the host and port on defaults.
+Notice that you can also use environmental variables instead of arguments, so you can setup your env and just call &lt;code>llama-server&lt;/code>.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>llama-server -m SmolLM2.q8.gguf
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>You should see similar output after running this command:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>build: 4182 (ab96610b) with cc (GCC) 14.2.1 20240910 for x86_64-pc-linux-gnu
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>system info: n_threads = 12, n_threads_batch = 12, total_threads = 24
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>system_info: n_threads = 12 (n_threads_batch = 12) / 24 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | LLAMAFILE = 1 | AARCH64_REPACK = 1 |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: HTTP server is listening, hostname: 127.0.0.1, port: 8080, http threads: 23
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: loading model
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>srv load_model: loading model &amp;#39;SmolLM2.q8.gguf&amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: loaded meta data with 37 key-value pairs and 218 tensors from SmolLM2.q8.gguf (version GGUF V3 (latest))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 0: general.architecture str = llama
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 1: general.type str = model
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 2: general.name str = SmolLM2 1.7B Instruct
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 3: general.finetune str = Instruct
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 4: general.basename str = SmolLM2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 5: general.size_label str = 1.7B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 6: general.license str = apache-2.0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 7: general.base_model.count u32 = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 8: general.base_model.0.name str = SmolLM2 1.7B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 9: general.base_model.0.organization str = HuggingFaceTB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 10: general.base_model.0.repo_url str = https://huggingface.co/HuggingFaceTB/...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 11: general.tags arr[str,4] = [&amp;#34;safetensors&amp;#34;, &amp;#34;onnx&amp;#34;, &amp;#34;transformers...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 12: general.languages arr[str,1] = [&amp;#34;en&amp;#34;]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 13: llama.block_count u32 = 24
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 14: llama.context_length u32 = 8192
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 15: llama.embedding_length u32 = 2048
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 16: llama.feed_forward_length u32 = 8192
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 17: llama.attention.head_count u32 = 32
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 18: llama.attention.head_count_kv u32 = 32
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 19: llama.rope.freq_base f32 = 130000.000000
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 20: llama.attention.layer_norm_rms_epsilon f32 = 0.000010
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 21: general.file_type u32 = 7
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 22: llama.vocab_size u32 = 49152
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 23: llama.rope.dimension_count u32 = 64
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 24: tokenizer.ggml.model str = gpt2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 25: tokenizer.ggml.pre str = smollm
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 26: tokenizer.ggml.tokens arr[str,49152] = [&amp;#34;&amp;lt;|endoftext|&amp;gt;&amp;#34;, &amp;#34;&amp;lt;|im_start|&amp;gt;&amp;#34;, &amp;#34;&amp;lt;|...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 27: tokenizer.ggml.token_type arr[i32,49152] = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 28: tokenizer.ggml.merges arr[str,48900] = [&amp;#34;Ġ t&amp;#34;, &amp;#34;Ġ a&amp;#34;, &amp;#34;i n&amp;#34;, &amp;#34;h e&amp;#34;, &amp;#34;Ġ Ġ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 29: tokenizer.ggml.bos_token_id u32 = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 30: tokenizer.ggml.eos_token_id u32 = 2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 31: tokenizer.ggml.unknown_token_id u32 = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 32: tokenizer.ggml.padding_token_id u32 = 2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 33: tokenizer.chat_template str = {% for message in messages %}{% if lo...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 34: tokenizer.ggml.add_space_prefix bool = false
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 35: tokenizer.ggml.add_bos_token bool = false
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - kv 36: general.quantization_version u32 = 2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - type f32: 49 tensors
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: - type q8_0: 169 tensors
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_vocab: special tokens cache size = 17
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_vocab: token to piece cache size = 0.3170 MB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: format = GGUF V3 (latest)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: arch = llama
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: vocab type = BPE
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_vocab = 49152
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_merges = 48900
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: vocab_only = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_ctx_train = 8192
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_embd = 2048
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_layer = 24
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_head = 32
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_head_kv = 32
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_rot = 64
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_swa = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_embd_head_k = 64
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_embd_head_v = 64
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_gqa = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_embd_k_gqa = 2048
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_embd_v_gqa = 2048
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: f_norm_eps = 0.0e+00
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: f_norm_rms_eps = 1.0e-05
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: f_clamp_kqv = 0.0e+00
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: f_max_alibi_bias = 0.0e+00
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: f_logit_scale = 0.0e+00
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_ff = 8192
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_expert = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_expert_used = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: causal attn = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: pooling type = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: rope type = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: rope scaling = linear
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: freq_base_train = 130000.0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: freq_scale_train = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: n_ctx_orig_yarn = 8192
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: rope_finetuned = unknown
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: ssm_d_conv = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: ssm_d_inner = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: ssm_d_state = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: ssm_dt_rank = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: ssm_dt_b_c_rms = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: model type = ?B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: model ftype = Q8_0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: model params = 1.71 B
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: model size = 1.69 GiB (8.50 BPW)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: general.name = SmolLM2 1.7B Instruct
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: BOS token = 1 &amp;#39;&amp;lt;|im_start|&amp;gt;&amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: EOS token = 2 &amp;#39;&amp;lt;|im_end|&amp;gt;&amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: EOT token = 0 &amp;#39;&amp;lt;|endoftext|&amp;gt;&amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: UNK token = 0 &amp;#39;&amp;lt;|endoftext|&amp;gt;&amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: PAD token = 2 &amp;#39;&amp;lt;|im_end|&amp;gt;&amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: LF token = 143 &amp;#39;Ä&amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: EOG token = 0 &amp;#39;&amp;lt;|endoftext|&amp;gt;&amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: EOG token = 2 &amp;#39;&amp;lt;|im_end|&amp;gt;&amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_print_meta: max token length = 162
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_tensors: CPU_Mapped model buffer size = 1734.38 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>................................................................................................
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_seq_max = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ctx = 4096
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ctx_per_seq = 4096
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_batch = 2048
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ubatch = 512
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: flash_attn = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: freq_base = 130000.0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: freq_scale = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ctx_per_seq (4096) &amp;lt; n_ctx_train (8192) -- the full capacity of the model will not be utilized
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_kv_cache_init: CPU KV buffer size = 768.00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: KV self size = 768.00 MiB, K (f16): 384.00 MiB, V (f16): 384.00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: CPU output buffer size = 0.19 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: CPU compute buffer size = 280.01 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: graph nodes = 774
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: graph splits = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>srv init: initializing slots, n_slots = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>slot init: id 0 | task -1 | new slot n_ctx_slot = 4096
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: model loaded
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: chat template, built_in: 1, chat_example: &amp;#39;&amp;lt;|im_start|&amp;gt;system
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>You are a helpful assistant&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;user
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Hello&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;assistant
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Hi there&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;user
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>How are you?&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;assistant
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;#39;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: server is listening on http://127.0.0.1:8080 - starting the main loop
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>srv update_slots: all slots are idle
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And now we can access the web UI on &lt;code>http://127.0.0.1:8080&lt;/code> or whatever host/port combo you&amp;rsquo;ve set.&lt;/p>
+&lt;p>&lt;img alt="llama.cpp webui" src="https://steelph0enix.github.io/img/llama-cpp/llama-cpp-webui.png">&lt;/p>
+&lt;p>From this point, we can freely chat with the LLM using the web UI, or you can use the OpenAI-compatible API that &lt;code>llama-server&lt;/code> provides.
+I won&amp;rsquo;t dig into the API itself here, i&amp;rsquo;ve written &lt;a href="https://github.com/SteelPh0enix/unreasonable-llama">a Python library&lt;/a> for it if you&amp;rsquo;re interested in using it (i&amp;rsquo;m trying to keep it up-to-date with &lt;code>llama.cpp&lt;/code> master, but it might not be all the time).
+I recommend looking into the &lt;a href="https://github.com/ggerganov/llama.cpp/tree/master/examples/server">&lt;code>llama-server&lt;/code> source code and README&lt;/a> for more details about endpoints.&lt;/p>
+&lt;p>Let&amp;rsquo;s see what we can do with web UI.
+On the left, we have list of conversations.
+Those are stored in browser&amp;rsquo;s localStorage (as the disclaimer on the bottom-left graciously explains), which means they are persistent even if you restart the browser.
+Keep in mind that changing the host/port of the server will &amp;ldquo;clear&amp;rdquo; those.
+Current conversation is passed to the LLM as context, and the context size is limited by server settings (we will learn how to tweak it in a second).
+I recommend making new conversations often, and keeping their context focused on the subject for optimal performance.&lt;/p>
+&lt;p>On the top-right, we have (from left to right) &amp;ldquo;remove conversation&amp;rdquo;, &amp;ldquo;download conversation&amp;rdquo; (in JSON format), &amp;ldquo;configuration&amp;rdquo; and &amp;ldquo;Theme&amp;rdquo; buttons.
+In the configuration window, we can tweak generation settings for our LLM.
+&lt;strong>Those are currently global, not per-conversation.&lt;/strong>
+All of those settings are briefly described &lt;a href="https://steelph0enix.github.io/posts/llama-cpp-guide/#llm-configuration-options-explained">below&lt;/a>.&lt;/p>
+&lt;p>&lt;img alt="llama.cpp webui config" src="https://steelph0enix.github.io/img/llama-cpp/llama-cpp-webui-config.png">&lt;/p>
+&lt;h3 id="llamacpp-server-settings">llama.cpp server settings&lt;/h3>
+&lt;p>Web UI provides only a small subset of configuration options we have available, and only those related to LLM samplers.
+For the full set, we need to call &lt;code>llama-server --help&lt;/code>.
+With those options we can drastically improve (or worsen) the behavior of our model and performance of text generation, so it&amp;rsquo;s worth knowing them.
+I won&amp;rsquo;t explain &lt;em>all&lt;/em> of the options listed there, because it would be mostly redundant, but i&amp;rsquo;ll probably explain &lt;em>most&lt;/em> of them in one way of another here.
+I&amp;rsquo;ll try to explain all &lt;em>interesting&lt;/em> options though.&lt;/p>
+&lt;p>One thing that&amp;rsquo;s also worth mentioning is that most of those parameters are read from the environment.
+This is also the case for most other &lt;code>llama.cpp&lt;/code> executables, and the parameter names (and environment variables) are the same for them.
+Names of those variables are provided in &lt;code>llama-server --help&lt;/code> output, i&amp;rsquo;ll add them to each described option here.&lt;/p>
+&lt;p>Let&amp;rsquo;s start with &lt;code>common params&lt;/code> section:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>--threads&lt;/code>/&lt;code>--threads-batch&lt;/code> (&lt;code>LLAMA_ARG_THREADS&lt;/code>) - amount of CPU threads used by LLM.
+Default value is -1, which tells &lt;code>llama.cpp&lt;/code> to detect the amount of cores in the system.
+This behavior is probably good enough for most of people, so unless you have &lt;em>exotic&lt;/em> hardware setup and you know what you&amp;rsquo;re doing - leave it on default.
+If you &lt;em>do&lt;/em> have an exotic setup, you may also want to look at other NUMA and offloading-related flags.&lt;/li>
+&lt;li>&lt;code>--ctx-size&lt;/code> (&lt;code>LLAMA_ARG_CTX_SIZE&lt;/code>) - size of the prompt context.
+In other words, the amount of tokens that the LLM can remember at once.
+Increasing the context size also increases the memory requirements for the LLM.
+Every model has a context size limit, when this argument is set to &lt;code>0&lt;/code>, &lt;code>llama.cpp&lt;/code> tries to use it.&lt;/li>
+&lt;li>&lt;code>--predict&lt;/code> (&lt;code>LLAMA_ARG_N_PREDICT&lt;/code>) - number of tokens to predict.
+When LLM generates text, it stops either after generating end-of-message token (when it decides that the generated sentence is over), or after hitting this limit.
+Default is &lt;code>-1&lt;/code>, which makes the LLM generate text ad infinitum.
+If we want to limit it to context size, we can set it to &lt;code>-2&lt;/code>.&lt;/li>
+&lt;li>&lt;code>--batch-size&lt;/code>/&lt;code>--ubatch-size&lt;/code> (&lt;code>LLAMA_ARG_BATCH&lt;/code>/&lt;code>LLAMA_ARG_UBATCH&lt;/code>) - amount of tokens fed to the LLM in single processing step.
+Optimal value of those arguments depends on your hardware, model, and context size - i encourage experimentation, but defaults are probably good enough for start.&lt;/li>
+&lt;li>&lt;code>--flash-attn&lt;/code> (&lt;code>LLAMA_ARG_FLASH_ATTN&lt;/code>) - &lt;a href="https://www.hopsworks.ai/dictionary/flash-attention">Flash attention&lt;/a> is an optimization that&amp;rsquo;s supported by most recent models.
+Read the linked article for details, in short - enabling it should improve the generation performance for some models.
+&lt;code>llama.cpp&lt;/code> will simply throw a warning when a model that doesn&amp;rsquo;t support flash attention is loaded, so i keep it on at all times without any issues.&lt;/li>
+&lt;li>&lt;code>--mlock&lt;/code> (&lt;code>LLAMA_ARG_MLOCK&lt;/code>) - this option is called exactly like &lt;a href="https://man7.org/linux/man-pages/man2/mlock.2.html">Linux function&lt;/a> that it uses underneath.
+On Windows, it uses &lt;a href="https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtuallock">VirtualLock&lt;/a>.
+If you have enough virtual memory (RAM or VRAM) to load the whole model into, you can use this parameter to prevent OS from swapping it to the hard drive.
+Enabling it can increase the performance of text generation, but may slow everything else down in return if you hit the virtual memory limit of your machine.&lt;/li>
+&lt;li>&lt;code>--no-mmap&lt;/code> (&lt;code>LLAMA_ARG_NO_MMAP&lt;/code>) - by default, &lt;code>llama.cpp&lt;/code> will map the model to memory (using &lt;a href="https://man7.org/linux/man-pages/man2/mmap.2.html">&lt;code>mmap&lt;/code>&lt;/a> on Linux and &lt;a href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createfilemappinga">&lt;code>CreateFileMappingA&lt;/code>&lt;/a> on Windows).
+Using this switch will disable this behavior.&lt;/li>
+&lt;li>&lt;code>--gpu-layers&lt;/code> (&lt;code>LLAMA_ARG_N_GPU_LAYERS&lt;/code>) - if GPU offloading is available, this parameter will set the maximum amount of LLM layers to offload to GPU.
+Number and size of layers is dependent on the used model.
+Usually, if we want to load the whole model to GPU, we can set this parameter to some unreasonably large number like 999.
+For partial offloading, you must experiment yourself.
+&lt;code>llama.cpp&lt;/code> must be built with GPU support, otherwise this option will have no effect.
+If you have multiple GPUs, you may also want to look at &lt;code>--split-mode&lt;/code> and &lt;code>--main-gpu&lt;/code> arguments.&lt;/li>
+&lt;li>&lt;code>--model&lt;/code> (&lt;code>LLAMA_ARG_MODEL&lt;/code>) - path to the GGUF model file.&lt;/li>
+&lt;/ul>
+&lt;p>Most of the options from &lt;code>sampling params&lt;/code> section are described in detail &lt;a href="https://steelph0enix.github.io/posts/llama-cpp-guide/#list-of-llm-configuration-options-and-samplers-available-in-llamacpp">below&lt;/a>.
+Server-specific arguments are:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>--no-context-shift&lt;/code> (&lt;code>LLAMA_ARG_NO_CONTEXT_SHIFT&lt;/code>) - by default, when context is filled up, it will be shifted (&amp;ldquo;oldest&amp;rdquo; tokens are discarded in favour of freshly generated ones).
+This parameter disables that behavior, and it will make the generation stop instead.&lt;/li>
+&lt;li>&lt;code>--cont-batching&lt;/code> (&lt;code>LLAMA_ARG_CONT_BATCHING&lt;/code>) - continuous batching allows processing prompts in parallel with text generation.
+This usually improves performance and is enabled by default.
+You can disable it with &lt;code>--no-cont-batching&lt;/code> (&lt;code>LLAMA_ARG_NO_CONT_BATCHING&lt;/code>) parameter.&lt;/li>
+&lt;li>&lt;code>--alias&lt;/code> (&lt;code>LLAMA_ARG_ALIAS&lt;/code>) - Alias for the model name, used by the REST API.
+Set to model name by default.&lt;/li>
+&lt;li>&lt;code>--host&lt;/code> (&lt;code>LLAMA_ARG_HOST&lt;/code>) and &lt;code>--port&lt;/code> (&lt;code>LLAMA_ARG_PORT&lt;/code>) - host and port for &lt;code>llama.cpp&lt;/code> server.&lt;/li>
+&lt;li>&lt;code>--slots&lt;/code> (&lt;code>LLAMA_ARG_ENDPOINT_SLOTS&lt;/code>) - enables &lt;code>/slots&lt;/code> endpoint of &lt;code>llama.cpp&lt;/code> server.&lt;/li>
+&lt;li>&lt;code>--props&lt;/code> (&lt;code>LLAMA_ARG_ENDPOINT_PROPS&lt;/code>) - enables &lt;code>/props&lt;/code> endpoint of &lt;code>llama.cpp&lt;/code> server.&lt;/li>
+&lt;/ul>
+&lt;h2 id="other-llamacpp-tools">other llama.cpp tools&lt;/h2>
+&lt;p>Webserver is not the only thing &lt;code>llama.cpp&lt;/code> provides.
+There&amp;rsquo;s few other useful tools hidden in built binaries.&lt;/p>
+&lt;h3 id="llama-bench">&lt;code>llama-bench&lt;/code>&lt;/h3>
+&lt;p>&lt;code>llama-bench&lt;/code> allows us to benchmark the prompt processing and text generation speed of our &lt;code>llama.cpp&lt;/code> build for a selected model.
+To run an example benchmark, we can simply run the executable with path to selected model.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>llama-bench --model selected_model.gguf
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>llama-bench&lt;/code> will try to use optimal &lt;code>llama.cpp&lt;/code> configuration for your hardware.
+Default settings will try to use full GPU offloading (99 layers) and mmap.
+I recommend enabling flash attention manually (with &lt;code>--flash-attn&lt;/code> flag, unfortunately &lt;code>llama-bench&lt;/code> does not read the environmental variables)
+Tweaking prompt length (&lt;code>--n-prompt&lt;/code>) and batch sizes (&lt;code>--batch-size&lt;/code>/&lt;code>--ubatch-size&lt;/code>) may affect the result of prompt processing benchmark.
+Tweaking number of tokens to generate (&lt;code>--n-gen&lt;/code>) may affect the result of text generation benchmark.
+You can also set the number of repetitions with &lt;code>--repetitions&lt;/code> argument.&lt;/p>
+&lt;p>Results for SmolLM2 1.7B Instruct quantized to Q8 w/ flash attention on my setup (CPU only, Ryzen 5900X, DDR4 RAM @3200MHz):&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>&amp;gt; llama-bench --flash-attn 1 --model ./SmolLM2.q8.gguf
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| model | size | params | backend | threads | fa | test | t/s |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| ------------------------------ | ---------: | ---------: | ---------- | ------: | -: | ------------: | -------------------: |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| llama ?B Q8_0 | 1.69 GiB | 1.71 B | CPU | 12 | 1 | pp512 | 162.54 ± 1.70 |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| llama ?B Q8_0 | 1.69 GiB | 1.71 B | CPU | 12 | 1 | tg128 | 22.50 ± 0.05 |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>build: dc223440 (4215)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The table is mostly self-explanatory, except two last columns.
+&lt;code>test&lt;/code> contains the benchmark identifier, made from two parts.
+First two letters define the bench type (&lt;code>pp&lt;/code> for prompt processing, &lt;code>tg&lt;/code> for text generation).
+The number defines the prompt size (for prompt processing benchmark) or amount of generated tokens (for text generation benchmark).
+&lt;code>t/s&lt;/code> column is the result in tokens processed/generated per second.&lt;/p>
+&lt;p>There&amp;rsquo;s also a &lt;em>mystery&lt;/em> &lt;code>-pg&lt;/code> argument, which can be used to perform mixed prompt processing+text generation test.
+For example:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>&amp;gt; llama-bench --flash-attn 1 --model ./SmolLM2.q8.gguf -pg 1024,256
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| model | size | params | backend | threads | fa | test | t/s |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| ------------------------------ | ---------: | ---------: | ---------- | ------: | -: | ------------: | -------------------: |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| llama ?B Q8_0 | 1.69 GiB | 1.71 B | CPU | 12 | 1 | pp512 | 165.50 ± 1.95 |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| llama ?B Q8_0 | 1.69 GiB | 1.71 B | CPU | 12 | 1 | tg128 | 22.44 ± 0.01 |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| llama ?B Q8_0 | 1.69 GiB | 1.71 B | CPU | 12 | 1 | pp1024+tg256 | 63.51 ± 4.24 |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>build: dc223440 (4215)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>This is probably the most realistic benchmark, because as long as you have continuous batching enabled you&amp;rsquo;ll use the model like that.
+Don&amp;rsquo;t mind the ridiculous result of prompt processing test, the standard deviation is crazy there.&lt;/p>
+&lt;h3 id="llama-cli">&lt;code>llama-cli&lt;/code>&lt;/h3>
+&lt;p>This is a simple CLI interface for the LLM.
+It allows you to generate a completion for specified prompt, or chat with the LLM.&lt;/p>
+&lt;p>It shares most arguments with &lt;code>llama-server&lt;/code>, except some specific ones:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>--prompt&lt;/code> - can also be used with &lt;code>llama-server&lt;/code>, but here it&amp;rsquo;s bit more useful.
+Sets the starting/system prompt for the LLM.
+Prompt can also be loaded from file by specifying it&amp;rsquo;s path using &lt;code>--file&lt;/code> or &lt;code>--binary-file&lt;/code> argument.&lt;/li>
+&lt;li>&lt;code>--color&lt;/code> - enables colored output, it&amp;rsquo;s disabled by default.&lt;/li>
+&lt;li>&lt;code>--no-context-shift&lt;/code> (&lt;code>LLAMA_ARG_NO_CONTEXT_SHIFT&lt;/code>) - does the same thing as in &lt;code>llama-server&lt;/code>.&lt;/li>
+&lt;li>&lt;code>--reverse-prompt&lt;/code> - when LLM generates a reverse prompt, it stops generation and returns the control over conversation to the user, allowing him to respond.
+Basically, this is list of stopping words/sentences.&lt;/li>
+&lt;li>&lt;code>--conversation&lt;/code> - enables conversation mode by enabling interactive mode and not printing special tokens (like those appearing in chat template)
+This is probably how you want to use this program.&lt;/li>
+&lt;li>&lt;code>--interactive&lt;/code> - enables interactive mode, allowing you to chat with the LLM. In this mode, the generation starts right away and you should set the &lt;code>--prompt&lt;/code> to get any reasonable output.
+Alternatively, we can use &lt;code>--interactive-first&lt;/code> to start chatting with control over chat right away.&lt;/li>
+&lt;/ul>
+&lt;p>Here are specific usage examples:&lt;/p>
+&lt;h4 id="text-completion">text completion&lt;/h4>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>&amp;gt; llama-cli --flash-attn --model ./SmolLM2.q8.gguf --prompt &amp;#34;The highest mountain on earth&amp;#34;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>build: 4215 (dc223440) with cc (GCC) 14.2.1 20240910 for x86_64-pc-linux-gnu
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: llama backend init
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: load the model and apply lora adapter, if any
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: loaded meta data with 37 key-value pairs and 218 tensors from ./SmolLM2.q8.gguf (version GGUF V3 (latest))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_tensors: CPU_Mapped model buffer size = 1734,38 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>................................................................................................
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_seq_max = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ctx = 4096
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ctx_per_seq = 4096
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_batch = 2048
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ubatch = 512
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: flash_attn = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: freq_base = 130000,0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: freq_scale = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ctx_per_seq (4096) &amp;lt; n_ctx_train (8192) -- the full capacity of the model will not be utilized
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_kv_cache_init: CPU KV buffer size = 768,00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: KV self size = 768,00 MiB, K (f16): 384,00 MiB, V (f16): 384,00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: CPU output buffer size = 0,19 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: CPU compute buffer size = 104,00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: graph nodes = 679
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: graph splits = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: llama threadpool init, n_threads = 12
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>system_info: n_threads = 12 (n_threads_batch = 12) / 24 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | LLAMAFILE = 1 | AARCH64_REPACK = 1 |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sampler seed: 2734556630
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sampler params:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> repeat_last_n = 64, repeat_penalty = 1,000, frequency_penalty = 0,000, presence_penalty = 0,000
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> dry_multiplier = 0,000, dry_base = 1,750, dry_allowed_length = 2, dry_penalty_last_n = -1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> top_k = 40, top_p = 0,950, min_p = 0,050, xtc_probability = 0,000, xtc_threshold = 0,100, typical_p = 1,000, temp = 0,800
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mirostat = 0, mirostat_lr = 0,100, mirostat_ent = 5,000
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sampler chain: logits -&amp;gt; logit-bias -&amp;gt; penalties -&amp;gt; dry -&amp;gt; top-k -&amp;gt; typical -&amp;gt; top-p -&amp;gt; min-p -&amp;gt; xtc -&amp;gt; temp-ext -&amp;gt; dist
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>generate: n_ctx = 4096, n_batch = 2048, n_predict = -1, n_keep = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>The highest mountain on earth is Mount Everest, which stands at an astonishing 8,848.86 meters (29,031.7 feet) above sea level. Located in the Mahalangur Sharhungtrigangla Range in the Himalayas, it&amp;#39;s a marvel of nature that draws adventurers and thrill-seekers from around the globe.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Standing at the base camp, the mountain appears as a majestic giant, its rugged slopes and snow-capped peaks a testament to its formidable presence. The climb to the summit is a grueling challenge that requires immense physical and mental fortitude, as climbers must navigate steep inclines, unpredictable weather, and crevasses.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>The ascent begins at Base Camp, a bustling hub of activity, where climbers gather to share stories, exchange tips, and prepare for the climb ahead. From Base Camp, climbers make their way to the South Col, a precarious route that offers breathtaking views of the surrounding landscape. The final push to the summit involves a grueling ascent up the steep and treacherous Lhotse Face, followed by a scramble up the near-vertical wall of the Western Cwm.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Upon reaching the summit, climbers are rewarded with an unforgettable sight: the majestic Himalayan range unfolding before them, with the sun casting a golden glow on the snow. The sense of accomplishment and awe is indescribable, and the experience is etched in the memories of those who have conquered this mighty mountain.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>The climb to Everest is not just about reaching the summit; it&amp;#39;s an adventure that requires patience, perseverance, and a deep respect for the mountain. Climbers must be prepared to face extreme weather conditions, altitude sickness, and the ever-present risk of accidents or crevasses. Despite these challenges, the allure of Everest remains a powerful draw, inspiring countless individuals to push their limits and push beyond them. [end of text]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_perf_sampler_print: sampling time = 12,58 ms / 385 runs ( 0,03 ms per token, 30604,13 tokens per second)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_perf_context_print: load time = 318,81 ms
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_perf_context_print: prompt eval time = 59,26 ms / 5 tokens ( 11,85 ms per token, 84,38 tokens per second)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_perf_context_print: eval time = 17797,98 ms / 379 runs ( 46,96 ms per token, 21,29 tokens per second)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_perf_context_print: total time = 17891,23 ms / 384 tokens
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="chat-mode">chat mode&lt;/h4>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>&amp;gt; llama-cli --flash-attn --model ./SmolLM2.q8.gguf --prompt &amp;#34;You are a helpful assistant&amp;#34; --conversation
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>build: 4215 (dc223440) with cc (GCC) 14.2.1 20240910 for x86_64-pc-linux-gnu
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: llama backend init
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: load the model and apply lora adapter, if any
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_model_loader: loaded meta data with 37 key-value pairs and 218 tensors from ./SmolLM2.q8.gguf (version GGUF V3 (latest))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llm_load_tensors: CPU_Mapped model buffer size = 1734,38 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>................................................................................................
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_seq_max = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ctx = 4096
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ctx_per_seq = 4096
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_batch = 2048
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ubatch = 512
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: flash_attn = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: freq_base = 130000,0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: freq_scale = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: n_ctx_per_seq (4096) &amp;lt; n_ctx_train (8192) -- the full capacity of the model will not be utilized
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_kv_cache_init: CPU KV buffer size = 768,00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: KV self size = 768,00 MiB, K (f16): 384,00 MiB, V (f16): 384,00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: CPU output buffer size = 0,19 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: CPU compute buffer size = 104,00 MiB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: graph nodes = 679
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_new_context_with_model: graph splits = 1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: llama threadpool init, n_threads = 12
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: chat template example:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;system
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>You are a helpful assistant&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;user
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Hello&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;assistant
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Hi there&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;user
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>How are you?&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;assistant
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>system_info: n_threads = 12 (n_threads_batch = 12) / 24 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | LLAMAFILE = 1 | AARCH64_REPACK = 1 |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: interactive mode on.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sampler seed: 968968654
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sampler params:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> repeat_last_n = 64, repeat_penalty = 1,000, frequency_penalty = 0,000, presence_penalty = 0,000
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> dry_multiplier = 0,000, dry_base = 1,750, dry_allowed_length = 2, dry_penalty_last_n = -1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> top_k = 40, top_p = 0,950, min_p = 0,050, xtc_probability = 0,000, xtc_threshold = 0,100, typical_p = 1,000, temp = 0,800
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mirostat = 0, mirostat_lr = 0,100, mirostat_ent = 5,000
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sampler chain: logits -&amp;gt; logit-bias -&amp;gt; penalties -&amp;gt; dry -&amp;gt; top-k -&amp;gt; typical -&amp;gt; top-p -&amp;gt; min-p -&amp;gt; xtc -&amp;gt; temp-ext -&amp;gt; dist
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>generate: n_ctx = 4096, n_batch = 2048, n_predict = -1, n_keep = 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>== Running in interactive mode. ==
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - Press Ctrl+C to interject at any time.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - Press Return to return control to the AI.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - To return control without starting a new line, end your input with &amp;#39;/&amp;#39;.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - If you want to submit another line, end your input with &amp;#39;\&amp;#39;.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>system
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>You are a helpful assistant
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;gt; hi
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Hello! How can I help you today?
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_perf_sampler_print: sampling time = 0,27 ms / 22 runs ( 0,01 ms per token, 80291,97 tokens per second)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_perf_context_print: load time = 317,46 ms
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_perf_context_print: prompt eval time = 2043,02 ms / 22 tokens ( 92,86 ms per token, 10,77 tokens per second)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_perf_context_print: eval time = 407,66 ms / 9 runs ( 45,30 ms per token, 22,08 tokens per second)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>llama_perf_context_print: total time = 5302,60 ms / 31 tokens
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Interrupted by user
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="building-the-llama-but-better">building the llama, but better&lt;/h2>
+&lt;p>All right, now that we know how to use &lt;code>llama.cpp&lt;/code> and tweak runtime parameters, let&amp;rsquo;s learn how to tweak build configuration.
+We already set some generic settings in &lt;a href="https://steelph0enix.github.io/posts/llama-cpp-guide/#building-the-llama">chapter about building the &lt;code>llama.cpp&lt;/code>&lt;/a> but we haven&amp;rsquo;t touched any backend-related ones yet.&lt;/p>
+&lt;p>Let&amp;rsquo;s start with clearing up the &lt;code>llama.cpp&lt;/code> repository (and, optionally, making sure that we have the latest commit):&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>cd llama.cpp
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git clean -xdf
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git pull
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git submodule update --recursive
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Now, we need to generate the build files for a custom backend.
+As of writing this, the list of backends supported by &lt;code>llama.cpp&lt;/code> is following:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Metal&lt;/code> - acceleration for Apple Silicon&lt;/li>
+&lt;li>&lt;code>Accelerate&lt;/code> - BLAS (Basic Linear Algebra Subprograms) acceleration for Mac PCs, enabled by default.&lt;/li>
+&lt;li>&lt;code>OpenBLAS&lt;/code> - BLAS acceleration for CPUs&lt;/li>
+&lt;li>&lt;code>BLIS&lt;/code> - relatively recently released high-performance BLAS framework&lt;/li>
+&lt;li>&lt;code>SYCL&lt;/code> - acceleration for Intel GPUs (Data Center Max series, Flex series, Arc series, Built-in GPUs and iGPUs)&lt;/li>
+&lt;li>&lt;code>Intel oneMKL&lt;/code> - acceleration for Intel CPUs&lt;/li>
+&lt;li>&lt;code>CUDA&lt;/code> - acceleration for Nvidia GPUs&lt;/li>
+&lt;li>&lt;code>MUSA&lt;/code> - acceleration for Moore Threads GPUs&lt;/li>
+&lt;li>&lt;code>hipBLAS&lt;/code> - BLAS acceleration for AMD GPUs&lt;/li>
+&lt;li>&lt;code>Vulkan&lt;/code> - generic acceleration for GPUs&lt;/li>
+&lt;li>&lt;code>CANN&lt;/code> - acceleration for Ascend NPU&lt;/li>
+&lt;li>&lt;code>Android&lt;/code> - yes, there&amp;rsquo;s also Android support.&lt;/li>
+&lt;/ul>
+&lt;p>As we can see, there&amp;rsquo;s something for everyone.
+My backend selection recommendation is following:&lt;/p>
+&lt;ul>
+&lt;li>Users without GPUs should try &lt;code>Intel oneMKL&lt;/code> in case of Intel CPUs, or &lt;code>BLIS&lt;/code>/&lt;code>OpenBLAS&lt;/code>.&lt;/li>
+&lt;li>Users with Nvidia GPUs should use &lt;code>CUDA&lt;/code> or &lt;code>Vulkan&lt;/code>&lt;/li>
+&lt;li>Users with AMD GPUs should use &lt;code>Vulkan&lt;/code> or &lt;code>ROCm&lt;/code> (order important here, ROCm was bugged last time i&amp;rsquo;ve used it)&lt;/li>
+&lt;li>Users with Intel GPUs should use &lt;code>SYCL&lt;/code> or &lt;code>Vulkan&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>As we can see, Vulkan is the most generic option for GPU acceleration and i believe it&amp;rsquo;s the simplest to build for, so i&amp;rsquo;ll explain in detail how to do that.
+The build process for every backend is very similar - install the necessary dependencies, generate the &lt;code>llama.cpp&lt;/code> build files with proper flag to enable the specific backend, and build it.&lt;/p>
+&lt;p>Oh, and don&amp;rsquo;t worry about Python and it&amp;rsquo;s dependencies.
+The performance of model conversion scripts is not limited by &lt;code>pytorch&lt;/code>, so there&amp;rsquo;s no point in installing CUDA/ROCm versions.&lt;/p>
+&lt;p>Before generating the build file, we need to install &lt;a href="https://www.lunarg.com/vulkan-sdk/">Vulkan SDK&lt;/a>.&lt;/p>
+&lt;p class="windows-bg-padded">On Windows, it&amp;rsquo;s easiest to do via MSYS.
+That&amp;rsquo;s why i&amp;rsquo;ve recommended using it at the beginning.
+I have tried installing it directly on Windows, but encountered issues that i haven&amp;rsquo;t seen when using MSYS - so, obviously, MSYS is a better option.
+Run this command in MSYS (make sure to use UCRT runtime) to install the required dependencies:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>pacman -S git &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> mingw-w64-ucrt-x86_64-gcc &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> mingw-w64-ucrt-x86_64-cmake &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> mingw-w64-ucrt-x86_64-vulkan-devel &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> mingw-w64-ucrt-x86_64-shaderc
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg-padded">If you &lt;em>really&lt;/em> don&amp;rsquo;t want to use MSYS, i recommend &lt;a href="https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md#vulkan">following the docs&lt;/a>&lt;/p>
+&lt;p class="linux-bg-padded">On Linux, i recommend installing Vulkan SDK using the package manager.
+If it&amp;rsquo;s not in package manager of your distro, i assume you know what you&amp;rsquo;re doing and how to install it manually.&lt;/p>
+&lt;p>Afterwards, we can generate the build files (replace &lt;code>/your/install/dir&lt;/code> with custom installation directory, if you want):&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>cmake -S . -B build -G Ninja -DGGML_VULKAN&lt;span style="color:#f92672">=&lt;/span>ON -DCMAKE_BUILD_TYPE&lt;span style="color:#f92672">=&lt;/span>Release -DCMAKE_INSTALL_PREFIX&lt;span style="color:#f92672">=&lt;/span>/your/install/dir -DLLAMA_BUILD_TESTS&lt;span style="color:#f92672">=&lt;/span>OFF -DLLAMA_BUILD_EXAMPLES&lt;span style="color:#f92672">=&lt;/span>ON -DLLAMA_BUILD_SERVER&lt;span style="color:#f92672">=&lt;/span>ON
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>and build/install the binaries (replace &lt;code>X&lt;/code> with amount of cores in your system):&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>cmake --build build --config Release -j X
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cmake --install build --config Release
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Don&amp;rsquo;t mind the warnings you&amp;rsquo;ll see, i get them too.
+Now our &lt;code>llama.cpp&lt;/code> binaries should be able to use our GPU.
+We can test it by running &lt;code>llama-server&lt;/code> or &lt;code>llama-cli&lt;/code> with &lt;code>--list-devices&lt;/code> argument:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>&amp;gt; llama-cli --list-devices
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ggml_vulkan: Found 1 Vulkan devices:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ggml_vulkan: 0 = AMD Radeon RX 7900 XT (AMD open-source driver) | uma: 0 | fp16: 1 | warp size: 64
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Available devices:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Vulkan0: AMD Radeon RX 7900 XT (20464 MiB, 20464 MiB free)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Running that command previously would print an empty list:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>&amp;gt; llama-cli --list-devices
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Available devices:
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Remember the &lt;code>llama-bench&lt;/code> results i&amp;rsquo;ve got previously on CPU build?
+This is them now:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>&amp;gt; llama-bench --flash-attn 1 --model ./SmolLM2.q8.gguf -pg 1024,256
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ggml_vulkan: Found 1 Vulkan devices:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ggml_vulkan: 0 = AMD Radeon RX 7900 XT (AMD open-source driver) | uma: 0 | fp16: 1 | warp size: 64
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| model | size | params | backend | ngl | fa | test | t/s |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| ------------------------------ | ---------: | ---------: | ---------- | --: | -: | ------------: | -------------------: |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ggml_vulkan: Compiling shaders..............................Done!
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| llama ?B Q8_0 | 1.69 GiB | 1.71 B | Vulkan | 99 | 1 | pp512 | 880.55 ± 5.30 |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| llama ?B Q8_0 | 1.69 GiB | 1.71 B | Vulkan | 99 | 1 | tg128 | 89.78 ± 1.66 |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| llama ?B Q8_0 | 1.69 GiB | 1.71 B | Vulkan | 99 | 1 | pp1024+tg256 | 115.25 ± 0.83 |
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Now, that&amp;rsquo;s some &lt;em>good shit&lt;/em> right here.
+Prompt processing speed has increased from ~165 to ~880 tokens per second (5.3x faster).
+Text generation - from ~22 to ~90 tokens per second (4x faster).
+Mixed text processing went up from ~63 to ~115 tokens per second (1.8x faster).
+All of this due to the fact that i&amp;rsquo;ve switched to &lt;em>correct&lt;/em> backend.&lt;/p>
+&lt;h2 id="llm-configuration-options-explained">LLM configuration options explained&lt;/h2>
+&lt;p>This will be a relatively long and very informational part full of boring explanations.
+But - it&amp;rsquo;s a good knowledge to have when playing with LLMs.&lt;/p>
+&lt;h3 id="how-does-llm-generate-text">how does LLM generate text?&lt;/h3>
+&lt;ol>
+&lt;li>
+&lt;p>Prompt&lt;/p>
+&lt;p>Everything starts with a prompt.
+Prompt can be a simple raw string that we want the LLM to complete for us, or it can be an elaborate construction that allows the LLM to chat or use external tools.
+Whatever we put in it, it&amp;rsquo;s usually in human-readable format with special &amp;ldquo;tags&amp;rdquo; (usually similar to XML tags) used for separating the parts of the prompt.&lt;/p>
+&lt;p>We&amp;rsquo;ve already seen an example of a prompt used for chat completion, provided by &lt;code>llama-server&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;system
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>You are a helpful assistant&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;user
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Hello&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;assistant
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Hi there&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;user
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>How are you?&amp;lt;|im_end|&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;lt;|im_start|&amp;gt;assistant
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>(if you&amp;rsquo;re wondering &lt;em>what are those funny &amp;lt;| and |&amp;gt; symbols&lt;/em> - those are ligatures from Fira Code font made out of &lt;code>|&lt;/code>, &lt;code>&amp;gt;&lt;/code> and &lt;code>&amp;lt;&lt;/code> characters)&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Tokenization&lt;/p>
+&lt;p>The LLM does not understand the human language like we do.
+We use words and punctuation marks to form sentences - LLMs use tokens that can be understood as an equivalent to those.
+First step in text generation is breaking the language barrier by performing prompt tokenization.
+Tokenization is a process of translating input text (in human-readable format) into an array of tokens that can be processed by an LLM.
+Tokens are simple numeric values, and with a vocabulary they can be easily mapped to their string representations (at least in case of BPE models, don&amp;rsquo;t know about others).
+In fact, that vocabulary is available in SmolLM2 repository, in &lt;code>tokenizer.json&lt;/code> file!
+That file also contains some metadata for &lt;em>special&lt;/em> tokens that have &lt;em>special&lt;/em> meaning for the LLM.
+Some of those tokens represent &lt;em>meta&lt;/em> things, like start and end of a message.
+Other can allow the LLM to chat with the user by providing tags for separating parts of conversation (system prompt, user messages, LLM responses).
+I&amp;rsquo;ve also seen tool calling capabilities in LLM templates, which in theory should allow the LLM to use external tools, but i haven&amp;rsquo;t tested them yet (check out Qwen2.5 and CodeQwen2.5 for example models with those functions).&lt;/p>
+&lt;p>We can use &lt;code>llama-server&lt;/code> API to tokenize some text and see how it looks after being translated. Hope you&amp;rsquo;ve got &lt;code>curl&lt;/code>.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>curl -X POST -H &lt;span style="color:#e6db74">&amp;#34;Content-Type: application/json&amp;#34;&lt;/span> -d &lt;span style="color:#e6db74">&amp;#39;{&amp;#34;content&amp;#34;: &amp;#34;hello world! this is an example message!&amp;#34;}&amp;#39;&lt;/span> http://127.0.0.1:8080/tokenize
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>For SmolLM2, the response should be following:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{&lt;span style="color:#f92672">&amp;#34;tokens&amp;#34;&lt;/span>:[&lt;span style="color:#ae81ff">28120&lt;/span>,&lt;span style="color:#ae81ff">905&lt;/span>,&lt;span style="color:#ae81ff">17&lt;/span>,&lt;span style="color:#ae81ff">451&lt;/span>,&lt;span style="color:#ae81ff">314&lt;/span>,&lt;span style="color:#ae81ff">1183&lt;/span>,&lt;span style="color:#ae81ff">3714&lt;/span>,&lt;span style="color:#ae81ff">17&lt;/span>]}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Which we can very roughly translate to:&lt;/p>
+&lt;ul>
+&lt;li>28120 - hello&lt;/li>
+&lt;li>905 - world&lt;/li>
+&lt;li>17 - !&lt;/li>
+&lt;li>451 - this&lt;/li>
+&lt;li>314 - is&lt;/li>
+&lt;li>354 - an&lt;/li>
+&lt;li>1183 - example&lt;/li>
+&lt;li>3714 - message&lt;/li>
+&lt;li>17 - !&lt;/li>
+&lt;/ul>
+&lt;p>We can pass this JSON back to &lt;code>/detokenize&lt;/code> endpoint to get our original text back:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>curl -X POST -H &lt;span style="color:#e6db74">&amp;#34;Content-Type: application/json&amp;#34;&lt;/span> -d &lt;span style="color:#e6db74">&amp;#39;{&amp;#34;tokens&amp;#34;: [28120,905,17,451,314,354,1183,3714,17]}&amp;#39;&lt;/span> http://127.0.0.1:8080/detokenize
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{&lt;span style="color:#f92672">&amp;#34;content&amp;#34;&lt;/span>:&lt;span style="color:#e6db74">&amp;#34;hello world! this is an example message!&amp;#34;&lt;/span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>
+&lt;p>Dank Magick (feeding the beast)&lt;/p>
+&lt;p>I honestly don&amp;rsquo;t know what exactly happens in this step, but i&amp;rsquo;ll try my best to explain it in simple and very approximate terms.
+The input is the tokenized prompt.
+This prompt is fed to the LLM, and the digestion process takes a lot of processing time due to the insane amount of matrix operations that must be performed to satisfy the digital beast.
+After the prompt is digested, the LLM starts talking to us.
+LLM talks by generating pairs of tokens and probabilities of them appearing next in the completed text.
+If we&amp;rsquo;d just use those as-is, the output would be complete gibberish and would drive people insane, as it&amp;rsquo;s usually the case with demons - digital or not.
+Those tokens must be filtered out in order to form an output understandable to human beings (or whatever other beings you want to talk with), and that&amp;rsquo;s what token sampling is all about.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Token sampling&lt;/p>
+&lt;p>This is probably the most interesting step for us, because we can control it&amp;rsquo;s every single parameter.
+As usual, i advise caution when working with raw output from demons - digital or not, it may result in unexpected stuff happening when handled incorrectly.
+To generate a token, LLM outputs a batch of token-probability pairs that&amp;rsquo;s filtered out to a single one by a chain of samplers.
+There&amp;rsquo;s plenty of different sampling algorithms that can be tweaked for different purposes, and list of those available in llama.cpp with their descriptions is presented below.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Detokenization&lt;/p>
+&lt;p>Generated tokens must be converted back to human-readable form, so a detokenization must take place.
+This is the last step.
+Hooray, we tamed the digital beast and forced it to talk.
+I have previously feared the consequences this could bring upon the humanity, but here we are, 373 1457 260 970 1041 3935.&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;h3 id="list-of-llm-configuration-options-and-samplers-available-in-llamacpp">list of LLM configuration options and samplers available in llama.cpp&lt;/h3>
+&lt;ul>
+&lt;li>&lt;strong>System Message&lt;/strong> - Usually, conversations with LLMs start with a &amp;ldquo;system&amp;rdquo; message that tells the LLM how to behave.
+This is probably the easiest-to-use tool that can drastically change the behavior of a model.
+My recommendation is to put as much useful informations and precise behavior descriptions for your application as possible, to maximize the quality of LLM output.
+You may think that giving the digital demon maximum amount of knowledge may lead to bad things happening, but our reality haven&amp;rsquo;t collapsed yet so i think we&amp;rsquo;re good for now.&lt;/li>
+&lt;li>&lt;strong>Temperature&lt;/strong> - per &lt;code>llama.cpp&lt;/code> docs &amp;ldquo;Controls the randomness of the generated text by affecting the probability distribution of the output tokens. Higher = more random, lower = more focused&amp;rdquo;.
+I don&amp;rsquo;t have anything to add here, it controls the &amp;ldquo;creativity&amp;rdquo; of an LLM.
+High values result in more random and &amp;ldquo;creative&amp;rdquo; output, but overcooking the beast may result in hallucinations, and - in certain scenarios - screams that will destroy your sanity.
+Keep it in 0.2-2.0 range for a start, and keep it positive and non-zero.&lt;/li>
+&lt;li>&lt;a href="https://rentry.org/dynamic_temperature">&lt;strong>Dynamic temperature&lt;/strong>&lt;/a> - Dynamic temperature sampling is an addition to temperature sampler.
+The linked article describes it in detail, and it&amp;rsquo;s pretty short so i strongly recommend reading it - i can&amp;rsquo;t really do a better job explaining it.
+There&amp;rsquo;s also the &lt;a href="https://www.reddit.com/r/Oobabooga/comments/191klr8/some_information_about_dynamic_temperature_added/">reddit post&lt;/a> with more explanations from the algorithm&amp;rsquo;s author.
+However, in case the article goes down - the short explanation of this algorithm is: it tweaks the temperature of generated tokens based on their entropy.
+Entropy here can be understood as inverse of LLMs confidence in generated tokens.
+Lower entropy means that the LLM is more confident in it&amp;rsquo;s predictions, and therefore the temperature of tokens with low entropy should also be low.
+High entropy works the other way around.
+Effectively, this sampling can encourage creativity while preventing hallucinations at higher temperatures.
+I strongly recommend testing it out, as it&amp;rsquo;s usually disabled by default.
+It may require some additional tweaks to other samplers when enabled, to produce optimal results.
+The parameters of dynamic temperature sampler are:
+&lt;ul>
+&lt;li>&lt;strong>Dynatemp range&lt;/strong> - the range of dynamic temperature to be added/subtracted&lt;/li>
+&lt;li>&lt;strong>Dynatemp exponent&lt;/strong> - changing the exponent changes the dynamic temperature in following way (figure shamelessly stolen from &lt;a href="https://rentry.org/dynamic_temperature">previously linked reentry article&lt;/a>): &lt;img alt="dynatemp exponent effects" src="https://steelph0enix.github.io/img/llama-cpp/dynatemp-exponent.png">&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Top-K&lt;/strong> - Top-K sampling is a fancy name for &amp;ldquo;keep only &lt;code>K&lt;/code> most probable tokens&amp;rdquo; algorithm.
+Higher values can result in more diverse text, because there&amp;rsquo;s more tokens to choose from when generating responses.&lt;/li>
+&lt;li>&lt;strong>Top-P&lt;/strong> - Top-P sampling, also called &lt;em>nucleus sampling&lt;/em>, per &lt;code>llama.cpp&lt;/code> docs &amp;ldquo;Limits the tokens to those that together have a cumulative probability of at least &lt;code>p&lt;/code>&amp;rdquo;.
+In human language, it means that the Top-P sampler takes a list of tokens and their probabilities as an input (note that the sum of their cumulative probabilities is by definition equal to 1), and returns tokens with highest probabilities from that list until the sum of their cumulative probabilities is greater or equal to &lt;code>p&lt;/code>.
+Or, in other words, &lt;code>p&lt;/code> value changes the % of tokens returned by the Top-P sampler.
+For example, when &lt;code>p&lt;/code> is equal to 0.7, the sampler will return 70% of input tokens with highest probabilities.
+There&amp;rsquo;s a &lt;a href="https://rumn.medium.com/setting-top-k-top-p-and-temperature-in-llms-3da3a8f74832">pretty good article&lt;/a> about temperature, Top-K and Top-P sampling that i&amp;rsquo;ve found and can recommend if you wanna know more.&lt;/li>
+&lt;li>&lt;strong>Min-P&lt;/strong> - Min-P sampling, per &lt;code>llama.cpp&lt;/code> docs &amp;ldquo;Limits tokens based on the minimum probability for a token to be considered, relative to the probability of the most likely token&amp;rdquo;.
+There&amp;rsquo;s a &lt;a href="https://arxiv.org/pdf/2407.01082">paper&lt;/a> explaining this algorithm (it contains loads of citations for other LLM-related stuff too, good read).
+Figure 1 from this paper nicely shows what each of the sampling algorithms does to probability distribution of tokens:
+&lt;img alt="min-p-probabilities" src="https://steelph0enix.github.io/img/llama-cpp/min-p-probs.png">&lt;/li>
+&lt;li>&lt;a href="https://www.reddit.com/r/LocalLLaMA/comments/1ev8n2s/exclude_top_choices_xtc_a_sampler_that_boosts/">&lt;strong>Exclude Top Choices (XTC)&lt;/strong>&lt;/a> - This is a funky one, because it works a bit differently from most other samplers.
+Quoting the author, &lt;em>Instead of pruning the least likely tokens, under certain circumstances, it removes the most likely tokens from consideration&lt;/em>.
+Detailed description can be found in &lt;a href="https://github.com/oobabooga/text-generation-webui/pull/6335">the PR with implementation&lt;/a>.
+I recommend reading it, because i really can&amp;rsquo;t come up with anything better in few sentences, it&amp;rsquo;s a really good explanation.
+I can, however, steal this image from the linked PR to show you more-or-less what XTC does: &lt;img alt="xtc" src="https://steelph0enix.github.io/img/llama-cpp/xtc.png">
+The parameters for XTC sampler are:
+&lt;ul>
+&lt;li>&lt;strong>XTC threshold&lt;/strong> - probability cutoff threshold for top tokens, in (0, 1) range.&lt;/li>
+&lt;li>&lt;strong>XTC probability&lt;/strong> - probability of XTC sampling being applied in [0, 1] range, where 0 = XTC disabled, 1 = XTC always enabled.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;a href="https://arxiv.org/pdf/2202.00666">&lt;strong>Locally typical sampling (typical-P)&lt;/strong>&lt;/a> - per &lt;code>llama.cpp&lt;/code> docs &amp;ldquo;Sorts and limits tokens based on the difference between log-probability and entropy&amp;rdquo;.
+I&amp;hellip; honestly don&amp;rsquo;t know how exactly it works.
+I tried reading the linked paper, but i lack the mental capacity to understand it enough to describe it back.
+&lt;a href="https://www.reddit.com/r/LocalLLaMA/comments/153bnly/what_does_typical_p_actually_do/">Some people on Reddit&lt;/a> also have the same issue, so i recommend going there and reading the comments.
+I haven&amp;rsquo;t used that sampling much, so i can&amp;rsquo;t really say anything about it from experience either, so - moving on.&lt;/li>
+&lt;li>&lt;a href="https://github.com/oobabooga/text-generation-webui/pull/5677">&lt;strong>DRY&lt;/strong>&lt;/a> - This sampler is used to prevent unwanted token repetition.
+Simplifying, it tries to detect repeating token sequences in generated text and reduces the probabilities of tokens that will create repetitions.
+As usual, i recommend reading the linked PR for detailed explanation, and as usual i&amp;rsquo;ve stolen a figure from it that shows what DRY does: &lt;img alt="dry" src="https://steelph0enix.github.io/img/llama-cpp/dry.png">
+I&amp;rsquo;ll also quote a short explanation of this sampler:
+&lt;em>The penalty for a token is calculated as &lt;code>multiplier * base ^ (n - allowed_length)&lt;/code>, where &lt;code>n&lt;/code> is the length of the sequence before that token that matches the end of the input, and &lt;code>multiplier&lt;/code>, &lt;code>base&lt;/code>, and &lt;code>allowed_length&lt;/code> are configurable parameters.&lt;/em>
+&lt;em>If the length of the matching sequence is less than &lt;code>allowed_length&lt;/code>, no penalty is applied.&lt;/em>
+The parameters for DRY sampler are:
+&lt;ul>
+&lt;li>&lt;strong>DRY multiplier&lt;/strong> - see explanation above&lt;/li>
+&lt;li>&lt;strong>DRY base&lt;/strong> - see explanation above&lt;/li>
+&lt;li>&lt;strong>DRY allowed length&lt;/strong> - see explanation above. Quoting &lt;code>llama.cpp&lt;/code> docs: &lt;em>Tokens that extend repetition beyond this receive exponentially increasing penalty&lt;/em>.&lt;/li>
+&lt;li>&lt;strong>DRY penalty last N&lt;/strong> - how many tokens should be scanned for repetition. -1 = whole context, 0 = disabled.&lt;/li>
+&lt;li>&lt;strong>DRY sequence breakers&lt;/strong> - characters that are used as separators for parts of sentences considered for DRY. Defaults for &lt;code>llama.cpp&lt;/code> are &lt;code>('\n', ':', '&amp;quot;', '*')&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;a href="https://openreview.net/pdf?id=W1G1JZEIy5_">&lt;strong>Mirostat&lt;/strong>&lt;/a> - is a funky sampling algorithm that &lt;strong>overrides Top-K, Top-P and Typical-P samplers&lt;/strong>.
+It&amp;rsquo;s an alternative sampler that produces text with controlled &lt;em>perplexity&lt;/em> (entropy), which means that we can control how certain the model should be in it&amp;rsquo;s predictions.
+This comes without side-effects of generating repeated text (as it happens in low perplexity scenarios) or incoherent output (as it happens in high perplexity scenarios).
+The configuration parameters for Mirostat are:
+&lt;ul>
+&lt;li>&lt;strong>Mirostat version&lt;/strong> - 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0.&lt;/li>
+&lt;li>&lt;strong>Mirostat learning rate (η, eta)&lt;/strong> - specifies how fast the model converges to desired perplexity.&lt;/li>
+&lt;li>&lt;strong>Mirostat target entropy (τ, tau)&lt;/strong> - the desired perplexity.
+Depending on the model, it should not be too high, otherwise you may degrade it&amp;rsquo;s performance.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Max tokens&lt;/strong> - i think that&amp;rsquo;s pretty self-explanatory. -1 makes the LLM generate until it decides it&amp;rsquo;s end of the sentence (by returning end-of-sentence token), or the context is full.&lt;/li>
+&lt;li>&lt;strong>Repetition penalty&lt;/strong> - Repetition penalty algorithm (not to be mistaken with DRY) simply reduces the chance that tokens that are already in the generated text will be used again.
+Usually the repetition penalty algorithm is restricted to &lt;code>N&lt;/code> last tokens of the context.
+In case of &lt;code>llama.cpp&lt;/code> (i&amp;rsquo;ll simplify a bit), it works like that: first, it creates a frequency map occurrences for last &lt;code>N&lt;/code> tokens.
+Then, the current logit bias for each token is divided by &lt;code>repeat_penalty&lt;/code> value.
+By default it&amp;rsquo;s usually set to 1.0, so to enable repetition penalty it should be set to &amp;gt;1.
+Finally, frequency and presence penalties are applied based on the frequency map.
+The penalty for each token is equal to &lt;code>(token_count * frequency_penalty) + (presence_penalty if token_count &amp;gt; 0)&lt;/code>.
+The penalty is represented as logit bias, which can be in [-100, 100] range.
+Negative values reduce the probability of token appearing in output, while positive increase it.
+The configuration parameters for repetition penalty are:
+&lt;ul>
+&lt;li>&lt;strong>Repeat last N&lt;/strong> - Amount of tokens from the end of the context to consider for repetition penalty.&lt;/li>
+&lt;li>&lt;strong>Repeat penalty&lt;/strong> - &lt;code>repeat_penalty&lt;/code> argument described above, if equal to &lt;code>1.0&lt;/code> then the repetition penalty is disabled.&lt;/li>
+&lt;li>&lt;strong>Presence penalty&lt;/strong> - &lt;code>presence_penalty&lt;/code> argument from the equation above.&lt;/li>
+&lt;li>&lt;strong>Frequency penalty&lt;/strong> - &lt;code>frequency_penalty&lt;/code> argument from the equation above.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;p>Additional literature:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://www.reddit.com/r/LocalLLaMA/comments/17vonjo/your_settings_are_probably_hurting_your_model_why/">Your settings are (probably) hurting your model&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>In &lt;em>Other sampler settings&lt;/em> we can find sampling queue configuration.
+As i&amp;rsquo;ve mentioned earlier, the samplers are applied in a chain.
+Here, we can configure the order of their application, and select which are used.
+The setting uses short names for samplers, the mapping is following:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>d&lt;/code> - DRY&lt;/li>
+&lt;li>&lt;code>k&lt;/code> - Top-K&lt;/li>
+&lt;li>&lt;code>y&lt;/code> - Typical-P&lt;/li>
+&lt;li>&lt;code>p&lt;/code> - Top-P&lt;/li>
+&lt;li>&lt;code>m&lt;/code> - Min-P&lt;/li>
+&lt;li>&lt;code>x&lt;/code> - Exclude Top Choices (XTC)&lt;/li>
+&lt;li>&lt;code>t&lt;/code> - Temperature&lt;/li>
+&lt;/ul>
+&lt;p>Some samplers and settings i&amp;rsquo;ve listed above may be missing from web UI configuration (like Mirostat), but they all can be configured via environmental variables, CLI arguments for &lt;code>llama.cpp&lt;/code> binaries, or llama.cpp server API.&lt;/p>
+&lt;h2 id="final-thoughts">final thoughts&lt;/h2>
+&lt;p>That is a &lt;strong>long&lt;/strong> post, damn.
+I have started writing this post at the end of October.
+It&amp;rsquo;s almost December now.
+During that time, multiple new models have been released - including SmolLM2, fun fact - i have originally planned to use Llama 3.2 3B.
+The speed at which the LLM community moves and releases new stuff is absolutely incredible, but thankfully &lt;code>llama.cpp&lt;/code> is &lt;em>relatively&lt;/em> stable now.
+I hope the knowledge i&amp;rsquo;ve gathered in this post will be useful and inspiring to the readers, and will allow them to play with LLMs freely in their homes.
+That&amp;rsquo;s it, i&amp;rsquo;m tired.
+I&amp;rsquo;m releasing that shit into the wild.&lt;/p>
+&lt;p>Suggestions for next posts are welcome, for now i intend to make some scripts for automated benchmarks w/ &lt;code>llama-bench&lt;/code> and gather some data.
+I&amp;rsquo;ll try to keep this post up-to-date and &lt;em>maybe&lt;/em> add some stuff if it&amp;rsquo;s requested.
+Questions are welcome too, preferably in the comments section.
+Have a nice one.&lt;/p></content></item></channel></rss>
