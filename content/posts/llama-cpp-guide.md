@@ -1517,4 +1517,4 @@ As for my recommendations, some relatively recent models i've tried that made a 
 - Google Gemma 2 9B SimPO - a fine-tune of Google Gemma model. Gemma models are pretty interesting, and their responses are noticeably different from other models.
 - Meta Llama 3.1/3.2 - i recommend trying out Llama 3.1 8B Instruct, as it's the default go-to model for most LLM applications. There's also many finetunes and *abliterated* versions that don't have any built-in restrictions available publicly.
 - Microsoft Phi 3.5 - a series of models from Microsoft. Most of them are small, but there's also big MoE (Mixture of Experts) version available.
-- Qwen/QwenCoder 2.5 - series of models from Alibaba, currently one of the best open-source models available. At the moment of writing this, QwenCoder 14B is my daily driver model.
+- Qwen/CodeQwen 2.5 - series of models from Alibaba, currently one of the best open-source models available. At the moment of writing this, CodeQwen 14B is my daily driver model.
