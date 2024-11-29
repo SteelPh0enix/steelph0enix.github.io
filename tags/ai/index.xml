@@ -1239,5 +1239,5 @@ The UI is not exactly &lt;em>great&lt;/em> but it&amp;rsquo;s &lt;em>good enough
 &lt;li>Google Gemma 2 9B SimPO - a fine-tune of Google Gemma model. Gemma models are pretty interesting, and their responses are noticeably different from other models.&lt;/li>
 &lt;li>Meta Llama 3.1/3.2 - i recommend trying out Llama 3.1 8B Instruct, as it&amp;rsquo;s the default go-to model for most LLM applications. There&amp;rsquo;s also many finetunes and &lt;em>abliterated&lt;/em> versions that don&amp;rsquo;t have any built-in restrictions available publicly.&lt;/li>
 &lt;li>Microsoft Phi 3.5 - a series of models from Microsoft. Most of them are small, but there&amp;rsquo;s also big MoE (Mixture of Experts) version available.&lt;/li>
-&lt;li>Qwen/QwenCoder 2.5 - series of models from Alibaba, currently one of the best open-source models available. At the moment of writing this, QwenCoder 14B is my daily driver model.&lt;/li>
+&lt;li>Qwen/CodeQwen 2.5 - series of models from Alibaba, currently one of the best open-source models available. At the moment of writing this, QwenCoder 14B is my daily driver model.&lt;/li>
 &lt;/ul></content></item></channel></rss>
