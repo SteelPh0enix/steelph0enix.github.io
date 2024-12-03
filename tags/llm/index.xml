@@ -1242,4 +1242,9 @@ The UI is not exactly &lt;em>great&lt;/em> but it&amp;rsquo;s &lt;em>good enough
 &lt;h3 id="post-mortem">post-mortem&lt;/h3>
 &lt;p>I&amp;rsquo;ve shared this post on Reddit and after getting the feedback, i managed to fix multiple issues with this post. Thanks!
 I&amp;rsquo;m currently at the process of &lt;em>refactors&lt;/em>, so many small things may change, and many other small things may be added in following days.
-I&amp;rsquo;ll update this section when i&amp;rsquo;m finished.&lt;/p></content></item></channel></rss>
+I&amp;rsquo;ll update this section when i&amp;rsquo;m finished.&lt;/p>
+&lt;ul>
+&lt;li>03.12.2024 - Updated the part about LLM text generation.
+I have made some mistakes there, so i&amp;rsquo;ve updated my knowledge and the post.
+Thanks /r/AbaGuy17 and /r/Oscylator for pointing stuff up.&lt;/li>
+&lt;/ul></content></item></channel></rss>
