@@ -121,8 +121,8 @@ Some context-specific formatting is used in this post:
 ## building the llama
 
 In [`docs/build.md`](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md), you'll find detailed build instructions for all the supported platforms.
-By default, `llama.cpp` builds with auto-detected CPU support.
-We'll talk about enabling GPU support later, first - let's try building it as-is, because it's a good baseline to start with, and it doesn't require any external dependencies.
+**By default, `llama.cpp` builds with auto-detected CPU support.**
+We'll talk about enabling GPU and advanced CPU support later, first - let's try building it as-is, because it's a good baseline to start with, and it doesn't require any external dependencies.
 To do that, we only need a C++ toolchain, [CMake](https://cmake.org/) and [Ninja](https://ninja-build.org/).
 
 > If you are **very** lazy, you can download a release from Github and skip building steps.
@@ -218,6 +218,10 @@ There's a lot of CMake variables being defined, which we could ignore and let ll
 - `LLAMA_BUILD_TESTS` is set to `OFF` because we don't need tests, it'll make the build a bit quicker.
 - `LLAMA_BUILD_EXAMPLES` is `ON` because we're gonna be using them.
 - `LLAMA_BUILD_SERVER` - see above. Note: Disabling `LLAMA_BUILD_EXAMPLES` unconditionally disables building the server, both must be `ON`.
+
+If you'd ignore all of those variables, the default would be used - in case of `LLAMA_BUILD_*` variables, all of those is `ON` (if you're building llama.cpp as standalone app, which you most likely are).
+`CMAKE_BUILD_TYPE` is *usually* set to `Release` by default, but not *always*, so i'd rather set it manually.
+`CMAKE_INSTALL_PREFIX` is not necessary at all if you don't intend to install the executables and you're fine with adding the build dir's `/bin` subdirectory to PATH.
 
 Now, let's build the project.
 Replace `X` with amount of cores your CPU has for faster compilation.
@@ -1212,6 +1216,7 @@ My backend selection recommendation is following:
 - Users with Intel GPUs should use `SYCL` or `Vulkan`
 
 As we can see, Vulkan is the most generic option for GPU acceleration and i believe it's the simplest to build for, so i'll explain in detail how to do that.
+Doesn't matter whether you're Nvidia, AMD or Intel graphics user - Vulkan implementation should work on **most** (if not all) of their GPUs, as long as they're reasonably modern.
 The build process for every backend is very similar - install the necessary dependencies, generate the `llama.cpp` build files with proper flag to enable the specific backend, and build it.
 
 Oh, and don't worry about Python and it's dependencies.
@@ -1240,7 +1245,7 @@ On Linux, i recommend installing Vulkan SDK using the package manager.
 If it's not in package manager of your distro, i assume you know what you're doing and how to install it manually.
 {.linux-bg-padded}
 
-Afterwards, we can generate the build files (replace `/your/install/dir` with custom installation directory, if you want):
+Afterwards, we can generate the build files (replace `/your/install/dir` with custom installation directory, if you want - or ignore this variable):
 
 ```sh
 cmake -S . -B build -G Ninja -DGGML_VULKAN=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/your/install/dir -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=ON -DLLAMA_BUILD_SERVER=ON
