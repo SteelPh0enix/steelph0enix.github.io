@@ -122,4 +122,6 @@ Mbyte
 abliterated
 finetunes
 bfloat
+Oscylator
+Ollama
 nthreads

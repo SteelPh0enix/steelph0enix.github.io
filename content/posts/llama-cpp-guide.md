@@ -1377,17 +1377,18 @@ But - it's a good knowledge to have when playing with LLMs.
    I honestly don't know what exactly happens in this step, but i'll try my best to explain it in simple and very approximate terms.
    The input is the tokenized prompt.
    This prompt is fed to the LLM, and the digestion process takes a lot of processing time due to the insane amount of matrix operations that must be performed to satisfy the digital beast.
-   After the prompt is digested, the LLM starts talking to us.
-   LLM talks by generating pairs of tokens and probabilities of them appearing next in the completed text.
-   If we'd just use those as-is, the output would be complete gibberish and would drive people insane, as it's usually the case with demons - digital or not.
-   Those tokens must be filtered out in order to form an output understandable to human beings (or whatever other beings you want to talk with), and that's what token sampling is all about.
+   After the prompt is digested, the LLM starts "talking" to us.
+   LLM "talks" by outputting the probability distribution for all the tokens in it's dictionary.
+   This distribution is a list of pairs containing the token value and it's probability to be used as the next one.
+   Now, in theory we could use a single token with the highest probability and be done with generation, but that's not the *best* way of doing things.
 
 1. Token sampling
 
    This is probably the most interesting step for us, because we can control it's every single parameter.
    As usual, i advise caution when working with raw output from demons - digital or not, it may result in unexpected stuff happening when handled incorrectly.
-   To generate a token, LLM outputs a batch of token-probability pairs that's filtered out to a single one by a chain of samplers.
-   There's plenty of different sampling algorithms that can be tweaked for different purposes, and list of those available in llama.cpp with their descriptions is presented below.
+   Samplers are used to choose the "best" token from the raw LLM output.
+   They work by trimming down all the available tokens to a single one.
+   Note that not every sampler will do that directly (for example, Top-K picks K tokens), but in the end of tokenization, the result is a single token.
 
 1. Detokenization
 
@@ -1532,3 +1533,7 @@ As for my recommendations, some relatively recent models i've tried that made a 
 I've shared this post on Reddit and after getting the feedback, i managed to fix multiple issues with this post. Thanks!
 I'm currently at the process of *refactors*, so many small things may change, and many other small things may be added in following days.
 I'll update this section when i'm finished.
+
+- 03.12.2024 - Updated the part about LLM text generation.
+               I have made some mistakes there, so i've updated my knowledge and the post.
+               Thanks /r/AbaGuy17, /r/Oscylator and others for pointing stuff up.
