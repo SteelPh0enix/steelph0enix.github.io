@@ -96,8 +96,8 @@ Linux is preferred. I will still explain everything step-by-step for Windows, bu
 &lt;/blockquote>
 &lt;h2 id="building-the-llama">building the llama&lt;/h2>
 &lt;p>In &lt;a href="https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md">&lt;code>docs/build.md&lt;/code>&lt;/a>, you&amp;rsquo;ll find detailed build instructions for all the supported platforms.
-By default, &lt;code>llama.cpp&lt;/code> builds with auto-detected CPU support.
-We&amp;rsquo;ll talk about enabling GPU support later, first - let&amp;rsquo;s try building it as-is, because it&amp;rsquo;s a good baseline to start with, and it doesn&amp;rsquo;t require any external dependencies.
+&lt;strong>By default, &lt;code>llama.cpp&lt;/code> builds with auto-detected CPU support.&lt;/strong>
+We&amp;rsquo;ll talk about enabling GPU and advanced CPU support later, first - let&amp;rsquo;s try building it as-is, because it&amp;rsquo;s a good baseline to start with, and it doesn&amp;rsquo;t require any external dependencies.
 To do that, we only need a C++ toolchain, &lt;a href="https://cmake.org/">CMake&lt;/a> and &lt;a href="https://ninja-build.org/">Ninja&lt;/a>.&lt;/p>
 &lt;blockquote>
 &lt;p>If you are &lt;strong>very&lt;/strong> lazy, you can download a release from Github and skip building steps.
@@ -159,6 +159,9 @@ If you don&amp;rsquo;t have them, change it to point somewhere in your user dire
 &lt;li>&lt;code>LLAMA_BUILD_EXAMPLES&lt;/code> is &lt;code>ON&lt;/code> because we&amp;rsquo;re gonna be using them.&lt;/li>
 &lt;li>&lt;code>LLAMA_BUILD_SERVER&lt;/code> - see above. Note: Disabling &lt;code>LLAMA_BUILD_EXAMPLES&lt;/code> unconditionally disables building the server, both must be &lt;code>ON&lt;/code>.&lt;/li>
 &lt;/ul>
+&lt;p>If you&amp;rsquo;d ignore all of those variables, the default would be used - in case of &lt;code>LLAMA_BUILD_*&lt;/code> variables, all of those is &lt;code>ON&lt;/code> (if you&amp;rsquo;re building llama.cpp as standalone app, which you most likely are).
+&lt;code>CMAKE_BUILD_TYPE&lt;/code> is &lt;em>usually&lt;/em> set to &lt;code>Release&lt;/code> by default, but not &lt;em>always&lt;/em>, so i&amp;rsquo;d rather set it manually.
+&lt;code>CMAKE_INSTALL_PREFIX&lt;/code> is not necessary at all if you don&amp;rsquo;t intend to install the executables and you&amp;rsquo;re fine with adding the build dir&amp;rsquo;s &lt;code>/bin&lt;/code> subdirectory to PATH.&lt;/p>
 &lt;p>Now, let&amp;rsquo;s build the project.
 Replace &lt;code>X&lt;/code> with amount of cores your CPU has for faster compilation.
 In theory, Ninja should automatically use all available cores, but i still prefer passing this argument manually.&lt;/p>
@@ -968,6 +971,7 @@ My backend selection recommendation is following:&lt;/p>
 &lt;li>Users with Intel GPUs should use &lt;code>SYCL&lt;/code> or &lt;code>Vulkan&lt;/code>&lt;/li>
 &lt;/ul>
 &lt;p>As we can see, Vulkan is the most generic option for GPU acceleration and i believe it&amp;rsquo;s the simplest to build for, so i&amp;rsquo;ll explain in detail how to do that.
+Doesn&amp;rsquo;t matter whether you&amp;rsquo;re Nvidia, AMD or Intel graphics user - Vulkan implementation should work on &lt;strong>most&lt;/strong> (if not all) of their GPUs, as long as they&amp;rsquo;re reasonably modern.
 The build process for every backend is very similar - install the necessary dependencies, generate the &lt;code>llama.cpp&lt;/code> build files with proper flag to enable the specific backend, and build it.&lt;/p>
 &lt;p>Oh, and don&amp;rsquo;t worry about Python and it&amp;rsquo;s dependencies.
 The performance of model conversion scripts is not limited by &lt;code>pytorch&lt;/code>, so there&amp;rsquo;s no point in installing CUDA/ROCm versions.&lt;/p>
@@ -984,7 +988,7 @@ Run this command in MSYS (make sure to use UCRT runtime) to install the required
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg-padded">If you &lt;em>really&lt;/em> don&amp;rsquo;t want to use MSYS, i recommend &lt;a href="https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md#vulkan">following the docs&lt;/a>&lt;/p>
 &lt;p class="linux-bg-padded">On Linux, i recommend installing Vulkan SDK using the package manager.
 If it&amp;rsquo;s not in package manager of your distro, i assume you know what you&amp;rsquo;re doing and how to install it manually.&lt;/p>
-&lt;p>Afterwards, we can generate the build files (replace &lt;code>/your/install/dir&lt;/code> with custom installation directory, if you want):&lt;/p>
+&lt;p>Afterwards, we can generate the build files (replace &lt;code>/your/install/dir&lt;/code> with custom installation directory, if you want - or ignore this variable):&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>cmake -S . -B build -G Ninja -DGGML_VULKAN&lt;span style="color:#f92672">=&lt;/span>ON -DCMAKE_BUILD_TYPE&lt;span style="color:#f92672">=&lt;/span>Release -DCMAKE_INSTALL_PREFIX&lt;span style="color:#f92672">=&lt;/span>/your/install/dir -DLLAMA_BUILD_TESTS&lt;span style="color:#f92672">=&lt;/span>OFF -DLLAMA_BUILD_EXAMPLES&lt;span style="color:#f92672">=&lt;/span>ON -DLLAMA_BUILD_SERVER&lt;span style="color:#f92672">=&lt;/span>ON
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>and build/install the binaries (replace &lt;code>X&lt;/code> with amount of cores in your system):&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>cmake --build build --config Release -j X
