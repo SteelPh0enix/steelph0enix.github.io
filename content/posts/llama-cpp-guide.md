@@ -1182,6 +1182,8 @@ Interrupted by user
 All right, now that we know how to use `llama.cpp` and tweak runtime parameters, let's learn how to tweak build configuration.
 We already set some generic settings in [chapter about building the `llama.cpp`](#building-the-llama) but we haven't touched any backend-related ones yet.
 
+Back-end for `llama.cpp` is provided via `ggml` library (created by the same author!).
+This library contains the code for math operations used to run LLMs, and it supports many hardware accelerations that we can enable to get the maximum LLM performance on our hardware.
 Let's start with clearing up the `llama.cpp` repository (and, optionally, making sure that we have the latest commit):
 
 ```sh
@@ -1192,7 +1194,7 @@ git submodule update --recursive
 ```
 
 Now, we need to generate the build files for a custom backend.
-As of writing this, the list of backends supported by `llama.cpp` is following:
+As of writing this, the list of backends supported by `ggml` library is following:
 
 - `Metal` - acceleration for Apple Silicon
 - `Accelerate` - BLAS (Basic Linear Algebra Subprograms) acceleration for Mac PCs, enabled by default.
@@ -1205,9 +1207,9 @@ As of writing this, the list of backends supported by `llama.cpp` is following:
 - `hipBLAS` - BLAS acceleration for AMD GPUs
 - `Vulkan` - generic acceleration for GPUs
 - `CANN` - acceleration for Ascend NPU
-- `Android` - yes, there's also Android support.
 
 As we can see, there's something for everyone.
+*It's good to note here that `llama.cpp` also supports Android!*
 My backend selection recommendation is following:
 
 - Users without GPUs should try `Intel oneMKL` in case of Intel CPUs, or `BLIS`/`OpenBLAS`.
@@ -1245,7 +1247,9 @@ On Linux, i recommend installing Vulkan SDK using the package manager.
 If it's not in package manager of your distro, i assume you know what you're doing and how to install it manually.
 {.linux-bg-padded}
 
-Afterwards, we can generate the build files (replace `/your/install/dir` with custom installation directory, if you want - or ignore this variable):
+Afterwards, we can generate the build files.
+To enable Vulkan back-end, we need to set `GGML_VULKAN` variable to `ON`.
+Replace `/your/install/dir` with custom installation directory, if you want one - otherwise remove this variable:
 
 ```sh
 cmake -S . -B build -G Ninja -DGGML_VULKAN=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/your/install/dir -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=ON -DLLAMA_BUILD_SERVER=ON
@@ -1300,6 +1304,39 @@ Prompt processing speed has increased from ~165 to ~880 tokens per second (5.3x 
 Text generation - from ~22 to ~90 tokens per second (4x faster).
 Mixed text processing went up from ~63 to ~115 tokens per second (1.8x faster).
 All of this due to the fact that i've switched to *correct* backend.
+
+### need better CPU support?
+
+Vulkan back-end is a good generic way of running the LLMs on GPU.
+But what if you don't have one, and still want to get the maximum performance out of your hardware?
+Fortunately, `ggml` library has support for optional CPU instruction sets that provide faster math operations for LLMs, like AVX.
+
+All the configuration options for `ggml` library are defined in `ggml/CMakeLists.txt` file of `llama.cpp` repo.
+You set them just like you did when building Vulkan, `-DVARIABLE_NAME=VALUE` when calling `cmake` for project generation.
+I'm gonna list CPU-related ones here, and explain what they do and when you should use them (if i know that).
+This list may become outdated, ping me somewhere when `ggml` gets updated and i don't notice the change!
+You should still double-check and validate this list with latest `CMakeLists.txt` of `ggml`.
+
+>To quickly check which instruction sets your CPU supports, i recommend [HWInfo](https://www.hwinfo.com/)
+>![cpu features](/img/llama-cpp/cpu-features.png)
+
+- `GGML_CPU` - enables CPU back-end. This is enabled by default and usually should not be changed, even when GPU back-end is enabled.
+- `GGML_CPU_HBM` - enables [`memkind`](https://pmem.io/memkind/) allocator, mostly for systems with CPU HBM memory.
+- `GGML_CPU_AARCH64` - enables support for AARCH64 (Armv8-A or newer) architecture.
+- `GGML_AVX` - enables AVX support. If you're not cross-compiling, should be enabled by default - most modern CPUs support it.
+- `GGML_AVX_VNNI` - enables [AVX-VNNI support](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions#CPUs_with_AVX-VNNI). This is a sub-set of AVX instructions introduced in Intel's Alder Lake (Q4 2021) and AMD Zen 5 (Q3 2024) CPUs or newer. Enable it if your CPU supports it.
+- `GGML_AVX2` - similar to `GGML_AVX`, also enabled by default if not cross-compiling.
+- `GGML_AVX512` - enables [AVX512F support](https://en.wikipedia.org/wiki/AVX-512#CPUs_with_AVX-512). Check the linked article for the list of supported CPUs. Enable if supported by your CPU.
+- `GGML_AVX512_VBMI`/`VNNI`/`BF16` - those three options control the optimizations for specific AVX512 subsets. Article linked above also provides info about support of those subsets, so enable it accordingly to your hardware.
+- `GGML_LASX`/`LSX` - enables support for LoongArch ([Loongson](https://en.wikipedia.org/wiki/Loongson) CPUs)
+- `GGML_RVV` - enables support for RISC-V Vector Extension, affects only supported RISC-V CPUs.
+- `GGML_SVE` - enables support for ARM [Scalable Vector Extensions](https://developer.arm.com/Architectures/Scalable%20Vector%20Extensions). Available on some ARM CPUs, like Armv9 Cortex-A510.
+
+Following options are not supported under MSVC (another reason to *not* use it):
+
+- `GGML_FMA` - enables optimizations for [FMA instruction set](https://en.wikipedia.org/wiki/FMA_instruction_set), every modern CPU should support them and it's enabled by default if not cross-compiling.
+- `GGML_F16C` - enables optimizations for [F16C instruction set](https://en.wikipedia.org/wiki/F16C), similarly to FMA - every modern CPU supports it, enabled by default when not cross-compiling.
+- `GGML_AMX_TILE`/`INT8`/`BF16` - enables support for Intel's [Advanced Matrix Extensions](https://en.wikipedia.org/wiki/Advanced_Matrix_Extensions). This is available only on recent Xeon CPUs.
 
 ## LLM configuration options explained
 
@@ -1542,3 +1579,4 @@ I'll update this section when i'm finished.
 - 03.12.2024 - Updated the part about LLM text generation.
                I have made some mistakes there, so i've updated my knowledge and the post.
                Thanks /r/AbaGuy17, /r/Oscylator and others for pointing stuff up.
+- 10.12.2024 - Updated the back-end part, added info about CPU optimizations.

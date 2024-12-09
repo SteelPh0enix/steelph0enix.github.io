@@ -125,3 +125,10 @@ bfloat
 Oscylator
 Ollama
 nthreads
+VNNI
+VBMI
+Loongson
+Loong
+LASX
+Armv
+DVARIABLE
