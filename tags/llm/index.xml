@@ -244,7 +244,7 @@ This rule applies to most LLMs, but not all, so make sure to read the model&amp;
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>set GIT_LFS_SKIP_SMUDGE&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git clone https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>HuggingFace also supports Git over SSH. You can look up the &lt;code>git clone&lt;/code> command for every repo here:
-&lt;img alt="huggingface - where to find git clone button" src="https://steelph0enix.github.io/img/llama-cpp/clone-hf-button.png">&lt;/p>
+&lt;img src="https://steelph0enix.github.io/img/llama-cpp/clone-hf-button.png" alt="huggingface - where to find git clone button">&lt;/p>
 &lt;p>After cloning the repo, &lt;strong>download the &lt;code>model.safetensors&lt;/code> file from HuggingFace manually.&lt;/strong>
 The reason why we used &lt;code>GIT_LFS_SKIP_SMUDGE&lt;/code> is because there&amp;rsquo;s many other large model files hidden in repo, and we don&amp;rsquo;t need them.
 Also, downloading very large files manually is faster, because Git LFS sucks in that regard.&lt;/p>
@@ -685,7 +685,7 @@ Notice that you can also use environmental variables instead of arguments, so yo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>main: server is listening on http://127.0.0.1:8080 - starting the main loop
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>srv update_slots: all slots are idle
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And now we can access the web UI on &lt;code>http://127.0.0.1:8080&lt;/code> or whatever host/port combo you&amp;rsquo;ve set.&lt;/p>
-&lt;p>&lt;img alt="llama.cpp webui" src="https://steelph0enix.github.io/img/llama-cpp/llama-cpp-webui.png">&lt;/p>
+&lt;p>&lt;img src="https://steelph0enix.github.io/img/llama-cpp/llama-cpp-webui.png" alt="llama.cpp webui">&lt;/p>
 &lt;p>From this point, we can freely chat with the LLM using the web UI, or you can use the OpenAI-compatible API that &lt;code>llama-server&lt;/code> provides.
 I won&amp;rsquo;t dig into the API itself here, i&amp;rsquo;ve written &lt;a href="https://github.com/SteelPh0enix/unreasonable-llama">a Python library&lt;/a> for it if you&amp;rsquo;re interested in using it (i&amp;rsquo;m trying to keep it up-to-date with &lt;code>llama.cpp&lt;/code> master, but it might not be all the time).
 I recommend looking into the &lt;a href="https://github.com/ggerganov/llama.cpp/tree/master/examples/server">&lt;code>llama-server&lt;/code> source code and README&lt;/a> for more details about endpoints.&lt;/p>
@@ -699,7 +699,7 @@ I recommend making new conversations often, and keeping their context focused on
 In the configuration window, we can tweak generation settings for our LLM.
 &lt;strong>Those are currently global, not per-conversation.&lt;/strong>
 All of those settings are briefly described &lt;a href="https://steelph0enix.github.io/posts/llama-cpp-guide/#llm-configuration-options-explained">below&lt;/a>.&lt;/p>
-&lt;p>&lt;img alt="llama.cpp webui config" src="https://steelph0enix.github.io/img/llama-cpp/llama-cpp-webui-config.png">&lt;/p>
+&lt;p>&lt;img src="https://steelph0enix.github.io/img/llama-cpp/llama-cpp-webui-config.png" alt="llama.cpp webui config">&lt;/p>
 &lt;h3 id="llamacpp-server-settings">llama.cpp server settings&lt;/h3>
 &lt;p>Web UI provides only a small subset of configuration options we have available, and only those related to LLM samplers.
 For the full set, we need to call &lt;code>llama-server --help&lt;/code>.
@@ -941,13 +941,15 @@ Alternatively, we can use &lt;code>--interactive-first&lt;/code> to start chatti
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="building-the-llama-but-better">building the llama, but better&lt;/h2>
 &lt;p>All right, now that we know how to use &lt;code>llama.cpp&lt;/code> and tweak runtime parameters, let&amp;rsquo;s learn how to tweak build configuration.
 We already set some generic settings in &lt;a href="https://steelph0enix.github.io/posts/llama-cpp-guide/#building-the-llama">chapter about building the &lt;code>llama.cpp&lt;/code>&lt;/a> but we haven&amp;rsquo;t touched any backend-related ones yet.&lt;/p>
-&lt;p>Let&amp;rsquo;s start with clearing up the &lt;code>llama.cpp&lt;/code> repository (and, optionally, making sure that we have the latest commit):&lt;/p>
+&lt;p>Back-end for &lt;code>llama.cpp&lt;/code> is provided via &lt;code>ggml&lt;/code> library (created by the same author!).
+This library contains the code for math operations used to run LLMs, and it supports many hardware accelerations that we can enable to get the maximum LLM performance on our hardware.
+Let&amp;rsquo;s start with clearing up the &lt;code>llama.cpp&lt;/code> repository (and, optionally, making sure that we have the latest commit):&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>cd llama.cpp
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git clean -xdf
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git pull
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git submodule update --recursive
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Now, we need to generate the build files for a custom backend.
-As of writing this, the list of backends supported by &lt;code>llama.cpp&lt;/code> is following:&lt;/p>
+As of writing this, the list of backends supported by &lt;code>ggml&lt;/code> library is following:&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>Metal&lt;/code> - acceleration for Apple Silicon&lt;/li>
 &lt;li>&lt;code>Accelerate&lt;/code> - BLAS (Basic Linear Algebra Subprograms) acceleration for Mac PCs, enabled by default.&lt;/li>
@@ -960,9 +962,9 @@ As of writing this, the list of backends supported by &lt;code>llama.cpp&lt;/cod
 &lt;li>&lt;code>hipBLAS&lt;/code> - BLAS acceleration for AMD GPUs&lt;/li>
 &lt;li>&lt;code>Vulkan&lt;/code> - generic acceleration for GPUs&lt;/li>
 &lt;li>&lt;code>CANN&lt;/code> - acceleration for Ascend NPU&lt;/li>
-&lt;li>&lt;code>Android&lt;/code> - yes, there&amp;rsquo;s also Android support.&lt;/li>
 &lt;/ul>
 &lt;p>As we can see, there&amp;rsquo;s something for everyone.
+&lt;em>It&amp;rsquo;s good to note here that &lt;code>llama.cpp&lt;/code> also supports Android!&lt;/em>
 My backend selection recommendation is following:&lt;/p>
 &lt;ul>
 &lt;li>Users without GPUs should try &lt;code>Intel oneMKL&lt;/code> in case of Intel CPUs, or &lt;code>BLIS&lt;/code>/&lt;code>OpenBLAS&lt;/code>.&lt;/li>
@@ -988,7 +990,9 @@ Run this command in MSYS (make sure to use UCRT runtime) to install the required
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg-padded">If you &lt;em>really&lt;/em> don&amp;rsquo;t want to use MSYS, i recommend &lt;a href="https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md#vulkan">following the docs&lt;/a>&lt;/p>
 &lt;p class="linux-bg-padded">On Linux, i recommend installing Vulkan SDK using the package manager.
 If it&amp;rsquo;s not in package manager of your distro, i assume you know what you&amp;rsquo;re doing and how to install it manually.&lt;/p>
-&lt;p>Afterwards, we can generate the build files (replace &lt;code>/your/install/dir&lt;/code> with custom installation directory, if you want - or ignore this variable):&lt;/p>
+&lt;p>Afterwards, we can generate the build files.
+To enable Vulkan back-end, we need to set &lt;code>GGML_VULKAN&lt;/code> variable to &lt;code>ON&lt;/code>.
+Replace &lt;code>/your/install/dir&lt;/code> with custom installation directory, if you want one - otherwise remove this variable:&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>cmake -S . -B build -G Ninja -DGGML_VULKAN&lt;span style="color:#f92672">=&lt;/span>ON -DCMAKE_BUILD_TYPE&lt;span style="color:#f92672">=&lt;/span>Release -DCMAKE_INSTALL_PREFIX&lt;span style="color:#f92672">=&lt;/span>/your/install/dir -DLLAMA_BUILD_TESTS&lt;span style="color:#f92672">=&lt;/span>OFF -DLLAMA_BUILD_EXAMPLES&lt;span style="color:#f92672">=&lt;/span>ON -DLLAMA_BUILD_SERVER&lt;span style="color:#f92672">=&lt;/span>ON
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>and build/install the binaries (replace &lt;code>X&lt;/code> with amount of cores in your system):&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sh" data-lang="sh">&lt;span style="display:flex;">&lt;span>cmake --build build --config Release -j X
@@ -1023,6 +1027,38 @@ Prompt processing speed has increased from ~165 to ~880 tokens per second (5.3x 
 Text generation - from ~22 to ~90 tokens per second (4x faster).
 Mixed text processing went up from ~63 to ~115 tokens per second (1.8x faster).
 All of this due to the fact that i&amp;rsquo;ve switched to &lt;em>correct&lt;/em> backend.&lt;/p>
+&lt;h3 id="need-better-cpu-support">need better CPU support?&lt;/h3>
+&lt;p>Vulkan back-end is a good generic way of running the LLMs on GPU.
+But what if you don&amp;rsquo;t have one, and still want to get the maximum performance out of your hardware?
+Fortunately, &lt;code>ggml&lt;/code> library has support for optional CPU instruction sets that provide faster math operations for LLMs, like AVX.&lt;/p>
+&lt;p>All the configuration options for &lt;code>ggml&lt;/code> library are defined in &lt;code>ggml/CMakeLists.txt&lt;/code> file of &lt;code>llama.cpp&lt;/code> repo.
+You set them just like you did when building Vulkan, &lt;code>-DVARIABLE_NAME=VALUE&lt;/code> when calling &lt;code>cmake&lt;/code> for project generation.
+I&amp;rsquo;m gonna list CPU-related ones here, and explain what they do and when you should use them (if i know that).
+This list may become outdated, ping me somewhere when &lt;code>ggml&lt;/code> gets updated and i don&amp;rsquo;t notice the change!
+You should still double-check and validate this list with latest &lt;code>CMakeLists.txt&lt;/code> of &lt;code>ggml&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>To quickly check which instruction sets your CPU supports, i recommend &lt;a href="https://www.hwinfo.com/">HWInfo&lt;/a>
+&lt;img src="https://steelph0enix.github.io/img/llama-cpp/cpu-features.png" alt="cpu features">&lt;/p>
+&lt;/blockquote>
+&lt;ul>
+&lt;li>&lt;code>GGML_CPU&lt;/code> - enables CPU back-end. This is enabled by default and usually should not be changed, even when GPU back-end is enabled.&lt;/li>
+&lt;li>&lt;code>GGML_CPU_HBM&lt;/code> - enables &lt;a href="https://pmem.io/memkind/">&lt;code>memkind&lt;/code>&lt;/a> allocator, mostly for systems with CPU HBM memory.&lt;/li>
+&lt;li>&lt;code>GGML_CPU_AARCH64&lt;/code> - enables support for AARCH64 (Armv8-A or newer) architecture.&lt;/li>
+&lt;li>&lt;code>GGML_AVX&lt;/code> - enables AVX support. If you&amp;rsquo;re not cross-compiling, should be enabled by default - most modern CPUs support it.&lt;/li>
+&lt;li>&lt;code>GGML_AVX_VNNI&lt;/code> - enables &lt;a href="https://en.wikipedia.org/wiki/Advanced_Vector_Extensions#CPUs_with_AVX-VNNI">AVX-VNNI support&lt;/a>. This is a sub-set of AVX instructions introduced in Intel&amp;rsquo;s Alder Lake (Q4 2021) and AMD Zen 5 (Q3 2024) CPUs or newer. Enable it if your CPU supports it.&lt;/li>
+&lt;li>&lt;code>GGML_AVX2&lt;/code> - similar to &lt;code>GGML_AVX&lt;/code>, also enabled by default if not cross-compiling.&lt;/li>
+&lt;li>&lt;code>GGML_AVX512&lt;/code> - enables &lt;a href="https://en.wikipedia.org/wiki/AVX-512#CPUs_with_AVX-512">AVX512F support&lt;/a>. Check the linked article for the list of supported CPUs. Enable if supported by your CPU.&lt;/li>
+&lt;li>&lt;code>GGML_AVX512_VBMI&lt;/code>/&lt;code>VNNI&lt;/code>/&lt;code>BF16&lt;/code> - those three options control the optimizations for specific AVX512 subsets. Article linked above also provides info about support of those subsets, so enable it accordingly to your hardware.&lt;/li>
+&lt;li>&lt;code>GGML_LASX&lt;/code>/&lt;code>LSX&lt;/code> - enables support for LoongArch (&lt;a href="https://en.wikipedia.org/wiki/Loongson">Loongson&lt;/a> CPUs)&lt;/li>
+&lt;li>&lt;code>GGML_RVV&lt;/code> - enables support for RISC-V Vector Extension, affects only supported RISC-V CPUs.&lt;/li>
+&lt;li>&lt;code>GGML_SVE&lt;/code> - enables support for ARM &lt;a href="https://developer.arm.com/Architectures/Scalable%20Vector%20Extensions">Scalable Vector Extensions&lt;/a>. Available on some ARM CPUs, like Armv9 Cortex-A510.&lt;/li>
+&lt;/ul>
+&lt;p>Following options are not supported under MSVC (another reason to &lt;em>not&lt;/em> use it):&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>GGML_FMA&lt;/code> - enables optimizations for &lt;a href="https://en.wikipedia.org/wiki/FMA_instruction_set">FMA instruction set&lt;/a>, every modern CPU should support them and it&amp;rsquo;s enabled by default if not cross-compiling.&lt;/li>
+&lt;li>&lt;code>GGML_F16C&lt;/code> - enables optimizations for &lt;a href="https://en.wikipedia.org/wiki/F16C">F16C instruction set&lt;/a>, similarly to FMA - every modern CPU supports it, enabled by default when not cross-compiling.&lt;/li>
+&lt;li>&lt;code>GGML_AMX_TILE&lt;/code>/&lt;code>INT8&lt;/code>/&lt;code>BF16&lt;/code> - enables support for Intel&amp;rsquo;s &lt;a href="https://en.wikipedia.org/wiki/Advanced_Matrix_Extensions">Advanced Matrix Extensions&lt;/a>. This is available only on recent Xeon CPUs.&lt;/li>
+&lt;/ul>
 &lt;h2 id="llm-configuration-options-explained">LLM configuration options explained&lt;/h2>
 &lt;p>This will be a relatively long and very informational part full of boring explanations.
 But - it&amp;rsquo;s a good knowledge to have when playing with LLMs.&lt;/p>
@@ -1126,7 +1162,7 @@ It may require some additional tweaks to other samplers when enabled, to produce
 The parameters of dynamic temperature sampler are:
 &lt;ul>
 &lt;li>&lt;strong>Dynatemp range&lt;/strong> - the range of dynamic temperature to be added/subtracted&lt;/li>
-&lt;li>&lt;strong>Dynatemp exponent&lt;/strong> - changing the exponent changes the dynamic temperature in following way (figure shamelessly stolen from &lt;a href="https://rentry.org/dynamic_temperature">previously linked reentry article&lt;/a>): &lt;img alt="dynatemp exponent effects" src="https://steelph0enix.github.io/img/llama-cpp/dynatemp-exponent.png">&lt;/li>
+&lt;li>&lt;strong>Dynatemp exponent&lt;/strong> - changing the exponent changes the dynamic temperature in following way (figure shamelessly stolen from &lt;a href="https://rentry.org/dynamic_temperature">previously linked reentry article&lt;/a>): &lt;img src="https://steelph0enix.github.io/img/llama-cpp/dynatemp-exponent.png" alt="dynatemp exponent effects">&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Top-K&lt;/strong> - Top-K sampling is a fancy name for &amp;ldquo;keep only &lt;code>K&lt;/code> most probable tokens&amp;rdquo; algorithm.
@@ -1139,12 +1175,12 @@ There&amp;rsquo;s a &lt;a href="https://rumn.medium.com/setting-top-k-top-p-and-
 &lt;li>&lt;strong>Min-P&lt;/strong> - Min-P sampling, per &lt;code>llama.cpp&lt;/code> docs &amp;ldquo;Limits tokens based on the minimum probability for a token to be considered, relative to the probability of the most likely token&amp;rdquo;.
 There&amp;rsquo;s a &lt;a href="https://arxiv.org/pdf/2407.01082">paper&lt;/a> explaining this algorithm (it contains loads of citations for other LLM-related stuff too, good read).
 Figure 1 from this paper nicely shows what each of the sampling algorithms does to probability distribution of tokens:
-&lt;img alt="min-p-probabilities" src="https://steelph0enix.github.io/img/llama-cpp/min-p-probs.png">&lt;/li>
+&lt;img src="https://steelph0enix.github.io/img/llama-cpp/min-p-probs.png" alt="min-p-probabilities">&lt;/li>
 &lt;li>&lt;a href="https://www.reddit.com/r/LocalLLaMA/comments/1ev8n2s/exclude_top_choices_xtc_a_sampler_that_boosts/">&lt;strong>Exclude Top Choices (XTC)&lt;/strong>&lt;/a> - This is a funky one, because it works a bit differently from most other samplers.
 Quoting the author, &lt;em>Instead of pruning the least likely tokens, under certain circumstances, it removes the most likely tokens from consideration&lt;/em>.
 Detailed description can be found in &lt;a href="https://github.com/oobabooga/text-generation-webui/pull/6335">the PR with implementation&lt;/a>.
 I recommend reading it, because i really can&amp;rsquo;t come up with anything better in few sentences, it&amp;rsquo;s a really good explanation.
-I can, however, steal this image from the linked PR to show you more-or-less what XTC does: &lt;img alt="xtc" src="https://steelph0enix.github.io/img/llama-cpp/xtc.png">
+I can, however, steal this image from the linked PR to show you more-or-less what XTC does: &lt;img src="https://steelph0enix.github.io/img/llama-cpp/xtc.png" alt="xtc">
 The parameters for XTC sampler are:
 &lt;ul>
 &lt;li>&lt;strong>XTC threshold&lt;/strong> - probability cutoff threshold for top tokens, in (0, 1) range.&lt;/li>
@@ -1158,7 +1194,7 @@ I tried reading the linked paper, but i lack the mental capacity to understand i
 I haven&amp;rsquo;t used that sampling much, so i can&amp;rsquo;t really say anything about it from experience either, so - moving on.&lt;/li>
 &lt;li>&lt;a href="https://github.com/oobabooga/text-generation-webui/pull/5677">&lt;strong>DRY&lt;/strong>&lt;/a> - This sampler is used to prevent unwanted token repetition.
 Simplifying, it tries to detect repeating token sequences in generated text and reduces the probabilities of tokens that will create repetitions.
-As usual, i recommend reading the linked PR for detailed explanation, and as usual i&amp;rsquo;ve stolen a figure from it that shows what DRY does: &lt;img alt="dry" src="https://steelph0enix.github.io/img/llama-cpp/dry.png">
+As usual, i recommend reading the linked PR for detailed explanation, and as usual i&amp;rsquo;ve stolen a figure from it that shows what DRY does: &lt;img src="https://steelph0enix.github.io/img/llama-cpp/dry.png" alt="dry">
 I&amp;rsquo;ll also quote a short explanation of this sampler:
 &lt;em>The penalty for a token is calculated as &lt;code>multiplier * base ^ (n - allowed_length)&lt;/code>, where &lt;code>n&lt;/code> is the length of the sequence before that token that matches the end of the input, and &lt;code>multiplier&lt;/code>, &lt;code>base&lt;/code>, and &lt;code>allowed_length&lt;/code> are configurable parameters.&lt;/em>
 &lt;em>If the length of the matching sequence is less than &lt;code>allowed_length&lt;/code>, no penalty is applied.&lt;/em>
@@ -1251,4 +1287,5 @@ I&amp;rsquo;ll update this section when i&amp;rsquo;m finished.&lt;/p>
 &lt;li>03.12.2024 - Updated the part about LLM text generation.
 I have made some mistakes there, so i&amp;rsquo;ve updated my knowledge and the post.
 Thanks /r/AbaGuy17, /r/Oscylator and others for pointing stuff up.&lt;/li>
+&lt;li>10.12.2024 - Updated the back-end part, added info about CPU optimizations.&lt;/li>
 &lt;/ul></content></item></channel></rss>
