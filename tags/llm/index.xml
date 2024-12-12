@@ -1059,6 +1059,10 @@ You should still double-check and validate this list with latest &lt;code>CMakeL
 &lt;li>&lt;code>GGML_F16C&lt;/code> - enables optimizations for &lt;a href="https://en.wikipedia.org/wiki/F16C">F16C instruction set&lt;/a>, similarly to FMA - every modern CPU supports it, enabled by default when not cross-compiling.&lt;/li>
 &lt;li>&lt;code>GGML_AMX_TILE&lt;/code>/&lt;code>INT8&lt;/code>/&lt;code>BF16&lt;/code> - enables support for Intel&amp;rsquo;s &lt;a href="https://en.wikipedia.org/wiki/Advanced_Matrix_Extensions">Advanced Matrix Extensions&lt;/a>. This is available only on recent Xeon CPUs.&lt;/li>
 &lt;/ul>
+&lt;h3 id="what-about-cudarocmblas">what about CUDA/ROCm/BLAS?&lt;/h3>
+&lt;p>I&amp;rsquo;ll write about ROCm in another blog post i&amp;rsquo;m preparing (with some benchmarks and comparisons).
+For CUDA and BLAS vendors, i&amp;rsquo;ll have to refer you to &lt;a href="https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md">the docs&lt;/a>.
+They are clear enough, and if you were able to build &lt;code>llama.cpp&lt;/code> for CPU and you have your build environment set up correctly (with all requirements installed) - it should be equally easy to build it with custom backend support.&lt;/p>
 &lt;h2 id="llm-configuration-options-explained">LLM configuration options explained&lt;/h2>
 &lt;p>This will be a relatively long and very informational part full of boring explanations.
 But - it&amp;rsquo;s a good knowledge to have when playing with LLMs.&lt;/p>
