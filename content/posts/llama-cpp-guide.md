@@ -1338,6 +1338,12 @@ Following options are not supported under MSVC (another reason to *not* use it):
 - `GGML_F16C` - enables optimizations for [F16C instruction set](https://en.wikipedia.org/wiki/F16C), similarly to FMA - every modern CPU supports it, enabled by default when not cross-compiling.
 - `GGML_AMX_TILE`/`INT8`/`BF16` - enables support for Intel's [Advanced Matrix Extensions](https://en.wikipedia.org/wiki/Advanced_Matrix_Extensions). This is available only on recent Xeon CPUs.
 
+### what about CUDA/ROCm/BLAS?
+
+I'll write about ROCm in another blog post i'm preparing (with some benchmarks and comparisons).
+For CUDA and BLAS vendors, i'll have to refer you to [the docs](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md).
+They are clear enough, and if you were able to build `llama.cpp` for CPU and you have your build environment set up correctly (with all requirements installed) - it should be equally easy to build it with custom backend support.
+
 ## LLM configuration options explained
 
 This will be a relatively long and very informational part full of boring explanations.
