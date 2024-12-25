@@ -113,7 +113,7 @@ CMake, Ninja and Git can be installed in UCRT MSYS environment like that:&lt;/p>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg">However, if you&amp;rsquo;re using any other toolchain (MSVC, or non-MSYS one), you should install CMake, Git and Ninja via &lt;code>winget&lt;/code>:&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>winget install cmake git.git ninja-build.ninja
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg">You&amp;rsquo;ll also need Python, which you can get via winget.
-Get the latest available version, at the time of writing this post it&amp;rsquo;s 3.13.&lt;/p>
+Get the 3.12 version, because 3.13 does not have working PyTorch package yet.&lt;/p>
 &lt;p class="windows-bg">&lt;strong>DO NOT USE PYTHON FROM MSYS, IT WILL NOT WORK PROPERLY DUE TO ISSUES WITH BUILDING &lt;code>llama.cpp&lt;/code> DEPENDENCY PACKAGES!&lt;/strong>
 &lt;strong>We&amp;rsquo;re going to be using MSYS only for &lt;em>building&lt;/em> &lt;code>llama.cpp&lt;/code>, nothing more.&lt;/strong>&lt;/p>
 &lt;p class="windows-bg">&lt;strong>If you&amp;rsquo;re using MSYS, remember to add it&amp;rsquo;s &lt;code>/bin&lt;/code> (&lt;code>C:\msys64\ucrt64\bin&lt;/code> by default) directory to PATH, so Python can use MinGW for building packages.&lt;/strong>
@@ -121,7 +121,7 @@ Get the latest available version, at the time of writing this post it&amp;rsquo;
 Also; check if it&amp;rsquo;s &lt;em>correct&lt;/em> GCC by running &lt;code>where.exe gcc.exe&lt;/code> and seeing where the first entry points to.
 Reorder your PATH if you&amp;rsquo;ll notice that you&amp;rsquo;re using wrong GCC.&lt;/p>
 &lt;p class="windows-bg">&lt;strong>If you&amp;rsquo;re using MSVC - ignore this disclaimer, it should be &amp;ldquo;detectable&amp;rdquo; by default.&lt;/strong>&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>winget install python.python.3.13
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>winget install python.python.3.12
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="windows-bg">I recommend installing/upgrading &lt;code>pip&lt;/code>, &lt;code>setuptools&lt;/code> and &lt;code>wheel&lt;/code> packages before continuing.&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-powershell" data-lang="powershell">&lt;span style="display:flex;">&lt;span>python -m pip install --upgrade pip wheel setuptools
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p class="linux-bg">On Linux, GCC is recommended, but you should be able to use Clang if you&amp;rsquo;d prefer by setting &lt;code>CMAKE_C_COMPILER=clang&lt;/code> and &lt;code>CMAKE_CXX_COMPILER=clang++&lt;/code> variables.
@@ -1292,6 +1292,7 @@ I&amp;rsquo;ll update this section when i&amp;rsquo;m finished.&lt;/p>
 I have made some mistakes there, so i&amp;rsquo;ve updated my knowledge and the post.
 Thanks /r/AbaGuy17, /r/Oscylator and others for pointing stuff up.&lt;/li>
 &lt;li>10.12.2024 - Updated the back-end part, added info about CPU optimizations.&lt;/li>
+&lt;li>25.12.2024 - Merry christmas, i just realized that Python 3.13 doesn&amp;rsquo;t have working PyTorch package, and i&amp;rsquo;ve been running Py3.12 all along! Sorry, fixed that!&lt;/li>
 &lt;/ul></content></item><item><title>Making C/C++ project template in Meson - part 2.5</title><link>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-2-5/</link><pubDate>Thu, 29 Feb 2024 00:00:00 +0000</pubDate><guid>https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-2-5/</guid><description>&lt;h2 id="fixing-cpputest-wrap-and-contributing-to-wrapdb">Fixing CppUTest wrap and contributing to WrapDB&lt;/h2>
 &lt;p>As per &lt;a href="https://steelph0enix.github.io/posts/making-c-cpp-project-template-in-meson-part-2/">my previous post&lt;/a>, &lt;a href="https://github.com/mesonbuild/wrapdb/pull/1398">I have fixed&lt;/a> the CppUTest wrap and it&amp;rsquo;s now available on WrapDB!
 Since this post series is strictly related to Meson, I want to talk a bit more about creating wraps and contributing there.
