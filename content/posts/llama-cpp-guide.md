@@ -148,7 +148,7 @@ winget install cmake git.git ninja-build.ninja
 ```
 
 You'll also need Python, which you can get via winget.
-Get the latest available version, at the time of writing this post it's 3.13.
+Get the 3.12 version, because 3.13 does not have working PyTorch package yet.
 {.windows-bg}
 
 **DO NOT USE PYTHON FROM MSYS, IT WILL NOT WORK PROPERLY DUE TO ISSUES WITH BUILDING `llama.cpp` DEPENDENCY PACKAGES!**
@@ -165,7 +165,7 @@ Reorder your PATH if you'll notice that you're using wrong GCC.
 {.windows-bg}
 
 ```powershell
-winget install python.python.3.13
+winget install python.python.3.12
 ```
 
 I recommend installing/upgrading `pip`, `setuptools` and `wheel` packages before continuing.
@@ -1586,3 +1586,4 @@ I'll update this section when i'm finished.
                I have made some mistakes there, so i've updated my knowledge and the post.
                Thanks /r/AbaGuy17, /r/Oscylator and others for pointing stuff up.
 - 10.12.2024 - Updated the back-end part, added info about CPU optimizations.
+- 25.12.2024 - Merry christmas, i just realized that Python 3.13 doesn't have working PyTorch package, and i've been running Py3.12 all along! Sorry, fixed that!
